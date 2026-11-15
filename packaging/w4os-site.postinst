@@ -1,0 +1,24 @@
+#!/bin/sh
+# The folders where the site writes, and the content of a new site (never overwritten).
+set -e
+
+case "$1" in
+configure)
+    for dir in /var/lib/w4os-site /var/lib/w4os-site/accounts /var/lib/w4os-site/data /var/lib/w4os-site/backup \
+        /var/cache/w4os-site /var/cache/w4os-site/cache /var/cache/w4os-site/tmp /var/cache/w4os-site/assets \
+        /var/cache/w4os-site/images /var/log/w4os-site; do
+        [ -d "$dir" ] || install -d -o www-data -g www-data -m 750 "$dir"
+    done
+    for dir in config pages; do
+        if [ ! -d "/var/lib/w4os-site/$dir" ]; then
+            cp -R "/usr/share/w4os-site/defaults/$dir" "/var/lib/w4os-site/$dir"
+            chown -R www-data:www-data "/var/lib/w4os-site/$dir"
+        fi
+    done
+    # The compiled templates and pages of the previous version
+    rm -rf /var/cache/w4os-site/cache/* /var/cache/w4os-site/assets/*
+    [ -n "$2" ] || echo "w4os-site: run 'sudo w4os-site setup' to connect the site to a grid, then 'sudo w4os-site web'."
+    ;;
+esac
+
+exit 0

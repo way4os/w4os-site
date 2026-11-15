@@ -1,0 +1,11 @@
+#!/bin/sh
+# Purge removes the caches and the logs, never the content of the site (/var/lib/w4os-site).
+set -e
+
+case "$1" in
+purge)
+    rm -rf /var/cache/w4os-site /var/log/w4os-site
+    ;;
+esac
+
+exit 0

@@ -1,0 +1,49 @@
+# The light website of an OpenSimulator grid, built by apt-package from build/w4os-site, prepared by packaging/build.
+# Grav and its plugins in /usr/share/w4os-site/grav (the document root), the content of the site in /var/lib/w4os-site,
+# its caches in /var/cache/w4os-site. Nothing is enabled in a web server by installing it: w4os-site setup, then
+# w4os-site web.
+name: w4os-site
+arch: all
+platform: linux
+version: ${VERSION}
+version_schema: semver
+section: web
+priority: optional
+maintainer: Gudule Lapointe <gudule@speculoos.world>
+description: |-
+  Light website of an OpenSimulator grid (w4os)
+  The website of a grid, kept minimal: avatars register with a model and
+  confirm their email, sign in, manage their account and their password;
+  the managers of the grid manage the avatars; Markdown pages show the
+  blocks of the helpers. Grav with the w4os plugin, talking to the OpenSim
+  engine API of the grid.
+homepage: https://w4os.org
+license: AGPL-3.0-or-later
+
+depends:
+  - bash-tools
+  - curl
+  - php-cli (>= 2:8.3) | php8.3-cli | php8.4-cli
+  - php-curl | php8.3-curl | php8.4-curl
+  - php-gd | php8.3-gd | php8.4-gd
+  - php-mbstring | php8.3-mbstring | php8.4-mbstring
+  - php-xml | php8.3-xml | php8.4-xml
+  - php-zip | php8.3-zip | php8.4-zip
+  - php-intl | php8.3-intl | php8.4-intl
+recommends:
+  - php-fpm | php8.3-fpm | php8.4-fpm
+suggests:
+  - apache2 | caddy | nginx
+  - opensim-helpers
+
+contents:
+  - src: build/w4os-site
+    dst: /usr/share/w4os-site
+    type: tree
+  - src: /usr/share/w4os-site/bin/w4os-site
+    dst: /usr/bin/w4os-site
+    type: symlink
+
+scripts:
+  postinstall: packaging/w4os-site.postinst
+  postremove: packaging/w4os-site.postrm

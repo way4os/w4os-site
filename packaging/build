@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Prepares what the Debian package installs, in build/w4os-site: Grav and its plugins at the versions of dependencies.txt
+# (their committed trees, with their composer dependencies), the theme, the defaults of a new site, the installer and the
+# web server template. Run by apt-package from the project root.
+set -Eeuo pipefail
+cd "$(dirname "$0")/.."
+root="$PWD"
+out="$root/build/w4os-site"
+grav="$out/grav"
+sources="$root/build/sources"
+rm -rf "$out" && mkdir -p "$grav" "$sources"
+
+# The committed tree of a source at a ref, extracted into a folder
+extract() {
+    local source=$1 ref=$2 target=$3 repo
+    if [ -d "$source" ]; then
+        repo=$source
+    else
+        repo="$sources/$(basename "$source" .git)-$ref"
+        [ -d "$repo/.git" ] || git -c advice.detachedHead=false clone -q --depth 1 --branch "$ref" "$source" "$repo"
+    fi
+    mkdir -p "$target"
+    git -C "$repo" archive --format=tar "$ref" | tar -x -C "$target"
+}
+
+while read -r path source ref; do
+    [[ -z ${path:-} || $path == \#* ]] && continue
+    [[ $source == ../* ]] && source="$root/$source"
+    extract "$source" "$ref" "$grav/$path"
+    # The PHP dependencies of what has some and does not ship them
+    if [ -f "$grav/$path/composer.json" ] && [ ! -d "$grav/$path/vendor" ] && grep -q '"require"' "$grav/$path/composer.json"; then
+        composer install -q --no-dev --no-interaction --optimize-autoloader -d "$grav/$path"
+    fi
+done < dependencies.txt
+
+# What the package does not need of Grav
+rm -rf "$grav"/{tests,.github,.phan,.oss-scanner,codeception.yml,now.json,.dependencies,CONTRIBUTING.md,CODE_OF_CONDUCT.md}
+rm -f "$grav"/user/plugins/*/composer.lock
+
+# The theme of the site
+cp -R theme/w4os "$grav/user/themes/w4os"
+
+# Where Grav writes: the content of the site in /var/lib, its caches in /var/cache (made by the postinst)
+cp grav.env "$grav/.env"
+for dir in config pages accounts data; do
+    rm -rf "${grav:?}/user/$dir"
+    ln -s "/var/lib/w4os-site/$dir" "$grav/user/$dir"
+done
+for dir in assets images cache logs tmp backup; do
+    rm -rf "${grav:?}/$dir"
+done
+ln -s /var/cache/w4os-site/assets "$grav/assets"
+ln -s /var/cache/w4os-site/images "$grav/images"
+
+# The defaults of a new site, the installer, the web server template
+cp -R defaults "$out/defaults"
+mkdir -p "$out/bin" "$out/web"
+cp bin/w4os-site "$out/bin/"
+cp web/* "$out/web/"
+
+echo "VERSION_GRAV=$(sed -n 's/^\. .* //p' dependencies.txt)" > "$root/build/packaging.env"
