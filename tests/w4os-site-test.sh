@@ -67,12 +67,11 @@ test_setup_no_mail_makes_a_test_site() {
     assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "send_mail: true"
 }
 
-test_default_languages_keep_the_choice_of_the_menu() {
-    local system="$ROOT/defaults/config/system.yaml"
-    assert_file_contains "$system" "include_default_lang: false"
-    assert_file_contains "$system" "http_accept_language: true"
-    # With the two above, the switch to the default language needs the session (oli-langswitcher, switcher_routes)
-    assert_file_contains "$system" "session_store_active: true"
+test_the_language_switcher_keeps_the_choice_of_the_menu() {
+    # oli-langswitcher keeps the language chosen in the session (session_store_active), which the default language without
+    # prefix and the language of the browser need
+    assert_file_contains "$ROOT/dependencies.txt" "user/plugins/oli-langswitcher"
+    assert_file_contains "$ROOT/defaults/config/system.yaml" "include_default_lang: false"
 }
 
 test_web_apache_listens_on_its_own_port() {
