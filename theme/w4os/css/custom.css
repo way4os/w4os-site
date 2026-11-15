@@ -11,3 +11,4 @@
 .login-status-wrapper { display: none; }
 .w4os-toggle-label { margin-left: .5rem; }
 .overlay .w4os-user-menu, .overlay .oli-langswitcher { margin-bottom: 1rem; }
+.navbar-section.actions .oli-langswitcher { margin: 0; }

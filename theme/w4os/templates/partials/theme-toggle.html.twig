@@ -1,5 +1,5 @@
-{# The tools of the top bar, right of the centered menu: the languages, the menu of the visitor (w4os plugin), then Quark2's day and night switch. #}
-{% include 'partials/oli-langswitcher.html.twig' ignore missing %}
+{# The tools of the top bar, right of the centered menu: the menu of the visitor (w4os plugin), Quark2's day and night switch, then
+   the languages, last. #}
 {% include 'w4os/user-menu.html.twig' ignore missing %}
 {% set labeled = labeled|default(false) %}
 <button type="button"
@@ -17,3 +17,4 @@
     <i class="icon icon-auto  fa-solid fa-circle-half-stroke" aria-hidden="true"></i>
     {% if labeled %}<span class="w4os-toggle-label">{{ 'THEME_QUARK2.THEME_TOGGLE.LABEL'|t }}</span>{% endif %}
 </button>
+{% include 'partials/oli-langswitcher.html.twig' ignore missing %}

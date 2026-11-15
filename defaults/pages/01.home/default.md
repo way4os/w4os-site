@@ -1,8 +1,8 @@
 ---
-title: Home
+title: 'Home'
 cache_enable: false
 ---
-# Welcome to the grid
+# [w4os text="welcome_title" /]
 
 A place to meet, build and explore.[w4os-guest] [Create your avatar](/register), then connect with any OpenSimulator viewer.[/w4os-guest]
 
