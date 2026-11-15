@@ -166,7 +166,13 @@ web() {
             die "Apache refuses the configuration, the site is not enabled: /etc/apache2/sites-available/w4os-site.conf"
         }
         systemctl reload apache2
-        success "the site answers at http://$host${port:+:$port}/"
+        # The address of the site in what it writes (the links of its mails, the pictures), whatever address it is visited at
+        local base="http://$host"
+        [ "$port" = 80 ] || base="$base:$port"
+        yaml_set "$CONFIG/system.yaml" custom_base_url "$base"
+        chown "$OWNER:$OWNER" "$CONFIG/system.yaml" 2>/dev/null || true
+        rm -rf "${W4OS_SITE_CACHE:-/var/cache/w4os-site/cache}"/* 2>/dev/null || true
+        success "the site answers at $base/"
         ;;
     caddy)
         [ -n "$socket" ] || die "Caddy needs PHP-FPM"
