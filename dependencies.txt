@@ -1,5 +1,6 @@
 # What the site bundles, at these versions (packaging/build): path in the Grav root, source, tag or commit.
-# A source that is a folder is a sibling project in development (its committed tree at that ref).
+# A source that is a folder is a sibling project in development (its committed tree at that ref); a zip is a release of a
+# project with its vendor folder (its first folder is the one of the project), a glob takes the newest.
 . https://github.com/getgrav/grav.git 2.2.23
 user/plugins/error https://github.com/getgrav/grav-plugin-error.git 2.0.5
 user/plugins/problems https://github.com/getgrav/grav-plugin-problems.git 3.0.1
@@ -10,4 +11,4 @@ user/plugins/login https://github.com/getgrav/grav-plugin-login.git 3.12.1
 user/plugins/langswitcher https://github.com/getgrav/grav-plugin-langswitcher.git 3.4.3
 user/plugins/oli-langswitcher git@git.magiiic.com:magicoli/grav-plugin-oli-langswitcher.git adef386b61d5005497f28628c3ff4c4f0b00af96
 user/themes/quark2 https://github.com/getgrav/grav-theme-quark2.git 1.1.22
-user/plugins/w4os ../grav-plugin-w4os HEAD
+user/plugins/w4os ../grav-plugin-w4os/dist/grav-plugin-w4os-*.zip -

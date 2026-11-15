@@ -28,6 +28,14 @@ extract() {
 while read -r path source ref; do
     [[ -z ${path:-} || $path == \#* ]] && continue
     [[ $source == ../* ]] && source="$root/$source"
+    if [[ $source == *.zip ]]; then
+        # A release with its vendor folder, the newest of a glob
+        zip=$(ls -t $source 2>/dev/null | head -1)
+        [ -n "$zip" ] || { echo "No release zip: $source (build it in its project: vendor/bin/build-tools build zip)" >&2; exit 1; }
+        rm -rf "$sources/zip" && mkdir -p "$sources/zip" "$grav/$path" && unzip -q "$zip" -d "$sources/zip"
+        cp -R "$sources/zip"/*/. "$grav/$path/"
+        continue
+    fi
     extract "$source" "$ref" "$grav/$path"
     # The PHP dependencies of what has some and does not ship them
     if [ -f "$grav/$path/composer.json" ] && [ ! -d "$grav/$path/vendor" ] && grep -q '"require"' "$grav/$path/composer.json"; then
