@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+# w4os-site: set up the light website of an OpenSimulator grid.
+#
+#   w4os-site setup [--url <helpers>] [--key <key>] [--grid <nick>] [--title <title>]
+#       connect the site to the helpers of a grid and their engine API (asked when not given)
+#   w4os-site status
+#       what the site is connected to, and whether the API answers
+#   w4os-site web apache|caddy|nginx [--host <name>] [--port <port>] [--install]
+#       the configuration of a web server for the site (printed; installed and enabled with --install, Apache only)
+
+PGM=w4os-site
+COMMANDOPTS=setup,status,web
+# Sourced before the options of the shell: bash-tools 1.0.9 stops under set -e when gnu-getopt is not where Homebrew puts it
+source "$(command -v bash-helpers)"
+set -eo pipefail
+
+SHARE=${W4OS_SITE_SHARE:-/usr/share/w4os-site}
+DATA=${W4OS_SITE_DATA:-/var/lib/w4os-site}
+CONFIG="$DATA/config"
+KEY_FILE="$DATA/data/w4os/api.json"
+OWNER=${W4OS_SITE_OWNER:-www-data}
+
+# The value of a top-level key of a YAML file, quotes removed
+yaml_get() {
+    [ -f "$1" ] && sed -n "s/^$2:[[:space:]]*//p" "$1" | head -1 | sed "s/^'\(.*\)'\$/\1/; s/^\"\(.*\)\"\$/\1/" || true
+}
+
+# Set a top-level key of a YAML file to a quoted string
+yaml_set() {
+    local file=$1 key=$2 value=${3//\'/\'\'}
+    mkdir -p "$(dirname "$file")"
+    touch "$file"
+    if grep -q "^$key:" "$file"; then
+        local escaped=${value//\\/\\\\}
+        escaped=${escaped//&/\\&}
+        escaped=${escaped//|/\\|}
+        sed -i.bak "s|^$key:.*|$key: '$escaped'|" "$file" && rm -f "$file.bak"
+    else
+        echo "$key: '$value'" >>"$file"
+    fi
+}
+
+api_key() {
+    [ -f "$KEY_FILE" ] && sed -n 's/.*"api_key"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$KEY_FILE" || true
+}
+
+# GET a path of the engine API with the key of the site; the body, or nothing
+api_get() {
+    local url=$1 key=$2 path=$3
+    curl -fsS --max-time 15 -H "Authorization: Bearer $key" -H 'Accept: application/vnd.api+json' "${url%/}/api$path"
+}
+
+ask() {
+    local prompt=$1 default=${2:-} answer
+    [ -t 0 ] || { echo "$default"; return; }
+    read -r -p "$prompt${default:+ [$default]}: " answer
+    echo "${answer:-$default}"
+}
+
+setup() {
+    local url= key= grid= title=
+    while [ $# -gt 0 ]; do
+        case $1 in
+        --url) url=$2; shift 2 ;;
+        --key) key=$2; shift 2 ;;
+        --grid) grid=$2; shift 2 ;;
+        --title) title=$2; shift 2 ;;
+        *) die "unknown option $1" ;;
+        esac
+    done
+    [ -d "$CONFIG" ] || die "$CONFIG is missing: is the package installed?"
+    url=${url:-$(ask 'Address of the helpers of the grid (https://grid.example.org/helpers)' "$(yaml_get "$CONFIG/plugins/w4os.yaml" url)")}
+    [ -n "$url" ] || die "the address of the helpers is needed"
+    url=${url%/}
+    key=${key:-$(api_key)}
+    # A grid on this machine makes the key itself
+    if [ -z "$key" ] && command -v opensim >/dev/null; then
+        key=$(opensim api-key create "w4os-site $(hostname)" 2>/dev/null | grep -o 'osk_[A-Za-z0-9_-]*' | head -1 || true)
+        [ -z "$key" ] || log "made the API key 'w4os-site $(hostname)' of this machine"
+    fi
+    [ -n "$key" ] || key=$(ask 'API key of the site (opensim api-key create <label>, on the machine of the grid)')
+    [ -n "$key" ] || die "the API key is needed"
+
+    local info
+    info=$(api_get "$url" "$key" /info) || die "the engine API does not answer at $url/api with this key"
+    local name
+    name=$(printf '%s' "$info" | sed -n 's/.*"gridname":"\([^"]*\)".*/\1/p')
+
+    yaml_set "$CONFIG/plugins/w4os.yaml" url "$url"
+    [ -z "$grid" ] || yaml_set "$CONFIG/plugins/w4os.yaml" grid "$grid"
+    title=${title:-$(ask 'Title of the site' "${name:-$(yaml_get "$CONFIG/site.yaml" title)}")}
+    [ -z "$title" ] || yaml_set "$CONFIG/site.yaml" title "$title"
+    mkdir -p "$(dirname "$KEY_FILE")"
+    printf '{"api_key":"%s"}\n' "$key" >"$KEY_FILE"
+    chmod 640 "$KEY_FILE"
+    chown -R "$OWNER:$OWNER" "$CONFIG" "$DATA/data" 2>/dev/null || true
+    rm -rf "${W4OS_SITE_CACHE:-/var/cache/w4os-site/cache}"/* 2>/dev/null || true
+    success "connected to ${name:-the grid} ($url)"
+}
+
+status() {
+    local url key
+    url=$(yaml_get "$CONFIG/plugins/w4os.yaml" url)
+    key=$(api_key)
+    echo "site:    $(yaml_get "$CONFIG/site.yaml" title)"
+    echo "helpers: ${url:-not set}"
+    echo "key:     $([ -n "$key" ] && echo set || echo 'not set')"
+    [ -n "$url" ] && [ -n "$key" ] || die "not connected: w4os-site setup"
+    api_get "$url" "$key" /info >/dev/null && echo "api:     answers" || die "api:     does not answer"
+    curl -fsS --max-time 15 -o /dev/null "$url/blocks/grid-info" && echo "blocks:  answer" || warning "blocks:  do not answer"
+}
+
+# The socket of PHP-FPM, when there is one
+php_socket() {
+    local socket
+    for socket in /run/php/php-fpm.sock /run/php/php*-fpm.sock /run/php/php*-fpm-*default.sock; do
+        [ -S "$socket" ] && echo "$socket" && return
+    done
+    return 0
+}
+
+web() {
+    local server=${1:-} host=localhost port= install=
+    shift || true
+    while [ $# -gt 0 ]; do
+        case $1 in
+        --host) host=$2; shift 2 ;;
+        --port) port=$2; shift 2 ;;
+        --install) install=1; shift ;;
+        *) die "unknown option $1" ;;
+        esac
+    done
+    local socket
+    socket=$(php_socket)
+    case $server in
+    apache)
+        port=${port:-80}
+        local listen= php= conf
+        [ "$port" = 80 ] || [ "$port" = 443 ] || listen="Listen $port"
+        [ -z "$socket" ] || php=$(printf '<FilesMatch "\\.php$">\n        SetHandler "proxy:unix:%s|fcgi://localhost"\n    </FilesMatch>' "$socket")
+        conf=$(<"$SHARE/web/apache.conf")
+        conf=${conf//\{\{host\}\}/$host}
+        conf=${conf//\{\{port\}\}/$port}
+        conf=${conf//\{\{listen\}\}/$listen}
+        conf=${conf//\{\{php\}\}/$php}
+        if [ -z "$install" ]; then
+            printf '%s\n' "$conf"
+            return
+        fi
+        require a2ensite apache2ctl
+        printf '%s\n' "$conf" >/etc/apache2/sites-available/w4os-site.conf
+        a2enmod -q rewrite proxy_fcgi >/dev/null
+        a2ensite -q w4os-site >/dev/null
+        apache2ctl configtest 2>/dev/null || {
+            a2dissite -q w4os-site >/dev/null
+            die "Apache refuses the configuration, the site is not enabled: /etc/apache2/sites-available/w4os-site.conf"
+        }
+        systemctl reload apache2
+        success "the site answers at http://$host${port:+:$port}/"
+        ;;
+    caddy)
+        [ -n "$socket" ] || die "Caddy needs PHP-FPM"
+        sed "s|^localhost|${host}${port:+:$port}|; s|^root \* \.|root * $SHARE/grav|; s|php_fastcgi .*|php_fastcgi unix/$socket|" "$SHARE/grav/webserver-configs/Caddyfile"
+        ;;
+    nginx)
+        sed "s|root /home/USER/www/html;|root $SHARE/grav;|; s|server_name localhost;|server_name $host;|; s|listen 80;|listen ${port:-80};|; s|unix:/var/run/php/php-fpm.sock|unix:${socket:-/run/php/php-fpm.sock}|" "$SHARE/grav/webserver-configs/nginx.conf"
+        ;;
+    *) die "w4os-site web apache|caddy|nginx [--host <name>] [--port <port>] [--install]" ;;
+    esac
+}
+
+case ${COMMAND:-} in
+setup | status | web)
+    # Older bash-tools keep the command in the arguments
+    [ "${1:-}" != "$COMMAND" ] || shift
+    $COMMAND "$@"
+    ;;
+*)
+    sed -n '3,10p' "$0" | sed 's/^# \{0,1\}//'
+    exit 1
+    ;;
+esac
