@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # w4os-site: set up the light website of an OpenSimulator grid.
 #
-#   w4os-site setup [--url <helpers>] [--key <key>] [--grid <nick>] [--title <title>]
-#       connect the site to the helpers of a grid and their engine API (asked when not given)
+#   w4os-site setup [--url <helpers>] [--key <key>] [--grid <nick>] [--title <title>] [--no-mail | --mail]
+#       connect the site to the helpers of a grid and their engine API (asked when not given); --no-mail on a test site:
+#       the engine mails nothing, the confirmation links are shown on the page
 #   w4os-site status
 #       what the site is connected to, and whether the API answers
 #   w4os-site web apache|caddy|nginx [--host <name>] [--port <port>] [--install]
@@ -25,18 +26,23 @@ yaml_get() {
     [ -f "$1" ] && sed -n "s/^$2:[[:space:]]*//p" "$1" | head -1 | sed "s/^'\(.*\)'\$/\1/; s/^\"\(.*\)\"\$/\1/" || true
 }
 
-# Set a top-level key of a YAML file to a quoted string
+# Set a top-level key of a YAML file to a quoted string (or as it is, with --raw: true, false, a number)
 yaml_set() {
+    local raw=
+    [ "$1" != --raw ] || { raw=1; shift; }
     local file=$1 key=$2 value=${3//\'/\'\'}
+    [ -z "$raw" ] || value=$3
     mkdir -p "$(dirname "$file")"
     touch "$file"
     if grep -q "^$key:" "$file"; then
         local escaped=${value//\\/\\\\}
         escaped=${escaped//&/\\&}
         escaped=${escaped//|/\\|}
-        sed -i.bak "s|^$key:.*|$key: '$escaped'|" "$file" && rm -f "$file.bak"
+        [ -n "$raw" ] || escaped="'$escaped'"
+        sed -i.bak "s|^$key:.*|$key: $escaped|" "$file" && rm -f "$file.bak"
     else
-        echo "$key: '$value'" >>"$file"
+        [ -n "$raw" ] || value="'$value'"
+        echo "$key: $value" >>"$file"
     fi
 }
 
@@ -58,9 +64,11 @@ ask() {
 }
 
 setup() {
-    local url= key= grid= title=
+    local url= key= grid= title= mail=
     while [ $# -gt 0 ]; do
         case $1 in
+        --no-mail) mail=false; shift ;;
+        --mail) mail=true; shift ;;
         --url) url=$2; shift 2 ;;
         --key) key=$2; shift 2 ;;
         --grid) grid=$2; shift 2 ;;
@@ -88,6 +96,7 @@ setup() {
 
     yaml_set "$CONFIG/plugins/w4os.yaml" url "$url"
     [ -z "$grid" ] || yaml_set "$CONFIG/plugins/w4os.yaml" grid "$grid"
+    [ -z "$mail" ] || yaml_set --raw "$CONFIG/plugins/w4os.yaml" send_mail "$mail"
     title=${title:-$(ask 'Title of the site' "${name:-$(yaml_get "$CONFIG/site.yaml" title)}")}
     [ -z "$title" ] || yaml_set "$CONFIG/site.yaml" title "$title"
     mkdir -p "$(dirname "$KEY_FILE")"
@@ -105,6 +114,7 @@ status() {
     echo "site:    $(yaml_get "$CONFIG/site.yaml" title)"
     echo "helpers: ${url:-not set}"
     echo "key:     $([ -n "$key" ] && echo set || echo 'not set')"
+    [ "$(yaml_get "$CONFIG/plugins/w4os.yaml" send_mail)" != false ] || echo "mail:    off (test site: the links are shown on the page)"
     [ -n "$url" ] && [ -n "$key" ] || die "not connected: w4os-site setup"
     api_get "$url" "$key" /info >/dev/null && echo "api:     answers" || die "api:     does not answer"
     curl -fsS --max-time 15 -o /dev/null "$url/blocks/grid-info" && echo "blocks:  answer" || warning "blocks:  do not answer"

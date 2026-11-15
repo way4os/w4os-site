@@ -6,7 +6,8 @@ set_up_before_script() {
     PORT=$((20000 + RANDOM % 20000))
     php -S "127.0.0.1:$PORT" "$ROOT/tests/fixtures/api.php" >/dev/null 2>&1 &
     API_PID=$!
-    sleep 0.5
+    local tries=50
+    until curl -s -o /dev/null "http://127.0.0.1:$PORT/" || [ $((tries -= 1)) -eq 0 ]; do sleep 0.1; done
 }
 
 tear_down_after_script() {
@@ -56,6 +57,14 @@ test_setup_refuses_a_key_the_api_refuses() {
 test_setup_keeps_a_title_with_a_quote() {
     site setup --url "http://127.0.0.1:$PORT" --key osk_test --title "Ada's grid" >/dev/null
     assert_file_contains "$SITE/data/config/site.yaml" "title: 'Ada''s grid'"
+}
+
+test_setup_no_mail_makes_a_test_site() {
+    site setup --url "http://127.0.0.1:$PORT" --key osk_test --no-mail >/dev/null
+    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "send_mail: false"
+    assert_contains "mail:    off" "$(site status)"
+    site setup --url "http://127.0.0.1:$PORT" --key osk_test --mail >/dev/null
+    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "send_mail: true"
 }
 
 test_web_apache_listens_on_its_own_port() {

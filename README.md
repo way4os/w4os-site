@@ -17,7 +17,7 @@ sudo w4os-site setup                  # asks the address of the helpers and the 
 sudo w4os-site web apache --host grid.example.org --install
 ```
 
-- `setup` asks the address of the helpers of the grid (`https://grid.example.org/helpers`) and the API key of the site, made on the machine of the grid with `opensim api-key create w4os-site`; it checks that the API answers and names the site after the grid. Options: `--url`, `--key`, `--grid` (when the API serves several grids), `--title`.
+- `setup` asks the address of the helpers of the grid (`https://grid.example.org/helpers`) and the API key of the site, made on the machine of the grid with `opensim api-key create w4os-site`; it checks that the API answers and names the site after the grid. Options: `--url`, `--key`, `--grid` (when the API serves several grids), `--title`, and `--no-mail` for a test site (the engine mails nothing, the confirmation links are shown on the page; `--mail` turns the mails back on).
 - `web apache|caddy|nginx [--host <name>] [--port <port>]` prints the configuration of the web server for the site; `--install` writes and enables it (Apache).
 - `status` tells what the site is connected to and whether the API answers.
 
