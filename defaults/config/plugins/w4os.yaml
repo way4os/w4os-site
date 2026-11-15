@@ -1,0 +1,4 @@
+enabled: true
+# Set by w4os-site setup: the address of the helpers of the grid (the engine API is its /api). The key is kept in
+# user/data/w4os/api.json.
+url: ''

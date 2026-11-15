@@ -1,0 +1,23 @@
+enabled: true
+# The settings of Quark2
+header-fixed: true
+header-animated: true
+header-transparent: false
+header-dark: false
+header-light: false
+sticky-footer: true
+layout-fluid: false
+theme-mode: auto
+accent-color: '#2b7a78'
+blog-page: '/blog'
+fontawesome:
+  enabled: true
+  local: false
+streams:
+  schemes:
+    theme:
+      type: ReadOnlyStream
+      prefixes:
+        '':
+          - user://themes/w4os
+          - user://themes/quark2

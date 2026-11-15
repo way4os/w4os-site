@@ -1,0 +1,11 @@
+# What the site bundles, at these versions (packaging/build): path in the Grav root, source, tag or commit.
+# A source that is a folder is a sibling project in development (its committed tree at that ref).
+. https://github.com/getgrav/grav.git 2.2.23
+user/plugins/error https://github.com/getgrav/grav-plugin-error.git 2.0.5
+user/plugins/problems https://github.com/getgrav/grav-plugin-problems.git 3.0.1
+user/plugins/shortcode-core https://github.com/getgrav/grav-plugin-shortcode-core.git 6.2.7
+user/plugins/email https://github.com/getgrav/grav-plugin-email.git 5.3.4
+user/plugins/form https://github.com/getgrav/grav-plugin-form.git 9.1.39
+user/plugins/login https://github.com/getgrav/grav-plugin-login.git 3.12.1
+user/themes/quark2 https://github.com/getgrav/grav-theme-quark2.git 1.1.22
+user/plugins/w4os ../grav-plugin-w4os HEAD

@@ -1,0 +1,28 @@
+home:
+  alias: '/home'
+pages:
+  theme: w4os
+  markdown:
+    extra: true
+  process:
+    twig: false
+languages:
+  supported: [en, fr]
+  include_default_lang: false
+  translations: true
+  http_accept_language: true
+cache:
+  enabled: true
+  check:
+    method: file
+twig:
+  cache: true
+errors:
+  display: 0
+  log: true
+debugger:
+  enabled: false
+session:
+  enabled: true
+gpm:
+  releases: stable

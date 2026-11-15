@@ -1,0 +1,17 @@
+name: w4os
+slug: w4os
+type: theme
+version: 0.1.0
+description: The light theme of the w4os site, a child of Quark2.
+icon: globe
+author:
+  name: Magìiíc
+license: AGPL-3.0-or-later
+dependencies:
+  - { name: quark2, version: '>=1.1.0' }
+form:
+  validation: loose
+  fields:
+    accent-color:
+      type: colorpicker
+      label: Accent color
