@@ -67,6 +67,14 @@ test_setup_no_mail_makes_a_test_site() {
     assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "send_mail: true"
 }
 
+test_default_languages_keep_the_choice_of_the_menu() {
+    local system="$ROOT/defaults/config/system.yaml"
+    assert_file_contains "$system" "include_default_lang: false"
+    assert_file_contains "$system" "http_accept_language: true"
+    # With the two above, the switch to the default language needs the session (oli-langswitcher, switcher_routes)
+    assert_file_contains "$system" "session_store_active: true"
+}
+
 test_web_apache_listens_on_its_own_port() {
     local output
     output=$(site web apache --host grid.example.org --port 8830)

@@ -9,9 +9,14 @@ pages:
 languages:
   # English and the languages of the OpenSim suite (the locales of opensim-helpers, and Dutch)
   supported: [en, fr, de, it, nl, pt-BR, cy]
+  default_lang: en
   include_default_lang: false
   translations: true
+  translations_fallback: true
+  # The language of the browser for a first visit, then the one chosen in the menu, kept in the session: without it the link to
+  # English (no prefix) goes back to the language of the browser
   http_accept_language: true
+  session_store_active: true
 cache:
   enabled: true
   check:
