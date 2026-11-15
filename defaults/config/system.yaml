@@ -7,7 +7,8 @@ pages:
   process:
     twig: false
 languages:
-  supported: [en, fr]
+  # The languages of the OpenSim suite; the main five are still to choose
+  supported: [en, fr, de, it, nl, pt-BR, cy]
   include_default_lang: false
   translations: true
   http_accept_language: true

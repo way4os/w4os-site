@@ -1,0 +1,19 @@
+{# The tools of the top bar, right of the centered menu: the languages, the menu of the visitor (w4os plugin), then Quark2's day and night switch. #}
+{% include 'partials/oli-langswitcher.html.twig' ignore missing %}
+{% include 'w4os/user-menu.html.twig' ignore missing %}
+{% set labeled = labeled|default(false) %}
+<button type="button"
+        class="theme-toggle"
+        data-theme-toggle
+        data-label-auto="{{ 'THEME_QUARK2.THEME_TOGGLE.AUTO'|t|e('html_attr') }}"
+        data-label-light="{{ 'THEME_QUARK2.THEME_TOGGLE.LIGHT'|t|e('html_attr') }}"
+        data-label-dark="{{ 'THEME_QUARK2.THEME_TOGGLE.DARK'|t|e('html_attr') }}"
+        data-aria-template="{{ 'THEME_QUARK2.THEME_TOGGLE.ARIA_LABEL'|t|e('html_attr') }}"
+        data-title-template="{{ 'THEME_QUARK2.THEME_TOGGLE.TITLE'|t|e('html_attr') }}"
+        aria-label="{{ 'THEME_QUARK2.THEME_TOGGLE.LABEL'|t|e('html_attr') }}"
+        title="{{ 'THEME_QUARK2.THEME_TOGGLE.LABEL'|t|e('html_attr') }}">
+    <i class="icon icon-sun   fa-solid fa-sun"   aria-hidden="true"></i>
+    <i class="icon icon-moon  fa-solid fa-moon"  aria-hidden="true"></i>
+    <i class="icon icon-auto  fa-solid fa-circle-half-stroke" aria-hidden="true"></i>
+    {% if labeled %}<span class="w4os-toggle-label">{{ 'THEME_QUARK2.THEME_TOGGLE.LABEL'|t }}</span>{% endif %}
+</button>

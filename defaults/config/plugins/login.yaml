@@ -1,0 +1,4 @@
+enabled: true
+# After signing in, the account of the avatar
+redirect_after_login: true
+route_after_login: /account

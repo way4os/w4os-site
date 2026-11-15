@@ -21,7 +21,9 @@ sudo w4os-site web apache --host grid.example.org --install
 - `web apache|caddy|nginx [--host <name>] [--port <port>]` prints the configuration of the web server for the site; `--install` writes and enables it (Apache).
 - `status` tells what the site is connected to and whether the API answers.
 
-Then edit the pages in `/var/lib/w4os-site/pages` (Markdown, English and French), with the blocks of the helpers:
+The top bar has the menu of the site in the middle, and on the right the languages (oli-langswitcher), the menu of the visitor (sign in, or the avatar signed in) and the day and night switch. The languages are those of the OpenSim suite (`languages.supported` in `/var/lib/w4os-site/config/system.yaml`).
+
+Then edit the pages in `/var/lib/w4os-site/pages` (Markdown, English and French), with the blocks of the helpers. Links between pages are written without the language (`[Create your avatar](/register)`): Grav adds it.
 
 ```markdown
 [w4os block="grid-info" /]

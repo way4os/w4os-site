@@ -3,7 +3,7 @@ title: Accueil
 ---
 # Bienvenue sur la grille
 
-Un lieu pour se rencontrer, construire et explorer. [Créez votre avatar](/fr/register), puis connectez-vous avec n'importe quel viewer OpenSimulator.
+Un lieu pour se rencontrer, construire et explorer. [Créez votre avatar](/register), puis connectez-vous avec n'importe quel viewer OpenSimulator.
 
 [w4os block="grid-info" /]
 

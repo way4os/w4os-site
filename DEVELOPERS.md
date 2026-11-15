@@ -5,8 +5,8 @@ The site is Grav, its official plugins and the w4os plugin, assembled at fixed v
 ## Layout
 
 - `dependencies.txt`: Grav, its plugins and the theme Quark2 at their tags; `grav-plugin-w4os` from the sibling folder `../grav-plugin-w4os` at `HEAD` while it has no release (its committed tree only).
-- `theme/w4os`: the light theme, a child of Quark2 (Grav theme inheritance: the `theme://` stream looks in w4os, then in quark2): the name of the grid as logo, its footer, a few styles.
-- `defaults/`: the settings (`config/`) and the pages (`pages/`, English and French) of a new site, copied to `/var/lib/w4os-site` by the postinst on first install only.
+- `theme/w4os`: the light theme, a child of Quark2 (Grav theme inheritance: the `theme://` stream looks in w4os, then in quark2): the name of the grid as logo, the main menu centered and on the right only the tools (`partials/theme-toggle.html.twig`: the languages, the menu of the visitor of the w4os plugin, day and night), its footer.
+- `defaults/`: the settings (`config/`) and the pages (`pages/`, English and French) of a new site, copied to `/var/lib/w4os-site` by the postinst on first install only (an upgrade does not bring new defaults to an existing site).
 - `grav.env`: the `.env` of Grav in the package, which puts its caches, logs, tmp and backups out of the code.
 - `bin/w4os-site`: the installer (bash, with the functions of bash-tools): `setup`, `status`, `web`.
 - `web/apache.conf`: the Apache template of `w4os-site web apache`; Caddy and nginx come from Grav's own `webserver-configs`.

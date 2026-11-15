@@ -1,3 +1,13 @@
 /* The w4os site: small touches over Quark2 */
 .w4os-logo { font-weight: 700; font-size: 1.25rem; }
 #footer p { opacity: .75; }
+
+/* The main menu centered, the tools of the visitor on the right */
+@media (min-width: 861px) {
+    #header .navbar { display: grid; grid-template-columns: 1fr auto 1fr; }
+    #header .navbar-section.desktop-menu { justify-content: center; }
+    #header .navbar-section.actions { justify-self: end; margin-left: 0; }
+}
+.login-status-wrapper { display: none; }
+.w4os-toggle-label { margin-left: .5rem; }
+.overlay .w4os-user-menu, .overlay .oli-langswitcher { margin-bottom: 1rem; }

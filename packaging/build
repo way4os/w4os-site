@@ -17,7 +17,9 @@ extract() {
         repo=$source
     else
         repo="$sources/$(basename "$source" .git)-$ref"
-        [ -d "$repo/.git" ] || git -c advice.detachedHead=false clone -q --depth 1 --branch "$ref" "$source" "$repo"
+        # A tag or a branch at once, a commit with the whole history
+        [ -d "$repo/.git" ] || git -c advice.detachedHead=false clone -q --depth 1 --branch "$ref" "$source" "$repo" 2>/dev/null ||
+            git clone -q "$source" "$repo"
     fi
     mkdir -p "$target"
     git -C "$repo" archive --format=tar "$ref" | tar -x -C "$target"
