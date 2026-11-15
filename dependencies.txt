@@ -9,6 +9,6 @@ user/plugins/email https://github.com/getgrav/grav-plugin-email.git 5.3.4
 user/plugins/form https://github.com/getgrav/grav-plugin-form.git 9.1.39
 user/plugins/login https://github.com/getgrav/grav-plugin-login.git 3.12.1
 user/plugins/langswitcher https://github.com/getgrav/grav-plugin-langswitcher.git 3.4.3
-user/plugins/oli-langswitcher git@git.magiiic.com:magicoli/grav-plugin-oli-langswitcher.git adef386b61d5005497f28628c3ff4c4f0b00af96
+user/plugins/oli-langswitcher ../sites/grav-plugin-oli-langswitcher 3fe6f6c
 user/themes/quark2 https://github.com/getgrav/grav-theme-quark2.git 1.1.22
 user/plugins/w4os ../grav-plugin-w4os/dist/grav-plugin-w4os-*.zip -

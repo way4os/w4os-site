@@ -5,7 +5,3 @@ author:
   email: ''
 metadata:
   description: 'An OpenSimulator grid: create your avatar and connect with any viewer.'
-# The flag of a language whose code is not a country (oli-langswitcher); en is gb
-language_flags:
-  pt-BR: br
-  cy: gb-wls
