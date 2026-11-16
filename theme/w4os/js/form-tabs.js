@@ -36,3 +36,21 @@ document.querySelectorAll('.form-tabs .tabs-nav').forEach((nav) => {
     });
     sync();
 });
+
+// The text areas that grow with their text (class w4os-autogrow), for the browsers without CSS field-sizing: on load, as they
+// are typed in, and when the tab they are in opens
+if (!(window.CSS && CSS.supports('field-sizing', 'content'))) {
+    const areas = [...document.querySelectorAll('textarea.w4os-autogrow')];
+    const grow = (area) => {
+        if (area.offsetParent === null) {
+            return;
+        }
+        area.style.height = 'auto';
+        area.style.height = `${area.scrollHeight + area.offsetHeight - area.clientHeight}px`;
+    };
+    areas.forEach((area) => {
+        area.addEventListener('input', () => grow(area));
+        grow(area);
+    });
+    document.addEventListener('click', (event) => event.target.closest?.('[data-tabid]') && setTimeout(() => areas.forEach(grow)));
+}

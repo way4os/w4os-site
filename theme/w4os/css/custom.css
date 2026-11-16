@@ -46,3 +46,26 @@ a:hover { color: var(--q2-link-hover); }
 /* The links of the w4os plugin under the button, inside the panel of the Login plugin */
 #grav-login:has(+ .w4os-login-links) { margin-bottom: 0; padding-bottom: 4rem; }
 #grav-login + .w4os-login-links { position: relative; margin: -3rem auto 5rem; }
+
+/* Tom Select (the languages of a profile) as a field of the theme: one border, the theme's colors and focus ring */
+.ts-wrapper { border: 0; padding: 0; background: none; box-shadow: none; height: auto; }
+.ts-wrapper .ts-control {
+    border: var(--pico-border-width) solid var(--pico-form-element-border-color);
+    border-radius: var(--pico-border-radius);
+    background-color: var(--pico-form-element-background-color);
+    color: var(--pico-form-element-color);
+    min-height: calc(1rem * var(--pico-line-height) + var(--pico-form-element-spacing-vertical) * 2 + var(--pico-border-width) * 2);
+    padding: calc(var(--pico-form-element-spacing-vertical) / 2) var(--pico-form-element-spacing-horizontal);
+    align-items: center;
+    box-shadow: none;
+}
+/* The focus ring of Quark2's fields (its .form-input:focus) */
+.ts-wrapper.focus .ts-control {
+    border-color: transparent;
+    box-shadow: 0 0 0 2px var(--q2-focus-ring), 0 0 0 3px var(--q2-bg);
+}
+.ts-wrapper .ts-control > input {
+    flex: 1 1 4rem; width: auto; height: auto; min-height: 0; margin: 0; padding: 0;
+    border: 0; background: none; box-shadow: none; color: inherit;
+}
+.ts-dropdown { background-color: var(--pico-form-element-background-color); color: var(--pico-form-element-color); border-color: var(--pico-form-element-border-color); }
