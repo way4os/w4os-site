@@ -12,3 +12,11 @@
 .w4os-toggle-label { margin-left: .5rem; }
 .overlay .w4os-user-menu, .overlay .oli-langswitcher { margin-bottom: 1rem; }
 .navbar-section.actions .oli-langswitcher { margin: 0; }
+
+/* The login form: the placeholders show, the labels stay for screen readers */
+#grav-login .form-label-wrapper { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+#grav-login .button-wrapper { display: flex; flex-direction: column; gap: .75rem; }
+#grav-login .button-wrapper button { width: 100%; }
+/* The links of the w4os plugin under the button, inside the panel of the Login plugin */
+#grav-login:has(+ .w4os-login-links) { margin-bottom: 0; padding-bottom: 4rem; }
+#grav-login + .w4os-login-links { position: relative; margin: -3rem auto 5rem; }

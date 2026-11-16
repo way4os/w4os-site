@@ -1,0 +1,8 @@
+{# The page of the Login plugin, with the links of the w4os plugin under its button #}
+{% extends 'partials/base.html.twig' %}
+
+{% block content %}
+    {% include 'partials/messages.html.twig' %}
+    {% include 'partials/login-form.html.twig' %}
+    {% if not grav.user.authenticated %}{% include 'w4os/login-links.html.twig' %}{% endif %}
+{% endblock %}

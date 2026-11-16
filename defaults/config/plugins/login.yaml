@@ -2,3 +2,5 @@ enabled: true
 # After signing in, the account of the avatar
 redirect_after_login: true
 route_after_login: /account
+# Lost password: the page of the w4os plugin, linked under the button (no button of the Login plugin)
+route_forgot: false
