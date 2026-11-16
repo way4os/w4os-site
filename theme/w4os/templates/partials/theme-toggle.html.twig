@@ -1,5 +1,6 @@
-{# The tools of the top bar, right of the centered menu: the menu of the visitor (w4os plugin), Quark2's day and night switch, then
-   the languages, last. #}
+{# The tools of the top bar, right of the centered menu: the admin menu (managers) and the menu of the visitor (w4os plugin),
+   Quark2's day and night switch, then the languages, last. #}
+{% include 'w4os/admin-menu.html.twig' ignore missing %}
 {% include 'w4os/user-menu.html.twig' ignore missing %}
 {% set labeled = labeled|default(false) %}
 <button type="button"
