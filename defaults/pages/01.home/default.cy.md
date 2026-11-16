@@ -4,7 +4,7 @@ cache_enable: false
 ---
 # [w4os text="welcome_title" /]
 
-Lle i gyfarfod, adeiladu ac archwilio.[w4os-guest] [Crëwch eich avatar](/register), yna cysylltwch ag unrhyw wyliwr OpenSimulator.[/w4os-guest]
+Lle i gyfarfod, adeiladu ac archwilio.[w4os-guest][w4os-register] [Crëwch eich avatar](/register), yna cysylltwch ag unrhyw wyliwr OpenSimulator.[/w4os-register][/w4os-guest]
 
 [w4os block="grid-info" /]
 

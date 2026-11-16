@@ -74,6 +74,13 @@ test_the_language_switcher_keeps_the_choice_of_the_menu() {
     assert_file_contains "$ROOT/defaults/config/system.yaml" "include_default_lang: false"
 }
 
+test_the_default_pages_link_to_registration_only_while_it_is_open() {
+    # Every line of a default page that links to the registration page is inside [w4os-register]...[/w4os-register]
+    local unguarded
+    unguarded=$(grep -h '(/register)' "$ROOT"/defaults/pages/*/*.md | grep -v '\[w4os-register\].*(/register).*\[/w4os-register\]' || true)
+    assert_empty "$unguarded"
+}
+
 test_web_apache_listens_on_its_own_port() {
     local output
     output=$(site web apache --host grid.example.org --port 8830)
