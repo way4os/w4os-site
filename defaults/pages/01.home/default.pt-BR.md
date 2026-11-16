@@ -2,6 +2,8 @@
 title: 'Início'
 cache_enable: false
 template: w4os/splash
+# The full width, like the splash page of the helpers
+body_classes: layout-fluid
 ---
 # [w4os text="welcome_title" /]
 
