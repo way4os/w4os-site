@@ -50,3 +50,6 @@ a:hover { color: var(--q2-link-hover); }
 /* The top bar and the footer as wide on a full-width page (layout-fluid, the home page) as on the others: Quark2's container
    width, whatever the width of the content below */
 body.layout-fluid #header > .container, body.layout-fluid #footer > .container { max-width: 1200px; }
+
+/* A card with no header (the blocks of the dashboard) spaced at its top as one with a header */
+.card > .card-body:first-child { padding-top: 1.25rem; }
