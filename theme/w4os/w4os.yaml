@@ -23,6 +23,9 @@ streams:
         '':
           - user://themes/w4os
           - user://themes/quark2
+        # Quark2's own templates as @quark2, for the ones this theme extends
+        'quark2/':
+          - user://themes/quark2
         # The logo and the favicon the site sets (Quark2's custom_logo and custom_favicon) are kept with the data of the site
         'images':
           - user://data/theme/images
