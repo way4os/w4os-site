@@ -40,6 +40,23 @@ Then edit the pages in `/var/lib/w4os-site/pages` (Markdown, English and French)
 | Caches | `/var/cache/w4os-site` |
 | Logs | `/var/log/w4os-site` |
 
+## Grav admin (optional)
+
+The site needs no admin: the avatars are managed on the site itself, by the managers of the grid (the w4os plugin). Grav's admin
+(`admin2`, with the `api` plugin it needs) can be added for the pages and the settings:
+
+```bash
+cd /usr/share/w4os-site/grav
+sudo php bin/gpm install admin2
+sudo chown -R www-data:www-data /var/lib/w4os-site /var/cache/w4os-site /var/log/w4os-site
+sudo -u www-data php bin/plugin login new-user    # an account of the site, with the admin access
+```
+
+Then open `/admin`. It is kept by the upgrades of the package (its folders are not the package's) and saves the settings in
+`/var/lib/w4os-site/config`. To remove it, delete its folders: `sudo rm -r user/plugins/admin2 user/plugins/api`. Never
+`bin/gpm uninstall`: it also removes the plugins of the package that admin2 shares (login, email, shortcode-core); `sudo apt
+install --reinstall w4os-site` puts them back.
+
 ## License
 
 AGPL-3.0-or-later.
