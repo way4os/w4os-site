@@ -3,9 +3,10 @@
    Quark2's partials/base.html.twig. #}
 {% extends '@quark2/partials/base.html.twig' %}
 
-{# The tabs of the forms reachable from the keyboard (js/form-tabs.js) #}
+{# jQuery, which the Form plugin's own scripts need (its tabs), and the tabs of the forms reachable from the keyboard (js/form-tabs.js) #}
 {% block javascripts %}
     {{ parent() }}
+    {% do assets.add('jquery', 101) %}
     {% do assets.addJs('theme://js/form-tabs.js', {group: 'bottom', loading: 'defer'}) %}
 {% endblock %}
 
