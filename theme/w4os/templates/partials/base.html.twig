@@ -10,6 +10,13 @@
     {% do assets.addJs('theme://js/form-tabs.js', {group: 'bottom', loading: 'defer'}) %}
 {% endblock %}
 
+{# The messages of the site at the start of the content; the marker is where the w4os plugin adds the ones given while the
+   content rendered (the notices of the blocks of the helpers) #}
+{% block messages %}
+    {{ parent() }}
+    <!-- w4os:messages -->
+{% endblock %}
+
 {% block head %}
     <meta charset="utf-8" />
     {% set slogan = w4os_slogan() %}
