@@ -45,8 +45,10 @@ document.querySelectorAll('.form-tabs .tabs-nav').forEach((nav) => {
     });
     sync();
     // The tab the address names, once the Form plugin's script listens
-    const asked = tabs.find((tab) => `#${name(tab)}` === location.hash);
-    asked && document.addEventListener('DOMContentLoaded', () => asked.click());
+    const asked = () => tabs.find((tab) => `#${name(tab)}` === location.hash);
+    asked() && document.addEventListener('DOMContentLoaded', () => asked().click());
+    // A link to a tab of the page (#picks) opens it
+    window.addEventListener('hashchange', () => asked()?.click());
 });
 
 // The text areas that grow with their text (class w4os-autogrow), for the browsers without CSS field-sizing: on load, as they
