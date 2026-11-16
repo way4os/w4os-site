@@ -21,6 +21,9 @@ cache:
     method: file
 twig:
   cache: true
+assets:
+  # The styles and scripts with the date of their file: a browser takes a changed one at once
+  enable_asset_timestamp: true
 errors:
   display: 0
   log: true
