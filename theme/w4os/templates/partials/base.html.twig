@@ -3,6 +3,12 @@
    Quark2's partials/base.html.twig. #}
 {% extends '@quark2/partials/base.html.twig' %}
 
+{# The tabs of the forms reachable from the keyboard (js/form-tabs.js) #}
+{% block javascripts %}
+    {{ parent() }}
+    {% do assets.addJs('theme://js/form-tabs.js', {group: 'bottom', loading: 'defer'}) %}
+{% endblock %}
+
 {% block head %}
     <meta charset="utf-8" />
     {% set slogan = w4os_slogan() %}
