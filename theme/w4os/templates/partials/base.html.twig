@@ -1,11 +1,13 @@
-{# Quark2's page (1.1.22), its head block copied with one change: the home page is titled with the name of the site alone, the
-   other pages "<page> | <site>". Grav's deferred blocks cannot be filtered, so the block is copied: keep it in step with
+{# Quark2's page (1.1.22), its head block copied with one change: the home page is titled "<site> | <slogan>" (the theme's
+   slogan, by language; the site alone without one), the other pages "<page> | <site>". Grav's deferred blocks cannot be filtered, so the block is copied: keep it in step with
    Quark2's partials/base.html.twig. #}
 {% extends '@quark2/partials/base.html.twig' %}
 
 {% block head %}
     <meta charset="utf-8" />
-    <title>{% if page.title and not page.home %}{{ page.title|e('html') }} | {% endif %}{{ site.title|e('html') }}</title>
+    {% set slogan = theme_var('slogan') %}
+    {% if slogan is iterable %}{% set slogan = slogan[grav.language.getActive ?: site.default_lang] ?? slogan[site.default_lang] ?? null %}{% endif %}
+    <title>{% if page.home %}{{ site.title|e('html') }}{% if slogan %} | {{ slogan|e('html') }}{% endif %}{% else %}{% if page.title %}{{ page.title|e('html') }} | {% endif %}{{ site.title|e('html') }}{% endif %}</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">

@@ -15,6 +15,12 @@ form:
     accent-color:
       type: colorpicker
       label: Accent color
+    slogan:
+      type: array
+      label: Slogan
+      help: By language (en, fr...). The title of the home page is the title of the site, then the slogan of its language (else the one of the default language).
+      placeholder_key: en
+      placeholder_value: 'A place to meet, build and explore'
     grid_logo:
       type: toggle
       label: Logo of the grid
