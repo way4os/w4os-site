@@ -1,5 +1,14 @@
+{# The name of the grid, then w4os (its long logo, which says w4os) and OpenSimulator (its logo beside its name) #}
+{% set long_logo = w4os_logo('w4os-logo-v1-long-300x75.png') %}
+{% set opensim_logo = w4os_logo('opensimulator-logo.png') %}
 <footer id="footer" class="section section-tight">
     <div class="container">
-        <p>{{ site.title }} · <a href="https://w4os.org">w4os</a> · <a href="http://opensimulator.org">OpenSimulator</a></p>
+        <p class="w4os-credits">
+            <span>{{ site.title }}</span>
+            <span aria-hidden="true">·</span>
+            <a href="https://w4os.org">{% if long_logo %}<img class="w4os-credit-logo" src="{{ long_logo }}" alt="w4os">{% else %}w4os{% endif %}</a>
+            <span aria-hidden="true">·</span>
+            <a href="http://opensimulator.org">{% if opensim_logo %}<img class="w4os-credit-icon" src="{{ opensim_logo }}" alt=""> {% endif %}OpenSimulator</a>
+        </p>
     </div>
 </footer>

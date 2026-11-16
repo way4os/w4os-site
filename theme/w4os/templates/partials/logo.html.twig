@@ -1,7 +1,9 @@
-{# Quark2's logo, with the name of the grid instead of the Grav logo when no logo is set. #}
+{# Quark2's logo when the site sets one (custom_logo); else the logo of the grid (its own, else the OpenSimulator logo) before its
+   name, unless the theme's grid_logo is off. #}
 {% set logo = theme_var(mobile ? 'custom_logo_mobile' : 'custom_logo') %}
 {% set logo_first = (logo is iterable and logo|length > 0) ? logo|first : null %}
 {% set logo_file = logo_first.name|default(null) %}
+{% set grid_logo = logo_file or theme_var('grid_logo') is same as(false) ? null : w4os_grid_logo() %}
 <a href="{{ home_url }}" class="navbar-brand" aria-label="{{ site.title }}" title="{{ site.title }}">
 {% if logo_file %}
     {% if logo_file|lower ends with '.svg' %}
@@ -10,6 +12,7 @@
         <img src="{{ url('theme://images/logo/' ~ logo_file) }}" alt="{{ site.title }}" />
     {% endif %}
 {% else %}
+    {% if grid_logo %}<img class="w4os-grid-logo" src="{{ grid_logo }}" alt="">{% endif %}
     <span class="w4os-logo">{{ site.title }}</span>
 {% endif %}
 </a>

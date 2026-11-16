@@ -1,6 +1,32 @@
 /* The w4os site: small touches over Quark2 */
+
+/* The colors of the w4os logo: its green first, its orange second. Filled accents keep the logo's green with black text, as the
+   logo has it; links are that green on a dark page, a darker shade of it on a light one (the logo's green on white is too pale
+   to read); the orange marks what is pointed or focused. */
+:root { --w4os-primary: #61c909; --w4os-secondary: #ff7f00; }
+:root:root, :root:root[data-theme="light"] {
+    --q2-accent: var(--w4os-primary);
+    --q2-accent-contrast: #000000;
+    --q2-link: #3a7a05;
+    --q2-link-hover: #b35600;
+    --q2-focus-ring: color-mix(in oklab, var(--w4os-secondary) 60%, transparent);
+}
+:root:root[data-theme="dark"] {
+    --q2-accent: var(--w4os-primary);
+    --q2-accent-contrast: #000000;
+    --q2-link: var(--w4os-primary);
+    --q2-link-hover: var(--w4os-secondary);
+    --q2-focus-ring: color-mix(in oklab, var(--w4os-secondary) 60%, transparent);
+}
+a:hover { color: var(--q2-link-hover); }
+.navbar-brand { display: inline-flex; align-items: center; gap: .5rem; }
+.w4os-grid-logo { height: 2rem; width: auto; }
 .w4os-logo { font-weight: 700; font-size: 1.25rem; }
-#footer p { opacity: .75; }
+.w4os-credits { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .25rem .6rem; }
+.w4os-credits > span:first-child { opacity: .75; }
+.w4os-credits a { display: inline-flex; align-items: center; gap: .35rem; }
+.w4os-credit-logo { height: 1.5rem; width: auto; }
+.w4os-credit-icon { height: 1.1rem; width: auto; }
 
 /* The main menu centered, the tools of the visitor on the right */
 @media (min-width: 861px) {

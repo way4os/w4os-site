@@ -15,3 +15,10 @@ form:
     accent-color:
       type: colorpicker
       label: Accent color
+    grid_logo:
+      type: toggle
+      label: Logo of the grid
+      help: Before its name in the top bar - its own logo (LogoURL of its helpers), else the OpenSimulator logo. A custom logo replaces both.
+      highlight: 1
+      options: { 1: PLUGIN_ADMIN.ENABLED, 0: PLUGIN_ADMIN.DISABLED }
+      validate: { type: bool }
