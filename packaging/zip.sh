@@ -14,7 +14,7 @@ site_zip() {
     done
     cp -R "$defaults/config" "$stage/w4os-site/user/config"
     cp -R "$defaults/pages" "$stage/w4os-site/user/pages"
-    for dir in user/accounts user/data assets images cache tmp logs backup; do
+    for dir in user/accounts user/data user/data/sessions assets images cache tmp logs backup; do
         mkdir -p "$stage/w4os-site/$dir"
     done
     mkdir -p "$(dirname "$zip")"

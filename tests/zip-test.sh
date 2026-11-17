@@ -33,7 +33,7 @@ test_the_zip_is_the_site_ready_to_use_wherever_it_is_unzipped() {
     # The content of a new site, and the folders where it writes, in the tree
     assert_file_contains "$site/user/config/plugins/w4os.yaml" "engine: remote"
     assert_file_exists "$site/user/pages/01.home/default.md"
-    for dir in user/accounts user/data assets images cache tmp logs backup; do
+    for dir in user/accounts user/data user/data/sessions assets images cache tmp logs backup; do
         assert_directory_exists "$site/$dir"
     done
     # Nothing that points outside, nothing of a machine

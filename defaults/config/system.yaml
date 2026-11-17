@@ -31,5 +31,15 @@ debugger:
   enabled: false
 session:
   enabled: true
+  # Signed in for a day without a visit; longer with "remember me" (the Login plugin, plugins/login.yaml)
+  timeout: 86400
+  # The sessions in a folder of the site (relative to the root of Grav: the zip; the package sends them to /var/lib/w4os-site/sessions
+  # in its .env), where PHP alone cleans them, after a day: the system's own cleaning (Debian and Ubuntu's phpsessionclean, every
+  # half hour) takes the ones of its own folder after 24 minutes
+  options:
+    save_path: user/data/sessions
+    gc_maxlifetime: 86400
+    gc_probability: 1
+    gc_divisor: 1000
 gpm:
   releases: stable

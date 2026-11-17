@@ -9,6 +9,8 @@ configure)
         /var/cache/w4os-site/images /var/log/w4os-site; do
         [ -d "$dir" ] || install -d -o www-data -g www-data -m 750 "$dir"
     done
+    # The sessions of the site (the .env of the package sends them there), for the web server alone
+    [ -d /var/lib/w4os-site/sessions ] || install -d -o www-data -g www-data -m 700 /var/lib/w4os-site/sessions
     for dir in config pages; do
         if [ ! -d "/var/lib/w4os-site/$dir" ]; then
             cp -R "/usr/share/w4os-site/defaults/$dir" "/var/lib/w4os-site/$dir"

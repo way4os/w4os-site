@@ -4,3 +4,6 @@ enabled: true
 # key is kept in user/data/w4os/api.json.
 api_url: ''
 url: ''
+# The avatars kept as accounts of the site (user/accounts: name, email, level, access; no password), so "remember me" finds them
+# again; a session back by it takes the avatar as the engine has it then
+save_accounts: true

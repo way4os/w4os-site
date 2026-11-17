@@ -1,3 +1,7 @@
 enabled: true
 # Lost password: the page of the w4os plugin, linked under the button (no button of the Login plugin)
 route_forgot: false
+# Signed in until signing out, as on a social network: "remember me" (checked by the theme) lasts a year
+rememberme:
+  enabled: true
+  timeout: 31536000

@@ -15,7 +15,7 @@ It is [Grav](https://getgrav.org) with the [w4os plugin](https://github.com/magi
 
 The site as a zip (`w4os-site-<version>.zip`, on the release): Grav, its plugins, the theme, Font Awesome and the defaults of a new site, nothing to build or download.
 
-1. Unzip it where the web server serves it (`unzip w4os-site-<version>.zip -d /var/www/`), and give the web server the folders it writes: `user/config`, `user/pages`, `user/accounts`, `user/data`, `assets`, `images`, `cache`, `tmp`, `logs` and `backup` of `w4os-site/`.
+1. Unzip it where the web server serves it (`unzip w4os-site-<version>.zip -d /var/www/`), and give the web server the folders it writes: `user/config`, `user/pages`, `user/accounts`, `user/data` (with `user/data/sessions`, the sessions), `assets`, `images`, `cache`, `tmp`, `logs` and `backup` of `w4os-site/`.
 2. Point the web server at `w4os-site/` (the configurations Grav gives are in `webserver-configs/`), with PHP 8.3 or later and its extensions curl, gd, mbstring, xml, zip and intl (pdo_mysql too, for the engine bundled with the plugin).
 3. Connect it to the grid in `user/config/plugins/w4os.yaml`: `engine: remote`, `api_url` (the engine API, `https://grid.example.org/api`), `url` (the helpers, for the blocks) and `grid`; the API key of the site (`opensim api-key create w4os-site`, on the machine of the grid) in `user/data/w4os/api.json`, `{"api_key": "osk_..."}`, readable by the web server only. With Grav's admin, the settings page of the plugin does both.
 
@@ -45,12 +45,26 @@ Then edit the pages in `/var/lib/w4os-site/pages` (Markdown, English and French)
 [w4os block="search" /]
 ```
 
+## Staying signed in
+
+A visitor stays signed in as on a social network: until they sign out. "Remember me" is checked on the sign-in page and lasts a year; without it, the session lasts a day without a visit. A session back by "remember me" takes the avatar as the engine has it then: its level and its rights of now, and a banned, disabled or deleted avatar is signed out.
+
+| Setting | Where (package: `/var/lib/w4os-site/config`; zip: `user/config`) | Default |
+| --- | --- | --- |
+| How long "remember me" lasts, in seconds; `enabled: false` removes it | `plugins/login.yaml`, `rememberme.timeout` | `31536000` (a year) |
+| How long a session lasts without a visit, in seconds | `system.yaml`, `session.timeout` and `session.options.gc_maxlifetime` | `86400` (a day) |
+| Where the sessions are kept | `system.yaml`, `session.options.save_path` (the package sets it in `/usr/share/w4os-site/grav/.env`) | `user/data/sessions` (zip), `/var/lib/w4os-site/sessions` (package) |
+| The avatars kept as accounts of the site, which "remember me" needs | `plugins/w4os.yaml`, `save_accounts` | `true` |
+
+The sessions are kept in a folder of the site, not the system's: Debian and Ubuntu clean the system's folder every half hour and take the sessions idle for 24 minutes, whatever the site sets. An upgrade does not change the settings of a site that exists: copy these lines from `/usr/share/w4os-site/defaults/config` into its own.
+
 ## Where things are
 
 | What | Where |
 | --- | --- |
 | Grav, its plugins, the theme (replaced by upgrades) | `/usr/share/w4os-site/grav`, the document root |
 | The pages, the settings, the accounts, the API key | `/var/lib/w4os-site` (never touched by upgrades nor removal) |
+| The sessions of the visitors | `/var/lib/w4os-site/sessions` |
 | Caches | `/var/cache/w4os-site` |
 | Logs | `/var/log/w4os-site` |
 
