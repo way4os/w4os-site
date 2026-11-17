@@ -10,22 +10,10 @@ grav="$out/grav"
 sources="$root/build/sources"
 rm -rf "$out" && mkdir -p "$grav" "$sources"
 
-# The committed tree of a source at a ref, extracted into a folder
-extract() {
-    local source=$1 ref=$2 target=$3 repo
-    if [ -d "$source" ]; then
-        repo=$source
-    else
-        repo="$sources/$(basename "$source" .git)-$ref"
-        # A tag or a branch at once, a commit with the whole history
-        [ -d "$repo/.git" ] || git -c advice.detachedHead=false clone -q --depth 1 --branch "$ref" "$source" "$repo" 2>/dev/null ||
-            git clone -q "$source" "$repo"
-    fi
-    mkdir -p "$target"
-    git -C "$repo" archive --format=tar "$ref" | tar -x -C "$target"
-}
+# shellcheck source=sources.sh
+source "$root/packaging/sources.sh"
 
-while read -r path source ref; do
+while read -r path source ref picked; do
     [[ -z ${path:-} || $path == \#* ]] && continue
     # The plugin of another folder (W4OS_PLUGIN: a worktree of a branch, dev/deploy.sh)
     [[ -z ${W4OS_PLUGIN:-} || $source != ../grav-plugin-w4os/* ]] || source="$(cd "$W4OS_PLUGIN" && pwd)/${source#../grav-plugin-w4os/}"
@@ -36,6 +24,12 @@ while read -r path source ref; do
         [ -n "$zip" ] || { echo "No release zip: $source (build it in its project: vendor/bin/build-tools build zip)" >&2; exit 1; }
         rm -rf "$sources/zip" && mkdir -p "$sources/zip" "$grav/$path" && unzip -q "$zip" -d "$sources/zip"
         cp -R "$sources/zip"/*/. "$grav/$path/"
+        continue
+    fi
+    # Some files of a release only, each at its place (from=to)
+    if [ -n "${picked:-}" ]; then
+        # shellcheck disable=SC2086
+        pick "$source" "$ref" "$grav/$path" $picked
         continue
     fi
     extract "$source" "$ref" "$grav/$path"
@@ -49,8 +43,9 @@ done < dependencies.txt
 rm -rf "$grav"/{tests,.github,.phan,.oss-scanner,codeception.yml,now.json,.dependencies,CONTRIBUTING.md,CODE_OF_CONDUCT.md}
 rm -f "$grav"/user/plugins/*/composer.lock
 
-# The theme of the site
-cp -R theme/w4os "$grav/user/themes/w4os"
+# The theme of the site, with what dependencies.txt put in it (Font Awesome)
+mkdir -p "$grav/user/themes/w4os"
+cp -R theme/w4os/. "$grav/user/themes/w4os/"
 
 # Where Grav writes: the content of the site in /var/lib, its caches in /var/cache (made by the postinst)
 cp grav.env "$grav/.env"

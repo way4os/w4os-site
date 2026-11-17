@@ -21,9 +21,10 @@ slogan:
   pt-BR: 'Um lugar para se encontrar, construir e explorar'
   cy: 'Lle i gyfarfod, adeiladu ac archwilio'
 blog-page: '/blog'
+# Font Awesome Free, served by the site (the package bundles it: dependencies.txt), never from a CDN
 fontawesome:
   enabled: true
-  local: false
+  local: true
 streams:
   schemes:
     theme:

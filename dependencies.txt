@@ -1,6 +1,7 @@
 # What the site bundles, at these versions (packaging/build): path in the Grav root, source, tag or commit.
 # A source that is a folder is a sibling project in development (its committed tree at that ref); a zip is a release of a
-# project with its vendor folder (its first folder is the one of the project), a glob takes the newest.
+# project with its vendor folder (its first folder is the one of the project), a glob takes the newest. Files of a source after
+# its ref (from=to) take only them, each at its place in the path.
 . https://github.com/getgrav/grav.git 2.2.23
 user/plugins/error https://github.com/getgrav/grav-plugin-error.git 2.0.5
 user/plugins/problems https://github.com/getgrav/grav-plugin-problems.git 3.0.1
@@ -11,4 +12,7 @@ user/plugins/login https://github.com/getgrav/grav-plugin-login.git 3.12.1
 user/plugins/langswitcher https://github.com/getgrav/grav-plugin-langswitcher.git 3.4.3
 user/plugins/oli-langswitcher ../sites/grav-plugin-oli-langswitcher 77caff0
 user/themes/quark2 https://github.com/getgrav/grav-theme-quark2.git 1.1.22
+# Font Awesome Free, the release the theme loads, served by the site (Quark2's fontawesome.local: theme://css/fontawesome/all.min.css,
+# its fonts in ../webfonts)
+user/themes/w4os/css https://github.com/FortAwesome/Font-Awesome.git 7.0.1 css/all.min.css=fontawesome/all.min.css webfonts=webfonts LICENSE.txt=fontawesome/LICENSE.txt
 user/plugins/w4os ../grav-plugin-w4os/dist/grav-plugin-w4os-*.zip -
