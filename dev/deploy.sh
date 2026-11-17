@@ -5,6 +5,7 @@
 #
 #   dev/deploy.sh            the server is DEPLOY_HOST (an ssh host) of the .env of the project, its address DEPLOY_URL
 #   dev/deploy.sh HOST       another one
+#   W4OS_PLUGIN=DIR dev/deploy.sh   the plugin of another folder (a worktree of a branch)
 #
 # The plugin is built from its last commit (build-tools refuses a tree with changes); the engine and the helpers as they are in
 # their folders, so their commits are told with "+changes" when their tree is not clean.
@@ -17,7 +18,7 @@ usage() { sed -n '2,10s/^# \{0,1\}//p' "$0"; }
 [ -f .env ] && { set -a; . ./.env; set +a; }
 host=${1:-${DEPLOY_HOST:-}}
 [ -n "$host" ] || { echo "deploy: no server (DEPLOY_HOST in .env, or dev/deploy.sh HOST)" >&2; exit 1; }
-plugin="$root/../grav-plugin-w4os"
+plugin="${W4OS_PLUGIN:-$root/../grav-plugin-w4os}"
 [ -d "$plugin" ] || { echo "deploy: no grav-plugin-w4os next to this project" >&2; exit 1; }
 
 # A project's commit, "+changes" when its tree is not clean

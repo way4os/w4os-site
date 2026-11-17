@@ -28,7 +28,7 @@ Grav's code is read-only in `/usr/share/w4os-site/grav`; its `user/config`, `use
 dev/deploy.sh                             # the server of DEPLOY_HOST in .env (see .env.example), or dev/deploy.sh HOST
 ```
 
-It builds the release zip of `grav-plugin-w4os` (from its last commit, with the engine and the helpers of the sibling folders as they are), then the package of the site, installs it on the server with `apt-get`, empties the cache of the site, and tells the commits of the plugin, the engine, the helpers and the site that run there. Run it again whenever one of them changed: the server has only what its last deploy bundled.
+It builds the release zip of `grav-plugin-w4os` (from its last commit, with the engine and the helpers of the sibling folders as they are), then the package of the site, installs it on the server with `apt-get`, empties the cache of the site, and tells the commits of the plugin, the engine, the helpers and the site that run there. Run it again whenever one of them changed: the server has only what its last deploy bundled. A branch of the plugin in a worktree: `W4OS_PLUGIN=../grav-plugin-w4os-<branch> dev/deploy.sh`; the engine and the helpers bundled are the ones the plugin's vendor folder links to, the sibling folders.
 
 ## Tests
 
