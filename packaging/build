@@ -65,4 +65,9 @@ mkdir -p "$out/bin" "$out/web"
 cp bin/w4os-site "$out/bin/"
 cp web/* "$out/web/"
 
+# The site as a zip next to the package, the same tree to unzip anywhere (dist/w4os-site_<version>.zip)
+# shellcheck source=zip.sh
+source "$root/packaging/zip.sh"
+site_zip "$grav" "$root/defaults" "$root/dist/w4os-site_${DEB_VERSION:-${VERSION:-dev}}.zip"
+
 echo "VERSION_GRAV=$(sed -n 's/^\. .* //p' dependencies.txt)" > "$root/build/packaging.env"
