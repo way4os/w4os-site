@@ -46,4 +46,6 @@ lib/bashunit/bashunit tests/
 
 The installer is tested on a site in a temporary folder (`W4OS_SITE_DATA`, `W4OS_SITE_SHARE`, `W4OS_SITE_OWNER`, `W4OS_SITE_CACHE` point it there), against a fake engine API (`tests/fixtures/api.php`, PHP built-in server).
 
+Signing in and staying signed in are tested end to end (`tests/remember-test.sh`): the Grav tree built (`build/w4os-site/grav`, or `W4OS_SITE_BUILD`) set up as the zip has it in a temporary folder, served by PHP alone with several workers, its engine the same fake API; each cookie jar of curl is a browser. Skipped while no tree is built; `W4OS_TEST_KEEP=1` leaves the site and its logs.
+
 The site itself is tried on a development machine, never on a live grid: install the package there, `w4os-site setup` with the helpers of a test grid, `w4os-site web apache --port <port> --install`. No real mail: addresses of `example.org`, and the tokens taken from the API with `send: false`.

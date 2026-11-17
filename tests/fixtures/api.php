@@ -1,12 +1,30 @@
 <?php
-// A fake engine API for the tests of the installer: /api/info with the key osk_test
+// A fake engine API for the tests: /api/info with the key osk_test; the avatar Ada Love signs in with the password "secret"
 if (($_SERVER['HTTP_AUTHORIZATION'] ?? '') !== 'Bearer osk_test') {
     http_response_code(401);
     exit;
 }
-if (parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) === '/api/info') {
-    header('Content-Type: application/vnd.api+json');
-    echo '{"data":{"type":"info","id":"demo","attributes":{"elements":{"gridname":"Demo Grid","gridnick":"demo"}}}}';
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$ada = ['type' => 'avatars', 'id' => 'a1', 'attributes' => [
+    'uuid' => 'a1', 'name' => 'Ada Love', 'slug' => 'ada-love', 'email' => 'ada@example.org', 'level' => 0, 'status' => 'active',
+]];
+$answer = function (int $status, array $document) {
+    http_response_code($status);
+    header('Content-Type: '.($status < 400 ? 'application/vnd.api+json' : 'application/problem+json'));
+    echo json_encode($document);
     exit;
+};
+if ($path === '/api/info') {
+    $answer(200, ['data' => ['type' => 'info', 'id' => 'demo', 'attributes' => ['elements' => ['gridname' => 'Demo Grid', 'gridnick' => 'demo']]]]);
+}
+if ($path === '/api/sign-ins' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $sent = (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []);
+    if (($sent['name'] ?? '') === 'Ada Love' && ($sent['password'] ?? '') === 'secret') {
+        $answer(200, ['data' => $ada]);
+    }
+    $answer(401, ['title' => 'Refused', 'status' => 401, 'detail' => 'Wrong name or password', 'code' => 'sign_in_refused']);
+}
+if ($path === '/api/avatars/a1') {
+    $answer(200, ['data' => $ada]);
 }
 http_response_code(404);
