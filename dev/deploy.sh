@@ -7,8 +7,8 @@
 #   dev/deploy.sh HOST       another one
 #   W4OS_PLUGIN=DIR dev/deploy.sh   the plugin of another folder (a worktree of a branch)
 #
-# The plugin is built from its last commit (build-tools refuses a tree with changes); the engine and the helpers as they are in
-# their folders, so their commits are told with "+changes" when their tree is not clean.
+# The plugin and the site are built from their last commit (build-tools refuses a tree with changes: commit first); the engine
+# and the helpers as they are in their folders, so their commits are told with "+changes" when their tree is not clean.
 set -Eeuo pipefail
 cd "$(dirname "$0")/.."
 root="$PWD"
@@ -30,8 +30,9 @@ commit() { echo "$(git -C "$1" log -1 --format=%h)$(git -C "$1" diff --quiet HEA
 sibling() { (cd "$plugin/vendor/magicoli/$1" && pwd -P); }
 
 (cd "$plugin" && rm -rf build && vendor/bin/build-tools build zip | tail -1)
-rm -f dist/w4os-site_*.deb
-/opt/magic/apt-repo/bin/apt-package | tail -1
+# The package of the site from its last commit, as the opensim projects build theirs (build-tools refuses uncommitted changes)
+[ -x vendor/bin/build-tools ] || { echo "deploy: build-tools is not installed: composer install" >&2; exit 1; }
+vendor/bin/build-tools build deb | tail -1
 deb=$(ls -t dist/w4os-site_*.deb | head -1)
 
 scp -q "$deb" "$host:/tmp/"

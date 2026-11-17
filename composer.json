@@ -10,6 +10,16 @@
         }
     ],
     "require-dev": {
-        "magicoli/build-tools": "^0.1.2"
-    }
+        "magicoli/build-tools": "@dev"
+    },
+    "repositories": [
+        {
+            "name": "magicoli/build-tools",
+            "url": "../build-tools/",
+            "type": "path",
+            "options": {
+                "symlink": true
+            }
+        }
+    ]
 }

@@ -50,3 +50,19 @@ test_the_zip_is_made_as_the_opensim_projects_make_theirs_by_build_tools() {
     assert_not_contains "site_zip" "$(cat "$ROOT/packaging/build")"
     assert_equals 0 "$(test -x "$ROOT/dev/build.sh"; echo $?)"
 }
+
+test_the_zip_built_serves_its_pages_with_php_alone() {
+    local zip
+    zip=$(ls -t "$ROOT"/dist/w4os-site-*.zip 2>/dev/null | head -1)
+    [ -n "$zip" ] || { skip "no zip built (dev/build.sh zip)"; return; }
+    unzip -q "$zip" -d "$TMP/served"
+    assert_empty "$(find "$TMP/served" -type l)"
+    assert_file_not_exists "$TMP/served/w4os-site/.env"
+    local port=$((20000 + RANDOM % 20000)) tries=50
+    (cd "$TMP/served/w4os-site" && exec php -S "127.0.0.1:$port" system/router.php >/dev/null 2>&1) &
+    local server=$!
+    until curl -s -o /dev/null "http://127.0.0.1:$port/" || [ $((tries -= 1)) -eq 0 ]; do sleep 0.2; done
+    assert_equals 200 "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/")"
+    assert_equals 200 "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/user/themes/w4os/css/fontawesome/all.min.css")"
+    kill "$server" 2>/dev/null || true
+}

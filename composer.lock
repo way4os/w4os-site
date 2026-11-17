@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b408a1b1990c635485d4f56816a46468",
+    "content-hash": "315c9f4d6f2b2b5f1bf3cf5eac7a9851",
     "packages": [],
     "packages-dev": [
         {
@@ -60,17 +60,11 @@
         },
         {
             "name": "magicoli/build-tools",
-            "version": "0.1.11",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/magicoli/build-tools.git",
-                "reference": "23830de70a31794375c40ad937a3e360c4820b27"
-            },
+            "version": "dev-dev",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/magicoli/build-tools/zipball/23830de70a31794375c40ad937a3e360c4820b27",
-                "reference": "23830de70a31794375c40ad937a3e360c4820b27",
-                "shasum": ""
+                "type": "path",
+                "url": "../build-tools",
+                "reference": "f7b171ada20d97bb5051cbc941f64970354b52a9"
             },
             "require": {
                 "magicoli/bash-tools": "@dev"
@@ -81,7 +75,6 @@
                 "bin/apt-publish"
             ],
             "type": "library",
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "AGPL-3.0-or-later"
             ],
@@ -92,16 +85,17 @@
                 }
             ],
             "description": "Build, release and publish a project: Debian packages, zip, GitHub release, apt repository.",
-            "support": {
-                "issues": "https://github.com/magicoli/build-tools/issues",
-                "source": "https://github.com/magicoli/build-tools/tree/0.1.11"
-            },
-            "time": "2026-10-26T13:16:05+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         }
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "magicoli/build-tools": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {},

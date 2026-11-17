@@ -20,3 +20,10 @@ test_no_server_is_refused() {
     output=$(DEPLOY_HOST= "$WORK/dev/deploy.sh" 2>&1) && fail "it should refuse"
     assert_contains "no server" "$output"
 }
+
+test_the_site_is_built_and_released_by_build_tools_as_the_opensim_projects_are() {
+    assert_contains "vendor/bin/build-tools build deb" "$(cat "$ROOT/dev/deploy.sh")"
+    assert_not_contains "/opt/magic/apt-repo" "$(cat "$ROOT/dev/deploy.sh")"
+    assert_contains 'exec "$tool" release' "$(cat "$ROOT/dev/release.sh")"
+    assert_contains '"url": "../build-tools/"' "$(cat "$ROOT/composer.json")"
+}

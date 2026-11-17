@@ -14,12 +14,15 @@ The site is Grav, its official plugins and the w4os plugin, assembled at fixed v
 
 ## The zip and the package
 
-They are built as the opensim projects build theirs, by build-tools (`composer install` first, for `vendor/bin/build-tools`), from the last commit, into `dist/`: the zip `w4os-site-<version>.zip`, the general delivery, and the Debian package `w4os-site_<version>_all.deb`; the version is the one of `.version`, with the number of commits and the hash of HEAD until a tag. `build-tools release` attaches both to the GitHub release.
+They are built as the opensim projects build theirs, by build-tools and its apt-package (`composer install` first, for `vendor/bin/build-tools`), from the last commit, into `dist/`: the zip `w4os-site-<version>.zip`, the general delivery, and the Debian package `w4os-site_<version>_all.deb`; the version is the one of `.version`, with the number of commits and the hash of HEAD until a tag. `build-tools release` attaches both to the GitHub release.
 
 ```bash
 dev/build.sh                            # the zip and the package (build-tools build)
 vendor/bin/build-tools build zip        # the zip only: packaging/build-zip
+dev/release.sh                          # the release (build-tools release): tag, build, GitHub release, apt repository
 ```
+
+build-tools comes from `../build-tools` (composer path repository, as for opensim-cli).
 
 The zip is the Grav tree of the package with its writable folders inside (the defaults of a new site in `user/config` and `user/pages`), no link outside and no `.env`: it is unzipped anywhere and configured.
 
