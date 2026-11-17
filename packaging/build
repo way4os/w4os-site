@@ -27,6 +27,8 @@ extract() {
 
 while read -r path source ref; do
     [[ -z ${path:-} || $path == \#* ]] && continue
+    # The plugin of another folder (W4OS_PLUGIN: a worktree of a branch, dev/deploy.sh)
+    [[ -z ${W4OS_PLUGIN:-} || $source != ../grav-plugin-w4os/* ]] || source="$(cd "$W4OS_PLUGIN" && pwd)/${source#../grav-plugin-w4os/}"
     [[ $source == ../* ]] && source="$root/$source"
     if [[ $source == *.zip ]]; then
         # A release with its vendor folder, the newest of a glob

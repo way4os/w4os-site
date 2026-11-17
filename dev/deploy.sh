@@ -20,6 +20,9 @@ host=${1:-${DEPLOY_HOST:-}}
 [ -n "$host" ] || { echo "deploy: no server (DEPLOY_HOST in .env, or dev/deploy.sh HOST)" >&2; exit 1; }
 plugin="${W4OS_PLUGIN:-$root/../grav-plugin-w4os}"
 [ -d "$plugin" ] || { echo "deploy: no grav-plugin-w4os next to this project" >&2; exit 1; }
+# The package of the site takes the release zip of this plugin (packaging/build)
+plugin=$(cd "$plugin" && pwd)
+export W4OS_PLUGIN=$plugin
 
 # A project's commit, "+changes" when its tree is not clean
 commit() { echo "$(git -C "$1" log -1 --format=%h)$(git -C "$1" diff --quiet HEAD -- 2>/dev/null || echo +changes)"; }
