@@ -60,3 +60,5 @@ install --reinstall w4os-site` puts them back.
 ## License
 
 AGPL-3.0-or-later.
+
+Third-party assets: the site ships Font Awesome Free 7.0.1 (`user/themes/w4os/css/fontawesome`, `css/webfonts`), icons under CC BY 4.0, fonts under SIL OFL 1.1, code under MIT, redistributed as released, with its `LICENSE.txt` and the attribution comments of its CSS.
