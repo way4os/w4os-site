@@ -6,6 +6,8 @@ set_up_before_script() {
     ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
     GRAV_TREE=${W4OS_SITE_BUILD:-$ROOT/build/w4os-site/grav}
     [ -f "$GRAV_TREE/index.php" ] || return 0
+    STALE=$(stale "$GRAV_TREE")
+    [ -z "$STALE" ] || return 0
     TMP=$(mktemp -d)
     # shellcheck source=../packaging/zip.sh
     source "$ROOT/packaging/zip.sh"
@@ -35,10 +37,29 @@ tear_down_after_script() {
     [ -z "${TMP:-}" ] || [ -n "${W4OS_TEST_KEEP:-}" ] || rm -rf "$TMP"
 }
 
-# built: whether the Grav tree is there to test, the test skipped without it
+# stale TREE: what of the code the tree is older than (the plugin, the libraries it bundles, the theme), nothing when it is current
+stale() {
+    local tree=$1 plugin=${W4OS_PLUGIN:-$ROOT/../grav-plugin-w4os} part changed=()
+    for part in w4os.php blueprints.yaml classes templates languages css js; do
+        [ -e "$plugin/$part" ] || continue
+        newer "$plugin/$part" "$tree/user/plugins/w4os/$part" || changed+=("plugin $part")
+    done
+    [ ! -d "$ROOT/../w4os-views/src" ] || newer "$ROOT/../w4os-views/src" "$tree/user/plugins/w4os/vendor/magicoli/w4os-views/src" ||
+        changed+=("w4os-views")
+    newer "$ROOT/theme/w4os" "$tree/user/themes/w4os" || changed+=("theme")
+    [ ${#changed[@]} -eq 0 ] || echo "the Grav tree is older than the code (${changed[*]}): dev/build.sh"
+}
+
+# newer SOURCE COPY: whether COPY has every file of SOURCE as it is (COPY may have more, the files a build adds; a link of SOURCE
+# that points into the built tree only is left out)
+newer() {
+    [ -e "$2" ] && [ -z "$(diff -rq "$1" "$2" 2>&1 | grep -v -e "^Only in $2" -e "^diff: $1/.*: No such file or directory")" ]
+}
+
+# built: whether the Grav tree is there to test, and current, the test skipped otherwise
 built() {
     [ -n "${SITE:-}" ] && return
-    bashunit::skip "no Grav tree built (dev/build.sh)"
+    bashunit::skip "${STALE:-no Grav tree built (dev/build.sh)}"
     return 1
 }
 
