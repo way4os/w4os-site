@@ -37,33 +37,46 @@ test_status_says_when_the_site_is_not_connected() {
 }
 
 test_setup_connects_the_site_and_keeps_the_key_out_of_the_config() {
-    site setup --url "http://127.0.0.1:$PORT/" --key osk_test >/dev/null
+    site setup --api "http://127.0.0.1:$PORT/api/" --url "http://127.0.0.1:$PORT/helpers/" --key osk_test >/dev/null
     assert_exit_code 0
-    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "url: 'http://127.0.0.1:$PORT'"
+    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "api_url: 'http://127.0.0.1:$PORT/api'"
+    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "url: 'http://127.0.0.1:$PORT/helpers'"
+    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "engine: 'remote'"
     assert_file_contains "$SITE/data/config/site.yaml" "title: 'Demo Grid'"
     assert_file_contains "$SITE/data/data/w4os/api.json" '"api_key":"osk_test"'
     assert_file_not_contains "$SITE/data/config/plugins/w4os.yaml" "osk_test"
     assert_contains "api:     answers" "$(site status)"
 }
 
+test_setup_needs_the_address_of_the_engine_api_never_the_helpers_api() {
+    local output
+    # Only the helpers' address: refused (no address of the engine API, or the one of the local listener when the machine has
+    # opensim, which does not answer here), never their /api
+    output=$(site setup --url "http://127.0.0.1:$PORT" --key osk_test)
+    assert_exit_code 1
+    assert_contains "engine API" "$output"
+    assert_not_contains "127.0.0.1:$PORT/api" "$output"
+    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "api_url: ''"
+}
+
 test_setup_refuses_a_key_the_api_refuses() {
     local output
-    output=$(site setup --url "http://127.0.0.1:$PORT" --key osk_wrong)
+    output=$(site setup --api "http://127.0.0.1:$PORT/api" --url "http://127.0.0.1:$PORT/helpers" --key osk_wrong)
     assert_exit_code 1
     assert_contains "does not answer" "$output"
-    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "url: ''"
+    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "api_url: ''"
 }
 
 test_setup_keeps_a_title_with_a_quote() {
-    site setup --url "http://127.0.0.1:$PORT" --key osk_test --title "Ada's grid" >/dev/null
+    site setup --api "http://127.0.0.1:$PORT/api" --url "http://127.0.0.1:$PORT/helpers" --key osk_test --title "Ada's grid" >/dev/null
     assert_file_contains "$SITE/data/config/site.yaml" "title: 'Ada''s grid'"
 }
 
 test_setup_no_mail_makes_a_test_site() {
-    site setup --url "http://127.0.0.1:$PORT" --key osk_test --no-mail >/dev/null
+    site setup --api "http://127.0.0.1:$PORT/api" --url "http://127.0.0.1:$PORT/helpers" --key osk_test --no-mail >/dev/null
     assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "send_mail: false"
     assert_contains "mail:    off" "$(site status)"
-    site setup --url "http://127.0.0.1:$PORT" --key osk_test --mail >/dev/null
+    site setup --api "http://127.0.0.1:$PORT/api" --url "http://127.0.0.1:$PORT/helpers" --key osk_test --mail >/dev/null
     assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "send_mail: true"
 }
 

@@ -1,4 +1,6 @@
 enabled: true
-# Set by w4os-site setup: the address of the helpers of the grid (the engine API is its /api). The key is kept in
-# user/data/w4os/api.json.
+# Set by w4os-site setup: the engine API, at its own address (api_url: https://grid.example.org/api, or
+# http://127.0.0.1:8780/api on the machine of the grid), and the address of the helpers of the grid, for the blocks (url). The
+# key is kept in user/data/w4os/api.json.
+api_url: ''
 url: ''
