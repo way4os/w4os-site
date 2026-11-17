@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# dist/w4os-site-<version>.zip, made by build-tools build zip (as the opensim projects make theirs): the Grav tree of the site
+# that packaging/build prepares (Grav, its plugins, the theme, Font Awesome, the defaults of a new site), to unzip anywhere and
+# configure, nothing to build or download (packaging/zip.sh).
+set -Eeuo pipefail
+cd "$(dirname "$0")/.."
+eval "$(vendor/magicoli/build-tools/libexec/version)"
+packaging/build
+# shellcheck source=zip.sh
+source packaging/zip.sh
+rm -f dist/w4os-site-*.zip
+site_zip build/w4os-site/grav defaults "dist/w4os-site-$VERSION.zip"
+echo "dist/w4os-site-$VERSION.zip"

@@ -10,15 +10,20 @@ The site is Grav, its official plugins and the w4os plugin, assembled at fixed v
 - `grav.env`: the `.env` of Grav in the package, which puts its caches, logs, tmp and backups out of the code.
 - `bin/w4os-site`: the installer (bash, with the functions of bash-tools): `setup`, `status`, `web`.
 - `web/apache.conf`: the Apache template of `w4os-site web apache`; Caddy and nginx come from Grav's own `webserver-configs`.
-- `packaging/`: the nfpm definition, `build` (assembles `build/w4os-site`), the maintainer scripts.
+- `packaging/`: the nfpm definition, `build` (assembles `build/w4os-site`), `build-zip` (the zip of that tree, `zip.sh`), the maintainer scripts.
 
-## The package
+## The zip and the package
 
-Grav's code is read-only in `/usr/share/w4os-site/grav`; its `user/config`, `user/pages`, `user/accounts`, `user/data` are links to `/var/lib/w4os-site`, and `assets`, `images` to `/var/cache/w4os-site`. The plugins and the theme stay in the package (`user/plugins`, `user/themes`), so an upgrade brings their new versions.
+They are built as the opensim projects build theirs, by build-tools (`composer install` first, for `vendor/bin/build-tools`), from the last commit, into `dist/`: the zip `w4os-site-<version>.zip`, the general delivery, and the Debian package `w4os-site_<version>_all.deb`; the version is the one of `.version`, with the number of commits and the hash of HEAD until a tag. `build-tools release` attaches both to the GitHub release.
 
 ```bash
-/opt/magic/apt-repo/bin/apt-package     # build: packaging/build, then nfpm, into dist/
+dev/build.sh                            # the zip and the package (build-tools build)
+vendor/bin/build-tools build zip        # the zip only: packaging/build-zip
 ```
+
+The zip is the Grav tree of the package with its writable folders inside (the defaults of a new site in `user/config` and `user/pages`), no link outside and no `.env`: it is unzipped anywhere and configured.
+
+Grav's code is read-only in `/usr/share/w4os-site/grav`; its `user/config`, `user/pages`, `user/accounts`, `user/data` are links to `/var/lib/w4os-site`, and `assets`, `images` to `/var/cache/w4os-site`. The plugins and the theme stay in the package (`user/plugins`, `user/themes`), so an upgrade brings their new versions.
 
 `packaging/build` clones each dependency at its tag into `build/sources`, extracts its committed tree, and installs the composer dependencies of what does not ship them. Nothing is enabled in a web server by installing the package.
 

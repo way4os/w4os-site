@@ -41,3 +41,12 @@ test_the_zip_is_the_site_ready_to_use_wherever_it_is_unzipped() {
     assert_file_exists "$site/user/themes/w4os/images/favicon.png"
     assert_file_not_exists "$site/.env"
 }
+
+test_the_zip_is_made_as_the_opensim_projects_make_theirs_by_build_tools() {
+    # build-tools build zip runs packaging/build-zip, which names it dist/<project>-<version>.zip
+    assert_equals 0 "$(test -x "$ROOT/packaging/build-zip"; echo $?)"
+    assert_contains '"magicoli/build-tools"' "$(cat "$ROOT/composer.json")"
+    assert_contains 'dist/w4os-site-$VERSION.zip' "$(cat "$ROOT/packaging/build-zip")"
+    assert_not_contains "site_zip" "$(cat "$ROOT/packaging/build")"
+    assert_equals 0 "$(test -x "$ROOT/dev/build.sh"; echo $?)"
+}

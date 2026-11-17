@@ -1,0 +1,110 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "b408a1b1990c635485d4f56816a46468",
+    "packages": [],
+    "packages-dev": [
+        {
+            "name": "magicoli/bash-tools",
+            "version": "1.0.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/magicoli/bash-tools.git",
+                "reference": "3979cd7e345a11e6ae39fe6c32763ed303559a95"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/magicoli/bash-tools/zipball/3979cd7e345a11e6ae39fe6c32763ed303559a95",
+                "reference": "3979cd7e345a11e6ae39fe6c32763ed303559a95",
+                "shasum": ""
+            },
+            "bin": [
+                "bin/cpuinfo",
+                "bin/bash-helpers",
+                "bin/mail-report",
+                "bin/randompassword",
+                "bin/stamp",
+                "bin/stampfile",
+                "bin/tildelete",
+                "bin/titlecase",
+                "bin/tts",
+                "bin/ucfirst",
+                "bin/webnormalize",
+                "bin/wtclient"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Magicoli\\BashHelpers\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "AGPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Olivier van Helden",
+                    "homepage": "https://magiiic.com"
+                }
+            ],
+            "description": "Eclectic collection of bash tools and helpers.",
+            "support": {
+                "issues": "https://github.com/magicoli/bash-tools/issues",
+                "source": "https://github.com/magicoli/bash-tools/tree/1.0.10"
+            },
+            "time": "2026-10-28T22:29:07+00:00"
+        },
+        {
+            "name": "magicoli/build-tools",
+            "version": "0.1.11",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/magicoli/build-tools.git",
+                "reference": "23830de70a31794375c40ad937a3e360c4820b27"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/magicoli/build-tools/zipball/23830de70a31794375c40ad937a3e360c4820b27",
+                "reference": "23830de70a31794375c40ad937a3e360c4820b27",
+                "shasum": ""
+            },
+            "require": {
+                "magicoli/bash-tools": "@dev"
+            },
+            "bin": [
+                "bin/build-tools",
+                "bin/apt-package",
+                "bin/apt-publish"
+            ],
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "AGPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Olivier van Helden",
+                    "homepage": "https://magiiic.com"
+                }
+            ],
+            "description": "Build, release and publish a project: Debian packages, zip, GitHub release, apt repository.",
+            "support": {
+                "issues": "https://github.com/magicoli/build-tools/issues",
+                "source": "https://github.com/magicoli/build-tools/tree/0.1.11"
+            },
+            "time": "2026-10-26T13:16:05+00:00"
+        }
+    ],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {},
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {},
+    "platform-dev": {},
+    "plugin-api-version": "2.9.0"
+}
