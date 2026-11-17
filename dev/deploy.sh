@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Puts the site as it is in development on the dev server, in one command: the release zip of grav-plugin-w4os (with the engine
+# and the helpers it bundles from their sibling projects), the package of the site, installed on the server, its cache emptied,
+# then what runs there: the commits of the plugin, the engine, the helpers and the site.
+#
+#   dev/deploy.sh            the server is DEPLOY_HOST (an ssh host) of the .env of the project, its address DEPLOY_URL
+#   dev/deploy.sh HOST       another one
+#
+# The plugin is built from its last commit (build-tools refuses a tree with changes); the engine and the helpers as they are in
+# their folders, so their commits are told with "+changes" when their tree is not clean.
+set -Eeuo pipefail
+cd "$(dirname "$0")/.."
+root="$PWD"
+
+usage() { sed -n '2,10s/^# \{0,1\}//p' "$0"; }
+[[ ${1:-} == -h || ${1:-} == --help ]] && { usage; exit 0; }
+[ -f .env ] && { set -a; . ./.env; set +a; }
+host=${1:-${DEPLOY_HOST:-}}
+[ -n "$host" ] || { echo "deploy: no server (DEPLOY_HOST in .env, or dev/deploy.sh HOST)" >&2; exit 1; }
+plugin="$root/../grav-plugin-w4os"
+[ -d "$plugin" ] || { echo "deploy: no grav-plugin-w4os next to this project" >&2; exit 1; }
+
+# A project's commit, "+changes" when its tree is not clean
+commit() { echo "$(git -C "$1" log -1 --format=%h)$(git -C "$1" diff --quiet HEAD -- 2>/dev/null || echo +changes)"; }
+# The folder a package of the plugin's vendor folder links to (a sibling project in development)
+sibling() { (cd "$plugin/vendor/magicoli/$1" && pwd -P); }
+
+(cd "$plugin" && rm -rf build && vendor/bin/build-tools build zip | tail -1)
+rm -f dist/w4os-site_*.deb
+/opt/magic/apt-repo/bin/apt-package | tail -1
+deb=$(ls -t dist/w4os-site_*.deb | head -1)
+
+scp -q "$deb" "$host:/tmp/"
+# shellcheck disable=SC2029
+ssh "$host" "sudo -n DEBIAN_FRONTEND=noninteractive NEEDRESTART_SUSPEND=1 apt-get install -y -qq --reinstall '/tmp/$(basename "$deb")' >/dev/null && rm -f '/tmp/$(basename "$deb")' &&
+    sudo -n find /var/cache/w4os-site/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
+# The site answers (DEPLOY_URL of the .env, its address)
+[ -z "${DEPLOY_URL:-}" ] || echo "site answers: $(curl -s -o /dev/null -w '%{http_code}' "$DEPLOY_URL/")"
+
+echo "on $host: plugin $(commit "$plugin"), engine $(commit "$(sibling opensim-engine)"), helpers $(commit "$(sibling opensim-helpers)"), site $(commit "$root")"

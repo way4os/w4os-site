@@ -22,6 +22,14 @@ Grav's code is read-only in `/usr/share/w4os-site/grav`; its `user/config`, `use
 
 `packaging/build` clones each dependency at its tag into `build/sources`, extracts its committed tree, and installs the composer dependencies of what does not ship them. Nothing is enabled in a web server by installing the package.
 
+## The dev server
+
+```bash
+dev/deploy.sh                             # the server of DEPLOY_HOST in .env (see .env.example), or dev/deploy.sh HOST
+```
+
+It builds the release zip of `grav-plugin-w4os` (from its last commit, with the engine and the helpers of the sibling folders as they are), then the package of the site, installs it on the server with `apt-get`, empties the cache of the site, and tells the commits of the plugin, the engine, the helpers and the site that run there. Run it again whenever one of them changed: the server has only what its last deploy bundled.
+
 ## Tests
 
 ```bash
