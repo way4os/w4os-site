@@ -54,7 +54,7 @@ test_the_zip_is_made_as_the_opensim_projects_make_theirs_by_build_tools() {
 test_the_zip_built_serves_its_pages_with_php_alone() {
     local zip
     zip=$(ls -t "$ROOT"/dist/w4os-site-*.zip 2>/dev/null | head -1)
-    [ -n "$zip" ] || { skip "no zip built (dev/build.sh zip)"; return; }
+    [ -n "$zip" ] || { bashunit::skip "no zip built (dev/build.sh zip)"; return; }
     unzip -q "$zip" -d "$TMP/served"
     assert_empty "$(find "$TMP/served" -type l)"
     assert_file_not_exists "$TMP/served/w4os-site/.env"
