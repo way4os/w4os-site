@@ -1,8 +1,5 @@
-{# The tools of the top bar, right of the centered menu: the search, the admin menu (managers) and the menu of the visitor (w4os plugin),
-   Quark2's day and night switch, then the languages, last. #}
-{% include 'w4os/search-link.html.twig' ignore missing %}
-{% include 'w4os/admin-menu.html.twig' ignore missing %}
-{% include 'w4os/user-menu.html.twig' ignore missing %}
+{# The tools of the top bar, right of the centered menu (the search, my avatar and the admin are entries of the menu itself, the w4os
+   plugin's): Quark2's day and night switch, then the languages (Grav's standard switcher), last. #}
 {% set labeled = labeled|default(false) %}
 <button type="button"
         class="theme-toggle"
@@ -19,4 +16,4 @@
     <i class="icon icon-auto  fa-solid fa-circle-half-stroke" aria-hidden="true"></i>
     {% if labeled %}<span class="w4os-toggle-label">{{ 'THEME_QUARK2.THEME_TOGGLE.LABEL'|t }}</span>{% endif %}
 </button>
-{% include 'partials/oli-langswitcher.html.twig' ignore missing %}
+{% include 'partials/langswitcher.html.twig' ignore missing %}
