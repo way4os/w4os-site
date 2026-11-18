@@ -43,7 +43,7 @@ ssh "$host" "sudo -n DEBIAN_FRONTEND=noninteractive NEEDRESTART_SUSPEND=1 apt-ge
     sudo -n find /var/cache/w4os-site/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
 # The themes of development (dev/themes.txt) and the theme switcher (dev/plugins/theme-switcher), never in the package
 dev/themes.sh | tail -1
-tar -C build/dev -cf - user | ssh "$host" "sudo -n tar -xf - --no-same-owner -C /usr/share/w4os-site/grav && sudo -n find /var/cache/w4os-site/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
+COPYFILE_DISABLE=1 tar --no-xattrs -C build/dev -cf - user | ssh "$host" "sudo -n tar -xf - --no-same-owner -C /usr/share/w4os-site/grav && sudo -n find /var/cache/w4os-site/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
 # The site answers (DEPLOY_URL of the .env, its address)
 [ -z "${DEPLOY_URL:-}" ] || echo "site answers: $(curl -s -o /dev/null -w '%{http_code}' "$DEPLOY_URL/")"
 
