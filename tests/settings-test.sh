@@ -37,15 +37,19 @@ test_the_logo_and_the_favicon_are_asked_only_of_a_theme_that_has_its_own_fields_
     [ -d "$SITE/user/themes/woo" ] || { bashunit::skip "no theme of development (dev/themes.sh)"; return 0; }
     sign_in_as "$TMP/god2" "God Test"
     local page
+    # Grav sees a changed configuration by the time of its file, to the second: a second between two changes
+    sleep 1
     sed -i.bak -E "s/^(  theme:).*/\1 quark2/" "$SITE/user/config/system.yaml"
     page=$(curl -s -b "$TMP/god2" "$URL/account/settings")
+    assert_matches '<option [^>]*selected[^>]*value="quark2"' "$page"
     # The file fields of the Form plugin (Dropzone), their settings in an attribute
     assert_contains '&quot;name&quot;&#x3A;&quot;logo&quot;' "$page"
     assert_contains '&quot;name&quot;&#x3A;&quot;favicon&quot;' "$page"
+    sleep 1
     sed -i.bak -E "s/^(  theme:).*/\1 woo/" "$SITE/user/config/system.yaml"
-    # Grav sees a changed configuration by the time of its file, to the second
-    php -r 'touch($argv[1], time() + 2);' "$SITE/user/config/system.yaml"
     page=$(curl -s -b "$TMP/god2" "$URL/account/settings")
+    assert_matches '<option [^>]*selected[^>]*value="woo"' "$page"
     assert_not_contains '&quot;name&quot;&#x3A;&quot;logo&quot;' "$page"
+    sleep 1
     sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
 }
