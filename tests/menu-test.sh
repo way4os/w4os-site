@@ -103,3 +103,22 @@ test_a_page_of_the_plugin_has_its_title_once_whatever_the_theme() {
     sleep 3
 }
 
+test_the_leftovers_of_the_demos_of_hadron_and_learn2_are_out_on_any_site_without_a_setting_of_its_own() {
+    built || return 0
+    [ -d "$ROOT/build/dev/user/themes/hadron" ] || { bashunit::skip "no hadron (dev/build.sh)"; return 0; }
+    cp -R "$ROOT/build/dev/user/themes/hadron" "$ROOT/build/dev/user/themes/learn2" "$SITE/user/themes/"
+    rm -f "$SITE/user/config/themes/hadron.yaml" "$SITE/user/config/themes/learn2.yaml"
+    local page
+    sed -i.bak -E "s/^(  theme:).*/\1 hadron/" "$SITE/user/config/system.yaml"
+    sleep 3
+    page=$(curl -s -L "$URL/fr/")
+    assert_not_contains "getgrav.org" "$page"
+    assert_not_contains "LANGUAGE.ICON" "$page"
+    assert_not_contains "grav-logo.svg" "$page"
+    sed -i.bak -E "s/^(  theme:).*/\1 learn2/" "$SITE/user/config/system.yaml"
+    sleep 3
+    assert_not_contains "grav-skeleton-rtfm-site" "$(curl -s -L "$URL/fr/")"
+    sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
+    sleep 3
+}
+

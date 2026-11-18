@@ -161,8 +161,6 @@ test_the_theme_has_its_picture_in_the_gallery_of_the_themes() {
     assert_equals "JPEG 500x500" "$(file -b "$ROOT/theme/w4os/thumbnail.jpg" | sed -E 's/^JPEG.*, ([0-9]+)x([0-9]+),.*/JPEG \1x\2/')"
 }
 
-test_the_leftovers_of_the_demos_of_some_themes_are_out_of_a_new_site() {
-    assert_contains "menu: ~" "$(cat "$ROOT/defaults/config/themes/hadron.yaml")"
-    assert_contains "custom_logo: ~" "$(cat "$ROOT/defaults/config/themes/hadron.yaml")"
-    assert_contains "position: 'off'" "$(cat "$ROOT/defaults/config/themes/learn2.yaml")"
+test_no_theme_fix_in_the_defaults_of_a_site_the_plugin_s_code_makes_them_for_every_site() {
+    assert_directory_not_exists "$ROOT/defaults/config/themes"
 }
