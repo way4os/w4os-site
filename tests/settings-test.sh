@@ -117,7 +117,9 @@ test_the_brand_is_the_site_s_shown_by_every_theme_what_a_theme_kept_before_becom
     for theme in "${themes[@]}"; do
         sleep 3
         sed -i.bak -E "s/^(  theme:).*/\1 $theme/" "$SITE/user/config/system.yaml"
-        assert_contains "/$mine\"" "$(curl -s -L "$URL/")"
+        # The copy the theme's own field would have made, the file in the site's data as it is
+        assert_contains "/user/themes/$theme/images/logo/friendly-fowl-brand.png\"" "$(curl -s -L "$URL/")"
+        assert_file_exists "$SITE/$mine"
     done
     sleep 3
     sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
