@@ -11,4 +11,14 @@ woo https://github.com/getgrav/grav-theme-woo.git 1.3.2
 editorial https://github.com/pmoreno-rodriguez/grav-theme-editorial.git V4.4.1
 # Its files are apple-notes.php and apple-notes.yaml: Grav finds them in a folder of that name (GPM's applenotes would not)
 apple-notes https://github.com/paulmassen/grav-theme-applenotes.git v1.2.0
+# Tests only, not recommended: it has no menu of the site (it lists the sections of the page shown)
 quark-photofolio https://github.com/severin10/grav-theme-quark-photofolio.git v0.1.8
+# Quark 1, the classic default theme many sites still run
+quark https://github.com/getgrav/grav-theme-quark.git 2.1.8
+# A theme for documentation, its menu in a sidebar
+learn2 https://github.com/getgrav/grav-theme-learn2.git 1.8.3
+hypertext https://github.com/artofthesmart/hypertext.git v2.4.2
+# A child of Quark2, the only free theme of another author that asks for Grav 2
+hadron https://github.com/Crabston/grav-theme-hadron.git 3.0.0
+# Tests only, not recommended: official but unmaintained since 2021
+saturn https://github.com/getgrav/grav-theme-saturn.git 1.7.1
