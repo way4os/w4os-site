@@ -9,8 +9,13 @@ sticky-footer: true
 layout-fluid: false
 theme-mode: auto
 accent-color: '#61c909'
-# The logo of the grid before its name in the top bar (its own, else the OpenSimulator logo), unless the theme has a custom logo
-grid_logo: true
+# The logo of the site, Quark2's own setting (the settings page of the site changes it): the OpenSimulator logo until the site sets
+# its own
+custom_logo:
+  user/themes/w4os/images/logo/opensimulator-logo.png:
+    name: opensimulator-logo.png
+    type: image/png
+    path: user/themes/w4os/images/logo/opensimulator-logo.png
 # The slogan of the site, by language: the title of the home page is "<site> | <slogan>" (the site title alone without one)
 slogan:
   en: 'A place to meet, build and explore'

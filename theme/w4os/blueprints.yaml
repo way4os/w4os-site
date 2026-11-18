@@ -21,10 +21,21 @@ form:
       help: By language (en, fr...). The title of the home page is the title of the site, then the slogan of its language (else the one of the default language).
       placeholder_key: en
       placeholder_value: 'A place to meet, build and explore'
-    grid_logo:
-      type: toggle
-      label: Logo of the grid
-      help: Before its name in the top bar - its own logo (LogoURL of its helpers), else the OpenSimulator logo. A custom logo replaces both.
-      highlight: 1
-      options: { 1: PLUGIN_ADMIN.ENABLED, 0: PLUGIN_ADMIN.DISABLED }
-      validate: { type: bool }
+    # Quark2's logo and favicon (its partials draw them), kept with the data of the site (the images of the theme's stream)
+    custom_logo:
+      type: file
+      label: Custom Logo
+      destination: 'theme://images/logo'
+      multiple: false
+      accept:
+        - image/*
+    custom_favicon:
+      type: file
+      label: Custom Favicon
+      filesize: 0.1
+      destination: 'theme://images/favicon'
+      multiple: false
+      accept:
+        - image/png
+        - image/svg+xml
+        - .ico

@@ -137,3 +137,12 @@ test_the_home_page_is_the_theme_s_default_page_the_blocks_of_the_grid_around_its
         assert_not_contains "w4os/splash" "$(cat "$page")"
     done
 }
+
+test_the_themes_keep_the_logo_and_the_favicon_the_site_sets_in_their_own_folders_the_web_server_writes() {
+    assert_contains 'images/logo' "$(cat "$ROOT/packaging/w4os-site.postinst")"
+    assert_contains 'images/favicon' "$(cat "$ROOT/packaging/w4os-site.postinst")"
+    assert_contains 'images/logo' "$(cat "$ROOT/dev/deploy.sh")"
+    assert_file_not_exists "$ROOT/theme/w4os/templates/partials/logo.html.twig"
+    assert_contains "custom_logo:" "$(cat "$ROOT/theme/w4os/blueprints.yaml")"
+    assert_file_exists "$ROOT/theme/w4os/images/logo/opensimulator-logo.png"
+}

@@ -44,6 +44,8 @@ ssh "$host" "sudo -n DEBIAN_FRONTEND=noninteractive NEEDRESTART_SUSPEND=1 apt-ge
 # The themes of development (dev/themes.txt), never in the package
 dev/themes.sh | tail -1
 COPYFILE_DISABLE=1 tar --no-xattrs -C build/dev -cf - user | ssh "$host" "sudo -n tar -xf - --no-same-owner -C /usr/share/w4os-site/grav && sudo -n find /var/cache/w4os-site/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
+# The folders of their logo and favicon writable by the web server, as the package makes them for its own themes
+ssh "$host" "sudo -n sh -c 'for t in /usr/share/w4os-site/grav/user/themes/*/; do for d in images/logo images/favicon; do install -d -o www-data -g www-data -m 755 \$t\$d; done; done'"
 # The site answers (DEPLOY_URL of the .env, its address)
 [ -z "${DEPLOY_URL:-}" ] || echo "site answers: $(curl -s -o /dev/null -w '%{http_code}' "$DEPLOY_URL/")"
 

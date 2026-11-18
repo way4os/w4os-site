@@ -20,8 +20,6 @@
 }
 a:hover { color: var(--q2-link-hover); }
 .navbar-brand { display: inline-flex; align-items: center; gap: .5rem; }
-.w4os-grid-logo { height: 2rem; width: auto; }
-.w4os-logo { font-weight: 700; font-size: 1.25rem; }
 .w4os-credits { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .25rem .6rem; }
 .w4os-credits > span:first-child { opacity: .75; }
 .w4os-credits a { display: inline-flex; align-items: center; gap: .35rem; }
