@@ -128,3 +128,12 @@ test_the_theme_of_the_site_shows_the_title_of_the_pages_of_the_w4os_plugin_which
     assert_contains "{{ page.title }}" "$page"
     assert_contains "page.content|raw" "$page"
 }
+
+test_the_home_page_is_the_theme_s_default_page_the_blocks_of_the_grid_around_its_text() {
+    local page
+    for page in "$ROOT"/defaults/pages/01.home/*.md; do
+        assert_contains "template: default" "$(cat "$page")"
+        assert_contains "[w4os-home]" "$(cat "$page")"
+        assert_not_contains "w4os/splash" "$(cat "$page")"
+    done
+}
