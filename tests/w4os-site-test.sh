@@ -156,3 +156,7 @@ test_the_site_gives_its_own_favicon_the_square_opensimulator_logo_as_the_theme_s
     # The w4os icon a site that saved its settings before still points at
     assert_file_exists "$ROOT/theme/w4os/images/favicon/cropped-w4os-logo-v1-square-32x32.png"
 }
+
+test_the_theme_has_its_picture_in_the_gallery_of_the_themes() {
+    assert_equals "JPEG 500x500" "$(file -b "$ROOT/theme/w4os/thumbnail.jpg" | sed -E 's/^JPEG.*, ([0-9]+)x([0-9]+),.*/JPEG \1x\2/')"
+}
