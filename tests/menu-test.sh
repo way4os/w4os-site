@@ -73,6 +73,9 @@ test_the_admin_pages_have_their_own_route_the_old_addresses_lead_there() {
         "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -b "$TMP/god6" "$URL/account/regions/region?uuid=r1")"
     # No admin page linked under /account any more: /account is the visitor's own
     assert_equals 200 "$(curl -s -o "$TMP/dashboard.html" -w '%{http_code}' -b "$TMP/god6" "$URL/w4os")"
-    assert_empty "$(grep -oE 'href="/account/[^"]*"' "$TMP/dashboard.html" | grep -v '/account/logout')"
-    assert_contains 'href="/w4os/settings"' "$(cat "$TMP/dashboard.html")"
+    # The admin layout escapes its links (&#x2F;)
+    local links
+    links=$(sed 's#&\#x2F;#/#g' "$TMP/dashboard.html" | grep -oE 'href="[^"]*"')
+    assert_empty "$(echo "$links" | grep '"/account/' | grep -v '/account/logout')"
+    assert_contains 'href="/w4os/settings"' "$links"
 }
