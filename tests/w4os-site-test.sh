@@ -146,10 +146,13 @@ test_nothing_writes_in_the_themes_of_the_package_the_logo_and_the_favicon_a_site
     assert_file_exists "$ROOT/theme/w4os/images/logo/opensimulator-logo.png"
 }
 
-test_the_site_gives_its_own_favicon_the_w4os_icon_as_the_theme_s_setting() {
-    local icon="$ROOT/theme/w4os/images/favicon/cropped-w4os-logo-v1-square-32x32.png"
+test_the_site_gives_its_own_favicon_the_square_opensimulator_logo_as_the_theme_s_setting() {
+    local icon="$ROOT/theme/w4os/images/favicon/opensimulator-logo-square.png"
     assert_file_exists "$icon"
     [ ! -L "$icon" ] || fail "the favicon is the site's own file, not a link into the plugin"
+    assert_equals "PNG 512x512" "$(file -b "$icon" | sed -E 's/^PNG image data, ([0-9]+) x ([0-9]+).*/PNG \1x\2/')"
     assert_file_not_exists "$ROOT/theme/w4os/images/favicon.png"
-    assert_contains "cropped-w4os-logo-v1-square-32x32.png" "$(sed -n '/^custom_favicon:/,/^[a-z]/p' "$ROOT/theme/w4os/w4os.yaml")"
+    assert_contains "opensimulator-logo-square.png" "$(sed -n '/^custom_favicon:/,/^[a-z]/p' "$ROOT/theme/w4os/w4os.yaml")"
+    # The w4os icon a site that saved its settings before still points at
+    assert_file_exists "$ROOT/theme/w4os/images/favicon/cropped-w4os-logo-v1-square-32x32.png"
 }
