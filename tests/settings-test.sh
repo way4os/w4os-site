@@ -21,8 +21,11 @@ test_a_god_finds_the_theme_among_the_ones_installed_the_site_s_chosen_under_the_
     assert_contains "<title>Site settings" "$page"
     assert_not_contains "w4os.settings_title" "$page"
     assert_contains "Theme" "$page"
-    assert_matches '<option [^>]*selected[^>]*value="w4os"[^>]*>w4os site</option>' "$page"
-    assert_matches '<option +value="quark2"[^>]*>Quark 2</option>' "$page"
+    # A gallery of the themes, a radio each, the site's checked, each by its name
+    assert_matches 'value="w4os"[^>]*checked' "$page"
+    assert_contains 'w4os site' "$page"
+    assert_contains 'value="quark2"' "$page"
+    assert_contains 'Quark 2' "$page"
 }
 
 test_a_resident_never_gets_them() {
@@ -41,14 +44,14 @@ test_the_logo_and_the_favicon_are_asked_only_of_a_theme_that_has_its_own_fields_
     sleep 3
     sed -i.bak -E "s/^(  theme:).*/\1 quark2/" "$SITE/user/config/system.yaml"
     page=$(curl -s -b "$TMP/god2" "$URL/account/settings")
-    assert_matches '<option [^>]*selected[^>]*value="quark2"' "$page"
+    assert_matches 'value=\"quark2\"[^>]*checked' \"$page\"
     # The file fields of the Form plugin (Dropzone), their settings in an attribute
     assert_contains '&quot;name&quot;&#x3A;&quot;logo&quot;' "$page"
     assert_contains '&quot;name&quot;&#x3A;&quot;favicon&quot;' "$page"
     sleep 3
     sed -i.bak -E "s/^(  theme:).*/\1 woo/" "$SITE/user/config/system.yaml"
     page=$(curl -s -b "$TMP/god2" "$URL/account/settings")
-    assert_matches '<option [^>]*selected[^>]*value="woo"' "$page"
+    assert_matches 'value=\"woo\"[^>]*checked' \"$page\"
     assert_not_contains '&quot;name&quot;&#x3A;&quot;logo&quot;' "$page"
     sleep 3
     sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
@@ -65,7 +68,7 @@ test_a_theme_saved_shows_at_once_on_the_settings_page_and_on_the_site() {
     done
     # Saved, then the page the save leads to and the home page, at once
     page=$(curl -s -L -b "$TMP/god3" -c "$TMP/god3" "$URL/account/settings" "${fields[@]}" --data-urlencode "data[theme]=quark2")
-    assert_matches '<option [^>]*selected[^>]*value="quark2"' "$page"
+    assert_matches 'value=\"quark2\"[^>]*checked' \"$page\"
     assert_contains '/user/themes/quark2/' "$(curl -s -L -b "$TMP/god3" "$URL/")"
     assert_not_contains '/user/themes/w4os/' "$(curl -s -L -b "$TMP/god3" "$URL/")"
     sleep 3
