@@ -20,3 +20,22 @@ test_a_home_page_of_an_earlier_version_still_shows_with_the_blocks_around_its_te
     assert_matches '<h1[^>]*>Old welcome</h1>' "$page"
     assert_contains 'Some text.' "$page"
 }
+
+test_the_logo_a_site_set_stays_after_an_upgrade_that_replaces_its_theme() {
+    built || return 0
+    # The logo the settings page put, as it puts it: the file in the site's data, the theme's own setting naming it
+    mkdir -p "$SITE/user/data/theme/images/logo" "$SITE/user/config/themes"
+    cp "$ROOT/theme/w4os/images/logo/opensimulator-logo.png" "$SITE/user/data/theme/images/logo/friendly-fowl-brand.png"
+    printf '%s\n' 'custom_logo:' '  user/data/theme/images/logo/friendly-fowl-brand.png:' '    name: friendly-fowl-brand.png' \
+        '    type: image/png' '    path: user/data/theme/images/logo/friendly-fowl-brand.png' >"$SITE/user/config/themes/quark2.yaml"
+    sleep 3
+    sed -i.bak -E "s/^(  theme:).*/\1 quark2/" "$SITE/user/config/system.yaml"
+    # An upgrade: the theme replaced by the package's own
+    rm -rf "$SITE/user/themes/quark2"
+    cp -R "$GRAV_TREE/user/themes/quark2" "$SITE/user/themes/quark2"
+    find "$SITE/cache" -mindepth 1 -delete 2>/dev/null || true
+    assert_contains '<img src="/user/data/theme/images/logo/friendly-fowl-brand.png"' "$(curl -s -L "$URL/")"
+    assert_equals 200 "$(curl -s -o /dev/null -w '%{http_code}' "$URL/user/data/theme/images/logo/friendly-fowl-brand.png")"
+    sleep 3
+    sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
+}

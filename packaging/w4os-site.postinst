@@ -25,13 +25,6 @@ configure)
             rm -rf "/var/cache/w4os-site/$dir.old.$$"
         fi
     done
-    # The logo and the favicon the site sets (its settings page) go where each theme keeps them (its own fields): writable by the
-    # web server, in every theme installed
-    for theme in /usr/share/w4os-site/grav/user/themes/*/; do
-        for dir in images/logo images/favicon; do
-            install -d -o www-data -g www-data -m 755 "$theme$dir"
-        done
-    done
     [ -n "$2" ] || echo "w4os-site: run 'sudo w4os-site setup' to connect the site to a grid, then 'sudo w4os-site web'."
     ;;
 esac
