@@ -121,9 +121,12 @@ test_web_apache_on_port_80_adds_no_listen() {
     assert_not_contains "Listen" "$(site web apache --host grid.example.org)"
 }
 
-test_the_theme_of_the_site_is_quark2_s_page_the_title_of_the_pages_of_the_plugin_in_their_content() {
-    # Quark2's default page (the content alone): the plugin heads the content of its pages with their title
-    assert_file_not_exists "$ROOT/theme/w4os/templates/default.html.twig"
+test_the_theme_of_the_site_shows_the_title_of_the_pages_of_the_w4os_plugin_which_leaves_it_to_the_theme() {
+    local page
+    page=$(cat "$ROOT/theme/w4os/templates/default.html.twig")
+    assert_contains "page.header.w4os" "$page"
+    assert_contains "{{ page.title }}" "$page"
+    assert_contains "page.content|raw" "$page"
 }
 
 test_the_home_page_is_the_theme_s_default_page_the_blocks_of_the_grid_around_its_text() {

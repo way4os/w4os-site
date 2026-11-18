@@ -87,8 +87,9 @@ test_the_admin_pages_have_their_own_route_the_old_addresses_lead_there() {
 
 test_a_page_of_the_plugin_has_its_title_once_whatever_the_theme() {
     built || return 0
-    # Quark2 shows the content of a page alone; Editorial and Mundana show its title themselves (themes of dev/themes.txt)
-    local theme count themes=(w4os quark2)
+    # The plugin leaves it to the theme: the w4os theme shows it (Quark2 shows the content alone), Editorial and Mundana show it
+    # themselves (themes of dev/themes.txt)
+    local theme count themes=(w4os)
     for theme in editorial mundana; do
         [ -d "$ROOT/build/dev/user/themes/$theme" ] && cp -R "$ROOT/build/dev/user/themes/$theme" "$SITE/user/themes/" && themes+=("$theme")
     done
