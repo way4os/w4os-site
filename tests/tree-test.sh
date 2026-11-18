@@ -99,3 +99,15 @@ test_an_upgrade_replaces_only_what_the_site_has_as_the_package_put_it() {
     # Changed once, still changed at the next upgrade
     assert_contains "themes/w4os changed on this site, left as it is" "$("$TREE" configure)"
 }
+
+test_the_web_user_writes_only_its_own_tree_never_what_opensim_owns() {
+    local root
+    root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    # The home of the suite made 755 when missing, never given to the web user; the web user gets the site's tree alone
+    assert_contains "install -d -m 755 /var/lib/opensim" "$(cat "$root/packaging/w4os-site.postinst")"
+    assert_not_contains "chown" "$(cat "$root/packaging/w4os-site.postinst")"
+    assert_equals 'chown -R "$OWNER:$OWNER" "$ROOT"' "$(grep -o 'chown .*' "$root/bin/w4os-site-tree")"
+    assert_not_contains "g+w" "$(cat "$root/bin/w4os-site-tree" "$root/packaging/w4os-site.postinst")"
+    "$TREE" configure >/dev/null
+    assert_equals 755 "$(stat -f %Lp "$(dirname "$W4OS_SITE_ROOT")" 2>/dev/null || stat -c %a "$(dirname "$W4OS_SITE_ROOT")")"
+}
