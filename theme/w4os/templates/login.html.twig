@@ -1,9 +1,0 @@
-{# The page of the Login plugin, with the links of the w4os plugin under its button; "remember me" checked, as on a social network
-   (the Login plugin has no setting for it) #}
-{% extends 'partials/base.html.twig' %}
-
-{% block content %}
-    {% include 'partials/messages.html.twig' %}
-    {{ include('partials/login-form.html.twig')|replace({'name="rememberme" id="#rememberme"': 'name="rememberme" id="#rememberme" checked'})|raw }}
-    {% if not grav.user.authenticated %}{% include 'w4os/login-links.html.twig' %}{% endif %}
-{% endblock %}

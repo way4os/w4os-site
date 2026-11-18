@@ -1,0 +1,14 @@
+# The themes a server of development gets besides the site's own, to try the site in other themes (?theme=<folder>, the theme
+# switcher of dev/plugins/theme-switcher): Quark forks and other structures. Never in the package. Folder in user/themes,
+# source, tag. Left out: bootstrap4-open-matter (its twigfeeds =4.0.1 cannot be met on Grav 2, its parent bootstrap4 unchanged
+# since 2020, 11 plugins), quark-open-publishing (Quark 1 and 11 plugins; quark2-open-publishing instead), quark-portfolio
+# (no such theme; quark-photofolio instead).
+quark-a11y https://github.com/pmoreno-rodriguez/grav-theme-quark-a11y.git 1.2.0
+quark2-open-publishing https://github.com/hibbitts-design/grav-theme-quark2-open-publishing.git v1.2.12
+mundana https://github.com/pmoreno-rodriguez/grav-theme-mundana.git V2.4.0
+future2021 https://github.com/pmoreno-rodriguez/grav-theme-future2021.git V3.10.1
+woo https://github.com/getgrav/grav-theme-woo.git 1.3.2
+editorial https://github.com/pmoreno-rodriguez/grav-theme-editorial.git V4.4.1
+# Its files are apple-notes.php and apple-notes.yaml: Grav finds them in a folder of that name (GPM's applenotes would not)
+apple-notes https://github.com/paulmassen/grav-theme-applenotes.git v1.2.0
+quark-photofolio https://github.com/severin10/grav-theme-quark-photofolio.git v0.1.8

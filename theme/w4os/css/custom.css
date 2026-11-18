@@ -44,8 +44,7 @@ a:hover { color: var(--q2-link-hover); }
 #grav-login .button-wrapper { display: flex; flex-direction: column; gap: .75rem; }
 #grav-login .button-wrapper button { width: 100%; }
 /* The links of the w4os plugin under the button, inside the panel of the Login plugin */
-#grav-login:has(+ .w4os-login-links) { margin-bottom: 0; padding-bottom: 4rem; }
-#grav-login + .w4os-login-links { position: relative; margin: -3rem auto 5rem; }
+#grav-login .w4os-login-links { margin: 1rem 0 0; text-align: center; }
 
 /* The top bar and the footer as wide on a full-width page (layout-fluid, the home page) as on the others: Quark2's container
    width, whatever the width of the content below */

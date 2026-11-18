@@ -14,9 +14,10 @@ test_a_session_lasts_a_day_in_a_folder_of_the_site_that_php_alone_cleans_after_a
     assert_contains "gc_maxlifetime: 86400" "$session"
 }
 
-test_remember_me_lasts_a_year_checked_by_the_theme_the_avatars_kept_as_accounts_to_find_them_again() {
+test_remember_me_lasts_a_year_checked_by_the_plugin_in_any_theme_the_avatars_kept_as_accounts_to_find_them_again() {
     assert_contains "timeout: 31536000" "$(sed -n '/^rememberme:/,/^[a-z]/p' "$ROOT/defaults/config/plugins/login.yaml")"
-    assert_contains 'name="rememberme" id="#rememberme" checked' "$(cat "$ROOT/theme/w4os/templates/login.html.twig")"
+    # The w4os plugin checks it on the sign-in page, whatever the theme: the theme of the site has no sign-in template of its own
+    assert_file_not_exists "$ROOT/theme/w4os/templates/login.html.twig"
     assert_contains "save_accounts: true" "$(cat "$ROOT/defaults/config/plugins/w4os.yaml")"
 }
 

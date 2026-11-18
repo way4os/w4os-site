@@ -7,6 +7,8 @@
 #   dev/deploy.sh HOST       another one
 #   W4OS_PLUGIN=DIR dev/deploy.sh   the plugin of another folder (a worktree of a branch)
 #
+# The server also gets the themes of dev/themes.txt and the theme switcher (?theme=<folder>), never in the package.
+#
 # The plugin and the site are built from their last commit (build-tools refuses a tree with changes: commit first); the engine
 # and the helpers as they are in their folders, so their commits are told with "+changes" when their tree is not clean.
 set -Eeuo pipefail
@@ -39,6 +41,9 @@ scp -q "$deb" "$host:/tmp/"
 # shellcheck disable=SC2029
 ssh "$host" "sudo -n DEBIAN_FRONTEND=noninteractive NEEDRESTART_SUSPEND=1 apt-get install -y -qq --reinstall '/tmp/$(basename "$deb")' >/dev/null && rm -f '/tmp/$(basename "$deb")' &&
     sudo -n find /var/cache/w4os-site/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
+# The themes of development (dev/themes.txt) and the theme switcher (dev/plugins/theme-switcher), never in the package
+dev/themes.sh | tail -1
+tar -C build/dev -cf - user | ssh "$host" "sudo -n tar -xf - --no-same-owner -C /usr/share/w4os-site/grav && sudo -n find /var/cache/w4os-site/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
 # The site answers (DEPLOY_URL of the .env, its address)
 [ -z "${DEPLOY_URL:-}" ] || echo "site answers: $(curl -s -o /dev/null -w '%{http_code}' "$DEPLOY_URL/")"
 
