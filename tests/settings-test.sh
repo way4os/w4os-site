@@ -53,3 +53,21 @@ test_the_logo_and_the_favicon_are_asked_only_of_a_theme_that_has_its_own_fields_
     sleep 3
     sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
 }
+
+test_a_theme_saved_shows_at_once_on_the_settings_page_and_on_the_site() {
+    built || return 0
+    sign_in_as "$TMP/god3" "God Test"
+    local form fields page
+    form=$(curl -s -b "$TMP/god3" -c "$TMP/god3" "$URL/account/settings")
+    fields=()
+    for name in __form-name__ __unique_form_id__ form-nonce; do
+        fields+=(--data-urlencode "$name=$(echo "$form" | sed -n "s/.*name=\"$name\" value=\"\([^\"]*\)\".*/\1/p" | head -1)")
+    done
+    # Saved, then the page the save leads to and the home page, at once
+    page=$(curl -s -L -b "$TMP/god3" -c "$TMP/god3" "$URL/account/settings" "${fields[@]}" --data-urlencode "data[theme]=quark2")
+    assert_matches '<option [^>]*selected[^>]*value="quark2"' "$page"
+    assert_contains '/user/themes/quark2/' "$(curl -s -L -b "$TMP/god3" "$URL/")"
+    assert_not_contains '/user/themes/w4os/' "$(curl -s -L -b "$TMP/god3" "$URL/")"
+    sleep 3
+    sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
+}
