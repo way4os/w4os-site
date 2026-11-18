@@ -34,25 +34,22 @@ test_a_resident_never_gets_them() {
     assert_equals 302 "$(curl -s -o /dev/null -w '%{http_code}' -b "$TMP/ada" "$URL/account/settings")"
 }
 
-test_the_logo_and_the_favicon_are_asked_only_of_a_theme_that_has_its_own_fields_for_them() {
+test_the_logo_and_the_favicon_of_the_site_are_asked_whatever_the_theme() {
     built || return 0
     cp -R "$ROOT/build/dev/user/themes/." "$SITE/user/themes/" 2>/dev/null || true
     [ -d "$SITE/user/themes/woo" ] || { bashunit::skip "no theme of development (dev/themes.sh)"; return 0; }
     sign_in_as "$TMP/god2" "God Test"
-    local page
-    # Grav sees a changed configuration once PHP takes its compiled file again (OPcache, every 2 seconds by default)
-    sleep 3
-    sed -i.bak -E "s/^(  theme:).*/\1 quark2/" "$SITE/user/config/system.yaml"
-    page=$(curl -s -b "$TMP/god2" "$URL/account/settings")
-    assert_matches 'value="quark2"[^>]*checked' "$page"
-    # The file fields of the Form plugin (Dropzone), their settings in an attribute
-    assert_contains '&quot;name&quot;&#x3A;&quot;logo&quot;' "$page"
-    assert_contains '&quot;name&quot;&#x3A;&quot;favicon&quot;' "$page"
-    sleep 3
-    sed -i.bak -E "s/^(  theme:).*/\1 woo/" "$SITE/user/config/system.yaml"
-    page=$(curl -s -b "$TMP/god2" "$URL/account/settings")
-    assert_matches 'value="woo"[^>]*checked' "$page"
-    assert_not_contains '&quot;name&quot;&#x3A;&quot;logo&quot;' "$page"
+    local page theme
+    for theme in quark2 woo; do
+        # Grav sees a changed configuration once PHP takes its compiled file again (OPcache, every 2 seconds by default)
+        sleep 3
+        sed -i.bak -E "s/^(  theme:).*/\1 $theme/" "$SITE/user/config/system.yaml"
+        page=$(curl -s -b "$TMP/god2" "$URL/account/settings")
+        assert_matches "value=\"$theme\"[^>]*checked" "$page"
+        # The file fields of the Form plugin (Dropzone), their settings in an attribute
+        assert_contains '&quot;name&quot;&#x3A;&quot;logo&quot;' "$page"
+        assert_contains '&quot;name&quot;&#x3A;&quot;favicon&quot;' "$page"
+    done
     sleep 3
     sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
 }
@@ -75,42 +72,60 @@ test_a_theme_saved_shows_at_once_on_the_settings_page_and_on_the_site() {
     sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
 }
 
-test_the_settings_saved_keep_in_the_site_only_what_is_not_the_theme_s_own_default() {
+# save_settings JAR FIELD=VALUE...: the settings saved by the god of JAR, with the fields of its form and these
+save_settings() {
+    local jar=$1 form name fields=()
+    shift
+    form=$(curl -s -b "$jar" -c "$jar" "$URL/account/settings")
+    for name in __form-name__ __unique_form_id__ form-nonce; do
+        fields+=(--data-urlencode "$name=$(echo "$form" | sed -n "s/.*name=\"$name\" value=\"\([^\"]*\)\".*/\1/p" | head -1)")
+    done
+    for name in "$@"; do fields+=(--data-urlencode "$name"); done
+    curl -s -o /dev/null -b "$jar" -c "$jar" "$URL/account/settings" "${fields[@]}"
+}
+
+test_the_brand_is_the_site_s_shown_by_every_theme_what_a_theme_kept_before_becomes_it() {
     built || return 0
-    sign_in_as "$TMP/god4" "God Test"
-    local form fields config logo mine
-    logo=user/themes/w4os/images/logo/opensimulator-logo.png
-    mine=user/data/theme/images/logo/friendly-fowl-brand.png
-    # A site that saved its brand before: its own logo, the theme's favicon written in its configuration, a setting of its own
-    mkdir -p "$SITE/user/config/themes"
-    printf '%s\n' 'accent-color: '"'"'#8428df'"'" 'custom_logo:' "  $mine:" '    name: friendly-fowl-brand.png' '    type: image/png' \
-        "    path: $mine" 'custom_favicon:' '  user/themes/w4os/images/favicon/opensimulator-logo-square.png:' \
-        '    name: opensimulator-logo-square.png' '    type: image/png' '    path: user/themes/w4os/images/favicon/opensimulator-logo-square.png' \
-        >"$SITE/user/config/themes/w4os.yaml"
+    local config mine icon theme json
     sleep 3
-    form=$(curl -s -b "$TMP/god4" -c "$TMP/god4" "$URL/account/settings")
-    fields=()
-    for name in __form-name__ __unique_form_id__ form-nonce; do
-        fields+=(--data-urlencode "$name=$(echo "$form" | sed -n "s/.*name=\"$name\" value=\"\([^\"]*\)\".*/\1/p" | head -1)")
-    done
-    # Saved with its own logo and the favicon of the theme, then with the logo of the theme
-    curl -s -o /dev/null -b "$TMP/god4" -c "$TMP/god4" "$URL/account/settings" "${fields[@]}" --data-urlencode "data[theme]=w4os" \
-        --data-urlencode "data[_json][logo]={\"$mine\":{\"name\":\"friendly-fowl-brand.png\",\"type\":\"image/png\",\"path\":\"$mine\"}}" \
-        --data-urlencode "data[_json][favicon]={\"user/themes/w4os/images/favicon/opensimulator-logo-square.png\":{\"name\":\"opensimulator-logo-square.png\",\"type\":\"image/png\",\"path\":\"user/themes/w4os/images/favicon/opensimulator-logo-square.png\"}}"
-    config=$(cat "$SITE/user/config/themes/w4os.yaml")
-    assert_contains "$mine" "$config"
-    assert_not_contains "custom_favicon" "$config"
-    assert_contains "accent-color" "$config"
-    form=$(curl -s -b "$TMP/god4" -c "$TMP/god4" "$URL/account/settings")
-    fields=()
-    for name in __form-name__ __unique_form_id__ form-nonce; do
-        fields+=(--data-urlencode "$name=$(echo "$form" | sed -n "s/.*name=\"$name\" value=\"\([^\"]*\)\".*/\1/p" | head -1)")
-    done
-    curl -s -o /dev/null -b "$TMP/god4" -c "$TMP/god4" "$URL/account/settings" "${fields[@]}" --data-urlencode "data[theme]=w4os" \
-        --data-urlencode "data[_json][logo]={\"$logo\":{\"name\":\"opensimulator-logo.png\",\"type\":\"image/png\",\"path\":\"$logo\"}}"
+    mine=user/data/theme/images/logo/friendly-fowl-brand.png
+    icon=user/themes/w4os/images/favicon/opensimulator-logo-square.png
+    mkdir -p "$SITE/user/data/theme/images/logo" "$SITE/user/config/themes"
+    cp "$SITE/user/themes/w4os/images/logo/opensimulator-logo.png" "$SITE/$mine"
+    # A site that saved its brand in the theme before: its own logo, the theme's favicon, a setting of its own
+    printf '%s\n' 'accent-color: '"'"'#8428df'"'" 'custom_logo:' "  $mine:" '    name: friendly-fowl-brand.png' '    type: image/png' \
+        "    path: $mine" 'custom_favicon:' "  $icon:" '    name: opensimulator-logo-square.png' '    type: image/png' "    path: $icon" \
+        >"$SITE/user/config/themes/w4os.yaml"
+    # Grav lists its configuration files again once its check interval is over (2 seconds), PHP its compiled files (OPcache)
+    sleep 3
+    sign_in_as "$TMP/god4" "God Test"
+    # Shown as the site's, saved as the site's: out of the theme, the theme's own favicon no brand of the site
+    assert_contains 'friendly-fowl-brand.png' "$(curl -s -b "$TMP/god4" "$URL/account/settings")"
+    json="{\"$mine\":{\"name\":\"friendly-fowl-brand.png\",\"type\":\"image/png\",\"path\":\"$mine\"}}"
+    save_settings "$TMP/god4" "data[theme]=w4os" "data[_json][logo]=$json" \
+        "data[_json][favicon]={\"$icon\":{\"name\":\"opensimulator-logo-square.png\",\"type\":\"image/png\",\"path\":\"$icon\"}}"
     config=$(cat "$SITE/user/config/themes/w4os.yaml")
     assert_not_contains "custom_logo" "$config"
+    assert_not_contains "custom_favicon" "$config"
     assert_contains "accent-color" "$config"
+    config=$(sed -n '/^brand:/,/^[a-z]/p' "$SITE/user/config/plugins/w4os.yaml")
+    assert_contains "$mine" "$config"
+    assert_not_contains "favicon" "$config"
+    # The same logo whatever the theme the site switches to, Editorial's switch on with it (a theme of dev/themes.txt)
+    local themes=(quark2 w4os)
+    [ -d "$ROOT/build/dev/user/themes/editorial" ] && cp -R "$ROOT/build/dev/user/themes/editorial" "$SITE/user/themes/" && themes+=(editorial)
+    for theme in "${themes[@]}"; do
+        sleep 3
+        sed -i.bak -E "s/^(  theme:).*/\1 $theme/" "$SITE/user/config/system.yaml"
+        assert_contains "/$mine\"" "$(curl -s -L "$URL/")"
+    done
+    sleep 3
+    sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
+    # No brand of the site (its files removed from the form, as Dropzone posts it): each theme its own
+    save_settings "$TMP/god4" "data[theme]=w4os" "data[_json][logo]=[]" "data[_json][favicon]=[]"
+    assert_not_contains "brand:" "$(cat "$SITE/user/config/plugins/w4os.yaml")"
+    sleep 3
+    assert_contains "opensimulator-logo.png" "$(curl -s -L "$URL/")"
     rm -f "$SITE/user/config/themes/w4os.yaml"
     sleep 3
 }
