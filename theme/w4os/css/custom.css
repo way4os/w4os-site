@@ -16,6 +16,10 @@ h4 { font-size: 1.0625rem; }
 h5 { font-size: 1rem; }
 :is(p, ul, ol, dl, blockquote, pre, table, figure, hr, iframe, .card) + :is(h1, h2) { margin-top: 1.35em; }
 :is(p, ul, ol, dl, blockquote, pre, table, figure, hr, iframe, .card) + :is(h3, h4, h5, h6) { margin-top: 1.2em; }
+/* A page as a page, not as Quark2's card on its canvas: cards kept for what stands out in it (the tables of the blocks on the same
+   background as the page around them) */
+#body-wrapper > .container > .content-item,
+:root[data-theme="dark"] #body-wrapper > .container > .content-item { background: none; box-shadow: none; border-radius: 0; }
 
 /* The colors of the w4os logo: its green first, its orange second. Filled accents keep the logo's green with black text, as the
    logo has it; links are that green on a dark page, a darker shade of it on a light one (the logo's green on white is too pale
