@@ -17,7 +17,6 @@
     <link rel="canonical" href="{{ page.url(true, true) }}" />
 
     {# Preload the critical latin subsets so headings + body text render in-font on first paint #}
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ url('theme://fonts/cal-sans/cal-sans-latin.woff2') }}" />
     <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ url('theme://fonts/inter/inter-latin.woff2') }}" />
 
     {% if accent_is_hex %}

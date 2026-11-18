@@ -1,5 +1,17 @@
 /* The w4os site: small touches over Quark2 */
 
+/* Quark2 made lighter: the headings in its text face (Inter, semibold) rather than its display face (Cal Sans, one heavy weight),
+   on a smaller scale, a little less space around them; the text at its regular weight */
+:root { --pico-font-family-display: var(--pico-font-family-sans-serif); --pico-font-weight: 400; }
+h1, h2, h3, h4, h5, .display, .h-display { font-weight: 600; letter-spacing: -0.01em; margin-bottom: 0.35em; }
+h1 { font-size: clamp(1.75rem, 2vw + 1rem, 2.375rem); line-height: 1.15; letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.375rem, 1.25vw + 0.85rem, 1.75rem); }
+h3 { font-size: clamp(1.15rem, 0.75vw + 0.8rem, 1.3rem); }
+h4 { font-size: 1.0625rem; }
+h5 { font-size: 1rem; }
+:is(p, ul, ol, dl, blockquote, pre, table, figure, hr, iframe, .card) + :is(h1, h2) { margin-top: 1.35em; }
+:is(p, ul, ol, dl, blockquote, pre, table, figure, hr, iframe, .card) + :is(h3, h4, h5, h6) { margin-top: 1.2em; }
+
 /* The colors of the w4os logo: its green first, its orange second. Filled accents keep the logo's green with black text, as the
    logo has it; links are that green on a dark page, a darker shade of it on a light one (the logo's green on white is too pale
    to read); the orange marks what is pointed or focused. */
