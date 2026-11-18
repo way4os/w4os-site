@@ -68,6 +68,8 @@ test_the_admin_pages_have_their_own_route_the_old_addresses_lead_there() {
         got=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -b "$TMP/god6" "$URL/account/$old")
         assert_equals "301 $URL$new" "$got"
     done
+    # Signed out: the sign-in, as for every page of the managers
+    assert_equals "302 $URL/login" "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$URL/w4os")"
     # The query of the old address kept
     assert_equals "301 $URL/w4os/regions/region?uuid=r1" \
         "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -b "$TMP/god6" "$URL/account/regions/region?uuid=r1")"
