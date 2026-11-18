@@ -49,7 +49,7 @@ test_my_avatar_is_the_profile_of_the_avatar_signed_in_and_the_registration_for_a
     sign_in_as "$TMP/ada2" "Ada Love"
     assert_equals 302 "$(curl -s -o /dev/null -w '%{http_code}' "$URL/profile")"
     assert_contains "/register" "$(curl -s -o /dev/null -w '%{redirect_url}' "$URL/profile")"
-    assert_contains "Ada Love" "$(curl -s -b "$TMP/ada2" "$URL/profile")"
+    assert_contains "<title>Ada Love" "$(curl -s -b "$TMP/ada2" "$URL/profile")"
 }
 
 test_logout_signs_out_as_the_login_plugin_does() {

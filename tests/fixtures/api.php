@@ -31,10 +31,11 @@ if ($path === '/api/sign-ins' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $answer(401, ['title' => 'Refused', 'status' => 401, 'detail' => 'Wrong name or password', 'code' => 'sign_in_refused']);
 }
-if ($path === '/api/avatars/a1') {
+// An avatar by its UUID or its name, as the engine finds it
+if (in_array(rawurldecode($path), ['/api/avatars/a1', '/api/avatars/Ada Love'], true)) {
     $answer(200, ['data' => $ada]);
 }
-if ($path === '/api/avatars/g1') {
+if (in_array(rawurldecode($path), ['/api/avatars/g1', '/api/avatars/God Test'], true)) {
     $answer(200, ['data' => $god]);
 }
 http_response_code(404);
