@@ -39,10 +39,11 @@ test_the_logo_and_the_favicon_are_asked_only_of_a_theme_that_has_its_own_fields_
     local page
     sed -i.bak -E "s/^(  theme:).*/\1 quark2/" "$SITE/user/config/system.yaml"
     page=$(curl -s -b "$TMP/god2" "$URL/account/settings")
-    assert_contains 'name="data[logo]"' "$page"
-    assert_contains 'name="data[favicon]"' "$page"
+    # The file fields of the Form plugin (Dropzone), their settings in an attribute
+    assert_contains '&quot;name&quot;&#x3A;&quot;logo&quot;' "$page"
+    assert_contains '&quot;name&quot;&#x3A;&quot;favicon&quot;' "$page"
     sed -i.bak -E "s/^(  theme:).*/\1 woo/" "$SITE/user/config/system.yaml"
     page=$(curl -s -b "$TMP/god2" "$URL/account/settings")
-    assert_not_contains 'name="data[logo]"' "$page"
+    assert_not_contains '&quot;name&quot;&#x3A;&quot;logo&quot;' "$page"
     sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
 }
