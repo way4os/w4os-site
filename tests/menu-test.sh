@@ -87,12 +87,16 @@ test_the_admin_pages_have_their_own_route_the_old_addresses_lead_there() {
 
 test_a_page_of_the_plugin_has_its_title_once_whatever_the_theme() {
     built || return 0
-    local theme count
-    for theme in w4os quark2; do
+    # Quark2 shows the content of a page alone; Editorial and Mundana show its title themselves (themes of dev/themes.txt)
+    local theme count themes=(w4os quark2)
+    for theme in editorial mundana; do
+        [ -d "$ROOT/build/dev/user/themes/$theme" ] && cp -R "$ROOT/build/dev/user/themes/$theme" "$SITE/user/themes/" && themes+=("$theme")
+    done
+    for theme in "${themes[@]}"; do
         sed -i.bak -E "s/^(  theme:).*/\1 $theme/" "$SITE/user/config/system.yaml"
         sleep 3
-        count=$(curl -s -L "$URL/fr/search" | grep -o '<h1[^>]*>[^<]*Chercher' | wc -l | tr -d ' ')
-        assert_equals "1" "$count"
+        count=$(curl -s -L "$URL/fr/search" | tr '\n' ' ' | grep -oE '<h[1-3][^>]*>[[:space:]]*(<a[^>]*>)?[[:space:]]*Chercher[[:space:]]*(</a>)?[[:space:]]*</h[1-3]>' | wc -l | tr -d ' ')
+        assert_equals "$theme 1" "$theme $count"
     done
     sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
     sleep 3
