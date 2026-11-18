@@ -1,9 +1,9 @@
 /* The w4os site: small touches over Quark2 */
 
 /* Quark2 made lighter: the headings in its text face (Inter, a variable font: every weight) rather than its display face (Cal Sans,
-   one heavy weight), on a smaller scale, a little less space around them; the first two at a normal weight (--w4os-heading-weight:
-   300 for light ones), the others semibold; what Quark2 and Pico make bold, semibold; the text at its regular weight */
-:root { --pico-font-family-display: var(--pico-font-family-sans-serif); --pico-font-weight: 400; --w4os-heading-weight: 400; }
+   one heavy weight), on a smaller scale, a little less space around them; the first two light (--w4os-heading-weight:
+   400 for a normal weight), the others semibold; what Quark2 and Pico make bold, semibold; the text at its regular weight */
+:root { --pico-font-family-display: var(--pico-font-family-sans-serif); --pico-font-weight: 400; --w4os-heading-weight: 300; }
 h1, h2, h3, h4, h5, .display, .h-display { letter-spacing: -0.01em; margin-bottom: 0.35em; }
 h1, h2, .display, .h-display { font-weight: var(--w4os-heading-weight); }
 h3, h4, h5, h6 { font-weight: 600; }
