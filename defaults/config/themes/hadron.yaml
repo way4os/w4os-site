@@ -1,0 +1,9 @@
+# Hadron, when the site uses it: the leftovers of its demo out (its logos and favicon name files of its demo site, its menu adds a
+# link to getgrav.org); its language switcher with the codes of the languages (its "icon" labels are not translated in most of
+# them)
+favicon: ~
+custom_logo: ~
+custom_logo_mobile: ~
+menu: ~
+langswitcher:
+  format: short

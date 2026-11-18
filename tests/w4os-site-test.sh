@@ -121,12 +121,9 @@ test_web_apache_on_port_80_adds_no_listen() {
     assert_not_contains "Listen" "$(site web apache --host grid.example.org)"
 }
 
-test_the_theme_of_the_site_shows_the_title_of_the_pages_of_the_w4os_plugin_which_leaves_it_to_the_theme() {
-    local page
-    page=$(cat "$ROOT/theme/w4os/templates/default.html.twig")
-    assert_contains "page.header.w4os" "$page"
-    assert_contains "{{ page.title }}" "$page"
-    assert_contains "page.content|raw" "$page"
+test_the_theme_of_the_site_is_quark2_s_page_the_title_of_the_pages_of_the_plugin_in_their_content() {
+    # Quark2's default page (the content alone): the plugin heads the content of its pages with their title
+    assert_file_not_exists "$ROOT/theme/w4os/templates/default.html.twig"
 }
 
 test_the_home_page_is_the_theme_s_default_page_the_blocks_of_the_grid_around_its_text() {
@@ -159,4 +156,10 @@ test_the_site_gives_its_own_favicon_the_square_opensimulator_logo_as_the_theme_s
 
 test_the_theme_has_its_picture_in_the_gallery_of_the_themes() {
     assert_equals "JPEG 500x500" "$(file -b "$ROOT/theme/w4os/thumbnail.jpg" | sed -E 's/^JPEG.*, ([0-9]+)x([0-9]+),.*/JPEG \1x\2/')"
+}
+
+test_the_leftovers_of_the_demos_of_some_themes_are_out_of_a_new_site() {
+    assert_contains "menu: ~" "$(cat "$ROOT/defaults/config/themes/hadron.yaml")"
+    assert_contains "custom_logo: ~" "$(cat "$ROOT/defaults/config/themes/hadron.yaml")"
+    assert_contains "position: 'off'" "$(cat "$ROOT/defaults/config/themes/learn2.yaml")"
 }

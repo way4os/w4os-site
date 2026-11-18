@@ -32,6 +32,9 @@ test_the_menu_is_the_same_under_themes_of_other_structures() {
         page=$(home "$theme" "$TMP/anon")
         assert_contains 'href="/profile"' "$page"
         assert_not_contains 'href="/account"' "$page"
+        # Signing in and creating an avatar, under my avatar
+        assert_contains 'href="/login"' "$page"
+        assert_contains 'href="/register"' "$page"
         page=$(home "$theme" "$TMP/ada")
         assert_contains 'href="/profile"' "$page"
         assert_contains 'href="/account"' "$page"
@@ -81,3 +84,17 @@ test_the_admin_pages_have_their_own_route_the_old_addresses_lead_there() {
     assert_empty "$(echo "$links" | grep '"/account/' | grep -v '/account/logout')"
     assert_contains 'href="/w4os/settings"' "$links"
 }
+
+test_a_page_of_the_plugin_has_its_title_once_whatever_the_theme() {
+    built || return 0
+    local theme count
+    for theme in w4os quark2; do
+        sed -i.bak -E "s/^(  theme:).*/\1 $theme/" "$SITE/user/config/system.yaml"
+        sleep 3
+        count=$(curl -s -L "$URL/fr/search" | grep -o '<h1[^>]*>[^<]*Chercher' | wc -l | tr -d ' ')
+        assert_equals "1" "$count"
+    done
+    sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
+    sleep 3
+}
+
