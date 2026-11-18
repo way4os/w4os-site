@@ -43,6 +43,8 @@ test_the_logo_and_the_favicon_are_asked_only_of_a_theme_that_has_its_own_fields_
     assert_contains '&quot;name&quot;&#x3A;&quot;logo&quot;' "$page"
     assert_contains '&quot;name&quot;&#x3A;&quot;favicon&quot;' "$page"
     sed -i.bak -E "s/^(  theme:).*/\1 woo/" "$SITE/user/config/system.yaml"
+    # Grav sees a changed configuration by the time of its file, to the second
+    php -r 'touch($argv[1], time() + 2);' "$SITE/user/config/system.yaml"
     page=$(curl -s -b "$TMP/god2" "$URL/account/settings")
     assert_not_contains '&quot;name&quot;&#x3A;&quot;logo&quot;' "$page"
     sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
