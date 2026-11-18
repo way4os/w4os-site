@@ -1,5 +1,5 @@
-# The themes a server of development gets besides the site's own, to try the site in other themes (?theme=<folder>, the theme
-# switcher of dev/plugins/theme-switcher): Quark forks and other structures. Never in the package. Folder in user/themes,
+# The themes a server of development gets besides the site's own, to try the site in other themes (chosen on the settings page
+# of the admin of the site): Quark forks and other structures. Never in the package. Folder in user/themes,
 # source, tag. Left out: bootstrap4-open-matter (its twigfeeds =4.0.1 cannot be met on Grav 2, its parent bootstrap4 unchanged
 # since 2020, 11 plugins), quark-open-publishing (Quark 1 and 11 plugins; quark2-open-publishing instead), quark-portfolio
 # (no such theme; quark-photofolio instead).
