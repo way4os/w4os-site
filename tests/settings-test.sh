@@ -114,3 +114,21 @@ test_the_settings_saved_keep_in_the_site_only_what_is_not_the_theme_s_own_defaul
     rm -f "$SITE/user/config/themes/w4os.yaml"
     sleep 3
 }
+
+test_the_settings_open_under_a_theme_that_names_its_folders_its_own_way() {
+    built || return 0
+    # Future2021 asks its favicon in theme@:/images, the older way of Grav's admin (a theme of dev/themes.txt)
+    [ -d "$ROOT/build/dev/user/themes/future2021" ] || { bashunit::skip "no future2021 (dev/build.sh)"; return 0; }
+    cp -R "$ROOT/build/dev/user/themes/future2021" "$SITE/user/themes/"
+    sed -i.bak -E "s/^(  theme:).*/\1 future2021/" "$SITE/user/config/system.yaml"
+    sleep 3
+    sign_in_as "$TMP/god5" "God Test"
+    local page
+    assert_equals 200 "$(curl -s -o "$TMP/future2021.html" -w '%{http_code}' -b "$TMP/god5" "$URL/account/settings")"
+    page=$(cat "$TMP/future2021.html")
+    # Its favicon asked like the others
+    assert_contains '&quot;name&quot;&#x3A;&quot;favicon&quot;' "$page"
+    assert_equals 200 "$(curl -s -o /dev/null -w '%{http_code}' "$URL/")"
+    sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
+    sleep 3
+}
