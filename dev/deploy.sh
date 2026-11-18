@@ -40,10 +40,11 @@ deb=$(ls -t dist/w4os-site_*.deb | head -1)
 scp -q "$deb" "$host:/tmp/"
 # shellcheck disable=SC2029
 ssh "$host" "sudo -n DEBIAN_FRONTEND=noninteractive NEEDRESTART_SUSPEND=1 apt-get install -y -qq --reinstall '/tmp/$(basename "$deb")' >/dev/null && rm -f '/tmp/$(basename "$deb")' &&
-    sudo -n find /var/cache/w4os-site/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
+    sudo -n find /var/lib/opensim/www/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
 # The themes of development (dev/themes.txt), never in the package
 dev/themes.sh | tail -1
-COPYFILE_DISABLE=1 tar --no-xattrs -C build/dev -cf - user | ssh "$host" "sudo -n tar -xf - --no-same-owner -C /usr/share/w4os-site/grav && sudo -n find /var/cache/w4os-site/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
+# The themes of development in the site, as the web user that owns it
+COPYFILE_DISABLE=1 tar --no-xattrs -C build/dev -cf - user | ssh "$host" "sudo -n -u www-data tar -xf - -C /var/lib/opensim/www && sudo -n find /var/lib/opensim/www/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
 # The site answers (DEPLOY_URL of the .env, its address)
 [ -z "${DEPLOY_URL:-}" ] || echo "site answers: $(curl -s -o /dev/null -w '%{http_code}' "$DEPLOY_URL/")"
 

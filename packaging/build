@@ -47,22 +47,17 @@ rm -f "$grav"/user/plugins/*/composer.lock
 mkdir -p "$grav/user/themes/w4os"
 cp -R theme/w4os/. "$grav/user/themes/w4os/"
 
-# Where Grav writes: the content of the site in /var/lib, its caches in /var/cache (made by the postinst)
-cp grav.env "$grav/.env"
-for dir in config pages accounts data; do
-    rm -rf "${grav:?}/user/$dir"
-    ln -s "/var/lib/w4os-site/$dir" "$grav/user/$dir"
-done
-for dir in assets images cache logs tmp backup; do
-    rm -rf "${grav:?}/$dir"
-done
-ln -s /var/cache/w4os-site/assets "$grav/assets"
-ln -s /var/cache/w4os-site/images "$grav/images"
+# A standard Grav site (the zip's tree, the package's seed): the content of a new site (the defaults) in user/, the folders Grav
+# writes in its own tree
+# shellcheck source=zip.sh
+source "$root/packaging/zip.sh"
+rm -rf "${grav:?}"/user/{config,pages,accounts,data}
+standard_tree "$grav" defaults
 
 # The defaults of a new site, the installer, the web server template
 cp -R defaults "$out/defaults"
 mkdir -p "$out/bin" "$out/web"
-cp bin/w4os-site "$out/bin/"
+cp bin/w4os-site bin/w4os-site-tree "$out/bin/"
 cp web/* "$out/web/"
 
 echo "VERSION_GRAV=$(sed -n 's/^\. .* //p' dependencies.txt)" > "$root/build/packaging.env"

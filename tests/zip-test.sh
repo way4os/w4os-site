@@ -4,15 +4,13 @@
 set_up() {
     ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
     TMP=$(mktemp -d)
-    # A Grav tree as the package has it: the folders where it writes are links to /var/lib and /var/cache, its .env says so
+    # A Grav tree as the package builds it (a .env from an earlier build left out of the zip)
     local grav="$TMP/grav"
     mkdir -p "$grav/system" "$grav/user/themes/w4os/images" "$grav/user/plugins/w4os"
     echo '<?php' >"$grav/index.php"
     echo 'logo' >"$grav/user/plugins/w4os/logo.png"
     ln -s ../../../plugins/w4os/logo.png "$grav/user/themes/w4os/images/favicon.png"
-    for dir in config pages accounts data; do ln -s "/var/lib/w4os-site/$dir" "$grav/user/$dir"; done
-    for dir in assets images; do ln -s "/var/cache/w4os-site/$dir" "$grav/$dir"; done
-    echo 'GRAV_CACHE_PATH=/var/cache/w4os-site/cache' >"$grav/.env"
+    echo 'GRAV_CACHE_PATH=/tmp/cache' >"$grav/.env"
     # The defaults of a new site
     mkdir -p "$TMP/defaults/config/plugins" "$TMP/defaults/pages/01.home"
     echo "engine: remote" >"$TMP/defaults/config/plugins/w4os.yaml"

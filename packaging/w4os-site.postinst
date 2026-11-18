@@ -1,31 +1,20 @@
 #!/bin/sh
-# The folders where the site writes, and the content of a new site (never overwritten).
+# The site in /var/lib/opensim/www, a standard Grav site the web user owns: made from the seed of the package (with the content
+# of an install of before), or upgraded where it still has what the package put (bin/w4os-site-tree).
 set -e
 
 case "$1" in
 configure)
-    for dir in /var/lib/w4os-site /var/lib/w4os-site/accounts /var/lib/w4os-site/data /var/lib/w4os-site/backup \
-        /var/cache/w4os-site /var/cache/w4os-site/cache /var/cache/w4os-site/tmp /var/cache/w4os-site/assets \
-        /var/cache/w4os-site/images /var/log/w4os-site; do
-        [ -d "$dir" ] || install -d -o www-data -g www-data -m 750 "$dir"
-    done
-    # The sessions of the site (the .env of the package sends them there), for the web server alone
-    [ -d /var/lib/w4os-site/sessions ] || install -d -o www-data -g www-data -m 700 /var/lib/w4os-site/sessions
-    for dir in config pages; do
-        if [ ! -d "/var/lib/w4os-site/$dir" ]; then
-            cp -R "/usr/share/w4os-site/defaults/$dir" "/var/lib/w4os-site/$dir"
-            chown -R www-data:www-data "/var/lib/w4os-site/$dir"
-        fi
-    done
-    # The compiled templates and pages of the previous version, moved aside first: the site may write there meanwhile
-    for dir in cache assets; do
-        if [ -d "/var/cache/w4os-site/$dir" ]; then
-            mv "/var/cache/w4os-site/$dir" "/var/cache/w4os-site/$dir.old.$$"
-            install -d -m 750 -o www-data -g www-data "/var/cache/w4os-site/$dir"
-            rm -rf "/var/cache/w4os-site/$dir.old.$$"
-        fi
-    done
-    [ -n "$2" ] || echo "w4os-site: run 'sudo w4os-site setup' to connect the site to a grid, then 'sudo w4os-site web'."
+    # The home of the OpenSim suite; opensim-tools, when installed, makes it its account's (opensim, 755)
+    [ -d /var/lib/opensim ] || install -d -m 755 /var/lib/opensim
+    new=
+    [ -d /var/lib/opensim/www ] || new=1
+    /usr/share/w4os-site/bin/w4os-site-tree configure
+    # The caches of an install of before (the site keeps its own now)
+    rm -rf /var/cache/w4os-site
+    if [ -n "$new" ] && [ -z "$2" ]; then
+        echo "w4os-site: run 'sudo w4os-site setup' to connect the site to a grid, then 'sudo w4os-site web'."
+    fi
     ;;
 esac
 

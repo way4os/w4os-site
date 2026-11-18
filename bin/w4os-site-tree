@@ -1,0 +1,185 @@
+#!/usr/bin/env bash
+# w4os-site-tree: the site as a normal Grav site, the web user's, which Grav's own tools (GPM, the admin) update; run by the
+# package (postinst), its functions sourced by the tests.
+#
+#   w4os-site-tree configure
+#       a new site: the site the package ships (its seed) copied where it is served, the content of an install of before moved
+#       into it (the content of the site, the plugins and themes added to it, the web server configuration it wrote); an existing
+#       site: what the package ships of it replaced where the site still has it as the package put it (Grav, each plugin, each
+#       theme), the rest left as it is and said
+#
+# The places, for the tests: W4OS_SITE_SEED (/usr/share/w4os-site/site), W4OS_SITE_ROOT (/var/lib/opensim/www), W4OS_SITE_OLD
+# (/var/lib/w4os-site, the content of the site of before), W4OS_SITE_OLD_TREE (/usr/share/w4os-site/grav, its Grav of before),
+# W4OS_SITE_APACHE (/etc/apache2/sites-available/w4os-site.conf), W4OS_SITE_OWNER (www-data).
+set -eo pipefail
+
+SEED=${W4OS_SITE_SEED:-/usr/share/w4os-site/site}
+ROOT=${W4OS_SITE_ROOT:-/var/lib/opensim/www}
+OLD=${W4OS_SITE_OLD:-/var/lib/w4os-site}
+OLD_TREE=${W4OS_SITE_OLD_TREE:-/usr/share/w4os-site/grav}
+APACHE=${W4OS_SITE_APACHE:-/etc/apache2/sites-available/w4os-site.conf}
+OWNER=${W4OS_SITE_OWNER:-www-data}
+# What the package put, and how (the checksum of each file), to know what the site changed since
+MANIFEST=user/data/w4os-site/manifest
+
+say() { echo "w4os-site: $*"; }
+
+# file_sum FILE: its checksum
+file_sum() {
+    if command -v md5sum >/dev/null; then md5sum <"$1" | cut -d' ' -f1; else md5 -q "$1"; fi
+}
+
+# units TREE: what the package ships and replaces as a whole: Grav (core), each plugin, each theme
+units() {
+    local dir
+    echo core
+    for dir in "$1"/user/plugins/*/ "$1"/user/themes/*/; do
+        [ -d "$dir" ] || continue
+        dir=${dir%/}
+        echo "${dir#"$1"/user/}"
+    done
+}
+
+# unit_files TREE UNIT: the files of a unit, from the root of TREE; Grav without the site's own (user/) and what it writes
+unit_files() {
+    if [ "$2" = core ]; then
+        (cd "$1" && find . -type f -not -path './user/*' -not -path './cache/*' -not -path './logs/*' -not -path './tmp/*' \
+            -not -path './backup/*' -not -path './assets/*' -not -path './images/*' | sed 's#^\./##' | LC_ALL=C sort)
+    elif [ -d "$1/user/$2" ]; then
+        (cd "$1" && find "user/$2" -type f | LC_ALL=C sort)
+    fi
+}
+
+# manifest TREE: unit, checksum, path of each file of the units of TREE (tab separated)
+manifest() {
+    local unit file
+    units "$1" | while read -r unit; do
+        unit_files "$1" "$unit" | while read -r file; do
+            printf '%s\t%s\t%s\n' "$unit" "$(file_sum "$1/$file")" "$file"
+        done
+    done
+}
+
+# as_put UNIT OLDMANIFEST: whether the site still has the files of UNIT as the package put them (none changed or removed);
+# the files the site added (a logo copied into a theme) do not count
+as_put() {
+    local unit sum file found=
+    while IFS=$'\t' read -r unit sum file; do
+        [ "$unit" = "$1" ] || continue
+        found=1
+        [ -f "$ROOT/$file" ] && [ "$(file_sum "$ROOT/$file")" = "$sum" ] || return 1
+    done <"$2"
+    [ -n "$found" ]
+}
+
+# put UNIT: the files of UNIT copied from the seed into the site, the ones of before that the seed no longer has removed
+put() {
+    local unit=$1 old=${2:-} sum file
+    if [ -n "$old" ]; then
+        local u
+        while IFS=$'\t' read -r u sum file; do
+            [ "$u" = "$unit" ] && [ ! -f "$SEED/$file" ] && rm -f "${ROOT:?}/$file"
+        done <"$old"
+    fi
+    (cd "$SEED" && unit_files . "$unit" | tar -cf - -T -) | (cd "$ROOT" && tar -xf -)
+}
+
+# install: the seed where the site is served, a new site
+install_site() {
+    mkdir -p "$(dirname "$ROOT")"
+    cp -Rp "$SEED" "$ROOT"
+}
+
+# migrate: the content of the site of before (its config, pages, accounts, data, sessions; the plugins and themes added to its
+# Grav) into the new site; the folders of before kept aside, renamed .migrated
+migrate() {
+    local dir
+    for dir in config pages accounts data; do
+        [ -d "$OLD/$dir" ] || continue
+        rm -rf "${ROOT:?}/user/$dir"
+        cp -Rp "$OLD/$dir" "$ROOT/user/$dir"
+    done
+    if [ -d "$OLD/sessions" ]; then
+        mkdir -p "$ROOT/user/data/sessions"
+        cp -Rp "$OLD/sessions/." "$ROOT/user/data/sessions/"
+    fi
+    for dir in "$OLD_TREE"/user/plugins/*/ "$OLD_TREE"/user/themes/*/; do
+        [ -d "$dir" ] || continue
+        dir=${dir%/}
+        dir=${dir#"$OLD_TREE"/}
+        [ -e "$ROOT/$dir" ] || { cp -Rp "$OLD_TREE/$dir" "$ROOT/$dir" && say "$dir, added to the site of before, kept"; }
+    done
+    mv "$OLD" "$OLD.migrated"
+    [ ! -d "$OLD_TREE" ] || mv "$OLD_TREE" "$OLD.migrated/grav"
+    # The Apache configuration w4os-site web wrote (its first line says so): the new root; any other is the admin's to change
+    if [ -f "$APACHE" ] && grep -q '/usr/share/w4os-site/grav' "$APACHE"; then
+        if head -1 "$APACHE" | grep -q '^# The w4os site'; then
+            sed -i.bak -e "s#/usr/share/w4os-site/grav#$ROOT#g" -e '/<Directory \/var\/cache\/w4os-site>/,/<\/Directory>/d' "$APACHE"
+            rm -f "$APACHE.bak"
+            say "$APACHE: the site served from $ROOT"
+        else
+            say "$APACHE serves /usr/share/w4os-site/grav: change it to $ROOT"
+        fi
+    fi
+    say "the site is now in $ROOT (its content of before kept in $OLD.migrated)"
+}
+
+# upgrade: each unit the site has as the package put it replaced by the seed's, the others left and said; the new ones added
+upgrade() {
+    local old="$ROOT/$MANIFEST" new kept unit
+    new=$(mktemp)
+    kept=$(mktemp)
+    [ -f "$old" ] || : >"$old"
+    while read -r unit; do
+        if [ "$unit" != core ] && [ ! -e "$ROOT/user/$unit" ]; then
+            # Removed from the site by its admin: left out; new in the package: added
+            if grep -q "^$unit	" "$old"; then
+                say "$unit removed from this site, left out"
+                continue
+            fi
+            put "$unit"
+            say "$unit added"
+        elif as_put "$unit" "$old"; then
+            put "$unit" "$old"
+        else
+            grep "^$unit	" "$old" >>"$kept" || true
+            say "$unit changed on this site, left as it is"
+            continue
+        fi
+        manifest_unit "$unit" >>"$new"
+    done < <(units "$SEED")
+    cat "$kept" "$new" >"$old"
+    rm -f "$new" "$kept"
+}
+
+# manifest_unit UNIT: the lines of the manifest of the seed for UNIT
+manifest_unit() {
+    local file
+    unit_files "$SEED" "$1" | while read -r file; do
+        printf '%s\t%s\t%s\n' "$1" "$(file_sum "$SEED/$file")" "$file"
+    done
+}
+
+configure() {
+    if [ ! -d "$ROOT" ]; then
+        install_site
+        [ ! -d "$OLD" ] || [ -d "$OLD.migrated" ] || migrate
+        mkdir -p "$(dirname "$ROOT/$MANIFEST")"
+        manifest "$SEED" >"$ROOT/$MANIFEST"
+    else
+        upgrade
+    fi
+    # What Grav compiled for the code of before
+    rm -rf "${ROOT:?}/cache/"* 2>/dev/null || true
+    [ "$(id -u)" != 0 ] || chown -R "$OWNER:$OWNER" "$ROOT"
+    # The sessions, for the web server alone
+    mkdir -p "$ROOT/user/data/sessions"
+    chmod 700 "$ROOT/user/data/sessions"
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+    case ${1:-} in
+    configure) configure ;;
+    *) sed -n '4,9p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+    esac
+fi

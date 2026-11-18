@@ -6,7 +6,7 @@ The site is Grav, its official plugins and the w4os plugin, assembled at fixed v
 
 - `dependencies.txt`: Grav, its plugins and the theme Quark2 at their tags; `grav-plugin-w4os` from its release zip (the newest of `../grav-plugin-w4os/dist/`, built there with `vendor/bin/build-tools build zip`), which carries the OpenSim engine and helpers: the package of the site depends on no OpenSim package.
 - `theme/w4os`: the light theme, a child of Quark2 (Grav theme inheritance: the `theme://` stream looks in w4os, then in quark2): the name of the grid as logo, the main menu centered and on the right only the tools (`partials/theme-toggle.html.twig`: the languages, the menu of the visitor of the w4os plugin, day and night), its footer.
-- `defaults/`: the settings (`config/`) and the pages (`pages/`, English and French) of a new site, copied to `/var/lib/w4os-site` by the postinst on first install only (an upgrade does not bring new defaults to an existing site).
+- `defaults/`: the settings (`config/`) and the pages (`pages/`, English and French) of a new site, in the tree of the site (`user/config`, `user/pages`) by `packaging/build` (an upgrade does not bring new defaults to an existing site).
 - `grav.env`: the `.env` of Grav in the package, which puts its caches, logs, tmp and backups out of the code.
 - `bin/w4os-site`: the installer (bash, with the functions of bash-tools): `setup`, `status`, `web`.
 - `web/apache.conf`: the Apache template of `w4os-site web apache`; Caddy and nginx come from Grav's own `webserver-configs`.
@@ -26,7 +26,7 @@ build-tools comes from `../build-tools` (composer path repository, as for opensi
 
 The zip is the Grav tree of the package with its writable folders inside (the defaults of a new site in `user/config` and `user/pages`), no link outside and no `.env`: it is unzipped anywhere and configured.
 
-Grav's code is read-only in `/usr/share/w4os-site/grav`; its `user/config`, `user/pages`, `user/accounts`, `user/data` are links to `/var/lib/w4os-site`, and `assets`, `images` to `/var/cache/w4os-site`. The plugins and the theme stay in the package (`user/plugins`, `user/themes`), so an upgrade brings their new versions.
+The package ships the same tree as its seed, `/usr/share/w4os-site/site`, never served. Its postinst runs `bin/w4os-site-tree configure`: a new site is the seed copied to `/var/lib/opensim/www`, the web user's (a site of before, `/usr/share/w4os-site/grav` and `/var/lib/w4os-site`, moved into it); an existing site gets, unit by unit (Grav, each plugin, each theme), what the seed has where the site still has the files the package put, as the manifest (`user/data/w4os-site/manifest`) records them, and keeps the rest. `tests/tree-test.sh` runs it in a temporary folder.
 
 `packaging/build` clones each dependency at its tag into `build/sources`, extracts its committed tree, and installs the composer dependencies of what does not ship them. Nothing is enabled in a web server by installing the package.
 

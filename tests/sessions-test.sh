@@ -21,8 +21,8 @@ test_remember_me_lasts_a_year_checked_by_the_plugin_in_any_theme_the_avatars_kep
     assert_contains "save_accounts: true" "$(cat "$ROOT/defaults/config/plugins/w4os.yaml")"
 }
 
-test_the_package_keeps_the_sessions_in_var_lib_for_the_web_server_alone() {
-    assert_contains "GRAV_CONFIG=true" "$(cat "$ROOT/grav.env")"
-    assert_contains "GRAV_CONFIG__system__session__options__save_path=/var/lib/w4os-site/sessions" "$(cat "$ROOT/grav.env")"
-    assert_contains "install -d -o www-data -g www-data -m 700 /var/lib/w4os-site/sessions" "$(cat "$ROOT/packaging/w4os-site.postinst")"
+test_the_sessions_are_in_a_folder_of_the_site_for_the_web_server_alone() {
+    assert_contains "save_path: user/data/sessions" "$(cat "$ROOT/defaults/config/system.yaml")"
+    assert_file_not_exists "$ROOT/grav.env"
+    assert_contains 'chmod 700 "$ROOT/user/data/sessions"' "$(cat "$ROOT/bin/w4os-site-tree")"
 }

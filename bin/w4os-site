@@ -17,9 +17,10 @@ source "$(command -v bash-helpers)"
 set -eo pipefail
 
 SHARE=${W4OS_SITE_SHARE:-/usr/share/w4os-site}
-DATA=${W4OS_SITE_DATA:-/var/lib/w4os-site}
-CONFIG="$DATA/config"
-KEY_FILE="$DATA/data/w4os/api.json"
+# The site, a standard Grav site the web user owns (bin/w4os-site-tree makes it)
+ROOT=${W4OS_SITE_ROOT:-/var/lib/opensim/www}
+CONFIG="$ROOT/user/config"
+KEY_FILE="$ROOT/user/data/w4os/api.json"
 OWNER=${W4OS_SITE_OWNER:-www-data}
 
 # The value of a top-level key of a YAML file, quotes removed
@@ -113,8 +114,8 @@ setup() {
     mkdir -p "$(dirname "$KEY_FILE")"
     printf '{"api_key":"%s"}\n' "$key" >"$KEY_FILE"
     chmod 640 "$KEY_FILE"
-    chown -R "$OWNER:$OWNER" "$CONFIG" "$DATA/data" 2>/dev/null || true
-    rm -rf "${W4OS_SITE_CACHE:-/var/cache/w4os-site/cache}"/* 2>/dev/null || true
+    chown -R "$OWNER:$OWNER" "$CONFIG" "$ROOT/user/data" 2>/dev/null || true
+    rm -rf "${W4OS_SITE_CACHE:-$ROOT/cache}"/* 2>/dev/null || true
     success "connected to ${name:-the grid} ($api)"
 }
 
@@ -174,6 +175,7 @@ web() {
         [ "$port" = 80 ] || [ "$port" = 443 ] || listen="Listen $port"
         [ -z "$socket" ] || php=$(printf '<FilesMatch "\\.php$">\n        SetHandler "proxy:unix:%s|fcgi://localhost"\n    </FilesMatch>' "$socket")
         conf=$(<"$SHARE/web/apache.conf")
+        conf=${conf//\{\{root\}\}/$ROOT}
         conf=${conf//\{\{host\}\}/$host}
         conf=${conf//\{\{port\}\}/$port}
         conf=${conf//\{\{listen\}\}/$listen}
@@ -197,15 +199,15 @@ web() {
         [ "$port" = 80 ] || base="$base:$port"
         yaml_set "$CONFIG/system.yaml" custom_base_url "$base"
         chown "$OWNER:$OWNER" "$CONFIG/system.yaml" 2>/dev/null || true
-        rm -rf "${W4OS_SITE_CACHE:-/var/cache/w4os-site/cache}"/* 2>/dev/null || true
+        rm -rf "${W4OS_SITE_CACHE:-$ROOT/cache}"/* 2>/dev/null || true
         success "the site answers at $base/"
         ;;
     caddy)
         [ -n "$socket" ] || die "Caddy needs PHP-FPM"
-        sed "s|^localhost|${host}${port:+:$port}|; s|^root \* \.|root * $SHARE/grav|; s|php_fastcgi .*|php_fastcgi unix/$socket|" "$SHARE/grav/webserver-configs/Caddyfile"
+        sed "s|^localhost|${host}${port:+:$port}|; s|^root \* \.|root * $ROOT|; s|php_fastcgi .*|php_fastcgi unix/$socket|" "$ROOT/webserver-configs/Caddyfile"
         ;;
     nginx)
-        sed "s|root /home/USER/www/html;|root $SHARE/grav;|; s|server_name localhost;|server_name $host;|; s|listen 80;|listen ${port:-80};|; s|unix:/var/run/php/php-fpm.sock|unix:${socket:-/run/php/php-fpm.sock}|" "$SHARE/grav/webserver-configs/nginx.conf"
+        sed "s|root /home/USER/www/html;|root $ROOT;|; s|server_name localhost;|server_name $host;|; s|listen 80;|listen ${port:-80};|; s|unix:/var/run/php/php-fpm.sock|unix:${socket:-/run/php/php-fpm.sock}|" "$ROOT/webserver-configs/nginx.conf"
         ;;
     *) die "w4os-site web apache|caddy|nginx [--host <name>] [--port <port>] [--install]" ;;
     esac

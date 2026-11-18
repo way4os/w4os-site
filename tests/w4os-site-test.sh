@@ -16,9 +16,9 @@ tear_down_after_script() {
 
 set_up() {
     SITE=$(mktemp -d)
-    mkdir -p "$SITE/data" "$SITE/cache"
-    cp -R "$ROOT/defaults/config" "$SITE/data/config"
-    export W4OS_SITE_DATA="$SITE/data" W4OS_SITE_SHARE="$ROOT" W4OS_SITE_OWNER="$(id -un)" W4OS_SITE_CACHE="$SITE/cache"
+    mkdir -p "$SITE/user/data" "$SITE/cache"
+    cp -R "$ROOT/defaults/config" "$SITE/user/config"
+    export W4OS_SITE_ROOT="$SITE" W4OS_SITE_SHARE="$ROOT" W4OS_SITE_OWNER="$(id -un)"
 }
 
 tear_down() {
@@ -39,12 +39,12 @@ test_status_says_when_the_site_is_not_connected() {
 test_setup_connects_the_site_and_keeps_the_key_out_of_the_config() {
     site setup --api "http://127.0.0.1:$PORT/api/" --url "http://127.0.0.1:$PORT/helpers/" --key osk_test >/dev/null
     assert_exit_code 0
-    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "api_url: 'http://127.0.0.1:$PORT/api'"
-    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "url: 'http://127.0.0.1:$PORT/helpers'"
-    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "engine: 'remote'"
-    assert_file_contains "$SITE/data/config/site.yaml" "title: 'Demo Grid'"
-    assert_file_contains "$SITE/data/data/w4os/api.json" '"api_key":"osk_test"'
-    assert_file_not_contains "$SITE/data/config/plugins/w4os.yaml" "osk_test"
+    assert_file_contains "$SITE/user/config/plugins/w4os.yaml" "api_url: 'http://127.0.0.1:$PORT/api'"
+    assert_file_contains "$SITE/user/config/plugins/w4os.yaml" "url: 'http://127.0.0.1:$PORT/helpers'"
+    assert_file_contains "$SITE/user/config/plugins/w4os.yaml" "engine: 'remote'"
+    assert_file_contains "$SITE/user/config/site.yaml" "title: 'Demo Grid'"
+    assert_file_contains "$SITE/user/data/w4os/api.json" '"api_key":"osk_test"'
+    assert_file_not_contains "$SITE/user/config/plugins/w4os.yaml" "osk_test"
     assert_contains "api:     answers" "$(site status)"
 }
 
@@ -56,7 +56,7 @@ test_setup_needs_the_address_of_the_engine_api_never_the_helpers_api() {
     assert_exit_code 1
     assert_contains "engine API" "$output"
     assert_not_contains "127.0.0.1:$PORT/api" "$output"
-    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "api_url: ''"
+    assert_file_contains "$SITE/user/config/plugins/w4os.yaml" "api_url: ''"
 }
 
 test_setup_refuses_a_key_the_api_refuses() {
@@ -64,20 +64,20 @@ test_setup_refuses_a_key_the_api_refuses() {
     output=$(site setup --api "http://127.0.0.1:$PORT/api" --url "http://127.0.0.1:$PORT/helpers" --key osk_wrong)
     assert_exit_code 1
     assert_contains "does not answer" "$output"
-    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "api_url: ''"
+    assert_file_contains "$SITE/user/config/plugins/w4os.yaml" "api_url: ''"
 }
 
 test_setup_keeps_a_title_with_a_quote() {
     site setup --api "http://127.0.0.1:$PORT/api" --url "http://127.0.0.1:$PORT/helpers" --key osk_test --title "Ada's grid" >/dev/null
-    assert_file_contains "$SITE/data/config/site.yaml" "title: 'Ada''s grid'"
+    assert_file_contains "$SITE/user/config/site.yaml" "title: 'Ada''s grid'"
 }
 
 test_setup_no_mail_makes_a_test_site() {
     site setup --api "http://127.0.0.1:$PORT/api" --url "http://127.0.0.1:$PORT/helpers" --key osk_test --no-mail >/dev/null
-    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "send_mail: false"
+    assert_file_contains "$SITE/user/config/plugins/w4os.yaml" "send_mail: false"
     assert_contains "mail:    off" "$(site status)"
     site setup --api "http://127.0.0.1:$PORT/api" --url "http://127.0.0.1:$PORT/helpers" --key osk_test --mail >/dev/null
-    assert_file_contains "$SITE/data/config/plugins/w4os.yaml" "send_mail: true"
+    assert_file_contains "$SITE/user/config/plugins/w4os.yaml" "send_mail: true"
 }
 
 test_the_language_switcher_keeps_the_choice_of_the_menu() {
@@ -108,7 +108,7 @@ test_web_apache_serves_the_helpers_from_their_package_when_the_machine_has_them(
     mkdir -p "$SITE/helpers/public" "$SITE/bin"
     printf '#!/bin/sh\n[ "$1 $2 $3 $4" = "web demo snippet apache" ] || exit 1\necho "# Helpers of the grid demo."\necho "AliasMatch \\"^/(?:helpers|health)(?:/.*)?$\\" \\"/usr/share/opensim-helpers/public/index.php\\""\n' >"$SITE/bin/opensim"
     chmod +x "$SITE/bin/opensim"
-    printf "grid: demo\n" >>"$SITE/data/config/plugins/w4os.yaml"
+    printf "grid: demo\n" >>"$SITE/user/config/plugins/w4os.yaml"
     local output
     output=$(PATH="$SITE/bin:$PATH" W4OS_SITE_HELPERS="$SITE/helpers" site web apache --host grid.example.org --port 8830)
     assert_contains 'AliasMatch "^/(?:helpers|health)(?:/.*)?$" "/usr/share/opensim-helpers/public/index.php"' "$output"
