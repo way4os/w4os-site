@@ -120,3 +120,11 @@ test_web_apache_serves_the_helpers_from_their_package_when_the_machine_has_them(
 test_web_apache_on_port_80_adds_no_listen() {
     assert_not_contains "Listen" "$(site web apache --host grid.example.org)"
 }
+
+test_the_theme_of_the_site_shows_the_title_of_the_pages_of_the_w4os_plugin_which_leaves_it_to_the_theme() {
+    local page
+    page=$(cat "$ROOT/theme/w4os/templates/default.html.twig")
+    assert_contains "page.header.w4os" "$page"
+    assert_contains "{{ page.title }}" "$page"
+    assert_contains "page.content|raw" "$page"
+}

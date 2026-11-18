@@ -39,3 +39,26 @@ test_the_deploy_of_development_puts_it_and_its_themes_on_the_server() {
     assert_contains "dev/plugins/theme-switcher" "$(cat "$ROOT/dev/deploy.sh")"
     assert_contains "dev/themes.txt" "$(cat "$ROOT/dev/deploy.sh")"
 }
+
+# The picker of the themes for a list of themes, the one shown and the site's own (comma separated)
+picker() {
+    php -r 'namespace Grav\Common { class Plugin {} } namespace { require $argv[1]; echo Grav\Plugin\ThemeSwitcherPlugin::picker(explode(",", $argv[2]), $argv[3], $argv[4]); }' \
+        "$ROOT/dev/plugins/theme-switcher/theme-switcher.php" "$@"
+}
+
+test_a_picker_lists_the_themes_the_one_shown_marked_the_site_s_own_first() {
+    local html
+    html=$(picker quark2,mundana,w4os mundana w4os)
+    assert_contains '<option value="">w4os</option>' "$html"
+    assert_contains '<option value="mundana" selected>mundana</option>' "$html"
+    assert_contains '<option value="quark2">quark2</option>' "$html"
+    assert_not_contains '<option value="w4os"' "$html"
+    assert_contains 'position:fixed' "$html"
+}
+
+test_the_picker_comes_at_the_end_of_a_page_whatever_its_theme_and_nowhere_else() {
+    assert_equals '<html><body><p></p><nav>P</nav></body></html>' \
+        "$(php -r 'namespace Grav\Common { class Plugin {} } namespace { require $argv[1]; echo Grav\Plugin\ThemeSwitcherPlugin::withPicker("<html><body><p></p></body></html>", "<nav>P</nav>"); }' "$ROOT/dev/plugins/theme-switcher/theme-switcher.php")"
+    assert_equals '{"a":1}' \
+        "$(php -r 'namespace Grav\Common { class Plugin {} } namespace { require $argv[1]; echo Grav\Plugin\ThemeSwitcherPlugin::withPicker("{\"a\":1}", "<nav>P</nav>"); }' "$ROOT/dev/plugins/theme-switcher/theme-switcher.php")"
+}
