@@ -146,3 +146,11 @@ test_the_themes_keep_the_logo_and_the_favicon_the_site_sets_in_their_own_folders
     assert_contains "custom_logo:" "$(cat "$ROOT/theme/w4os/blueprints.yaml")"
     assert_file_exists "$ROOT/theme/w4os/images/logo/opensimulator-logo.png"
 }
+
+test_the_site_gives_its_own_favicon_the_w4os_icon_as_the_theme_s_setting() {
+    local icon="$ROOT/theme/w4os/images/favicon/cropped-w4os-logo-v1-square-32x32.png"
+    assert_file_exists "$icon"
+    [ ! -L "$icon" ] || fail "the favicon is the site's own file, not a link into the plugin"
+    assert_file_not_exists "$ROOT/theme/w4os/images/favicon.png"
+    assert_contains "cropped-w4os-logo-v1-square-32x32.png" "$(sed -n '/^custom_favicon:/,/^[a-z]/p' "$ROOT/theme/w4os/w4os.yaml")"
+}

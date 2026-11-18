@@ -16,6 +16,12 @@ custom_logo:
     name: opensimulator-logo.png
     type: image/png
     path: user/themes/w4os/images/logo/opensimulator-logo.png
+# The favicon of the site, Quark2's own setting (the settings page of the site changes it): the w4os icon until the site sets its own
+custom_favicon:
+  user/themes/w4os/images/favicon/cropped-w4os-logo-v1-square-32x32.png:
+    name: cropped-w4os-logo-v1-square-32x32.png
+    type: image/png
+    path: user/themes/w4os/images/favicon/cropped-w4os-logo-v1-square-32x32.png
 # The slogan of the site, by language: the title of the home page is "<site> | <slogan>" (the site title alone without one)
 slogan:
   en: 'A place to meet, build and explore'
