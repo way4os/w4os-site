@@ -30,3 +30,19 @@ test_a_resident_never_gets_them() {
     sign_in_as "$TMP/ada" "Ada Love"
     assert_equals 302 "$(curl -s -o /dev/null -w '%{http_code}' -b "$TMP/ada" "$URL/account/settings")"
 }
+
+test_the_logo_and_the_favicon_are_asked_only_of_a_theme_that_has_its_own_fields_for_them() {
+    built || return 0
+    cp -R "$ROOT/build/dev/user/themes/." "$SITE/user/themes/" 2>/dev/null || true
+    [ -d "$SITE/user/themes/woo" ] || { bashunit::skip "no theme of development (dev/themes.sh)"; return 0; }
+    sign_in_as "$TMP/god2" "God Test"
+    local page
+    sed -i.bak -E "s/^(  theme:).*/\1 quark2/" "$SITE/user/config/system.yaml"
+    page=$(curl -s -b "$TMP/god2" "$URL/account/settings")
+    assert_contains 'name="data[logo]"' "$page"
+    assert_contains 'name="data[favicon]"' "$page"
+    sed -i.bak -E "s/^(  theme:).*/\1 woo/" "$SITE/user/config/system.yaml"
+    page=$(curl -s -b "$TMP/god2" "$URL/account/settings")
+    assert_not_contains 'name="data[logo]"' "$page"
+    sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
+}
