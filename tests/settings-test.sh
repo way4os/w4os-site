@@ -17,7 +17,7 @@ test_a_god_finds_the_theme_among_the_ones_installed_the_site_s_chosen_under_the_
     built || return 0
     local page
     sign_in_as "$TMP/god" "God Test"
-    page=$(curl -s -b "$TMP/god" "$URL/account/settings")
+    page=$(curl -s -b "$TMP/god" "$URL/w4os/settings")
     assert_contains "<title>Site settings" "$page"
     assert_not_contains "w4os.settings_title" "$page"
     assert_contains "Theme" "$page"
@@ -31,7 +31,7 @@ test_a_god_finds_the_theme_among_the_ones_installed_the_site_s_chosen_under_the_
 test_a_resident_never_gets_them() {
     built || return 0
     sign_in_as "$TMP/ada" "Ada Love"
-    assert_equals 302 "$(curl -s -o /dev/null -w '%{http_code}' -b "$TMP/ada" "$URL/account/settings")"
+    assert_equals 302 "$(curl -s -o /dev/null -w '%{http_code}' -b "$TMP/ada" "$URL/w4os/settings")"
 }
 
 test_the_logo_and_the_favicon_of_the_site_are_asked_whatever_the_theme() {
@@ -44,7 +44,7 @@ test_the_logo_and_the_favicon_of_the_site_are_asked_whatever_the_theme() {
         # Grav sees a changed configuration once PHP takes its compiled file again (OPcache, every 2 seconds by default)
         sleep 3
         sed -i.bak -E "s/^(  theme:).*/\1 $theme/" "$SITE/user/config/system.yaml"
-        page=$(curl -s -b "$TMP/god2" "$URL/account/settings")
+        page=$(curl -s -b "$TMP/god2" "$URL/w4os/settings")
         assert_matches "value=\"$theme\"[^>]*checked" "$page"
         # The file fields of the Form plugin (Dropzone), their settings in an attribute
         assert_contains '&quot;name&quot;&#x3A;&quot;logo&quot;' "$page"
@@ -58,13 +58,13 @@ test_a_theme_saved_shows_at_once_on_the_settings_page_and_on_the_site() {
     built || return 0
     sign_in_as "$TMP/god3" "God Test"
     local form fields page
-    form=$(curl -s -b "$TMP/god3" -c "$TMP/god3" "$URL/account/settings")
+    form=$(curl -s -b "$TMP/god3" -c "$TMP/god3" "$URL/w4os/settings")
     fields=()
     for name in __form-name__ __unique_form_id__ form-nonce; do
         fields+=(--data-urlencode "$name=$(echo "$form" | sed -n "s/.*name=\"$name\" value=\"\([^\"]*\)\".*/\1/p" | head -1)")
     done
     # Saved, then the page the save leads to and the home page, at once
-    page=$(curl -s -L -b "$TMP/god3" -c "$TMP/god3" "$URL/account/settings" "${fields[@]}" --data-urlencode "data[theme]=quark2")
+    page=$(curl -s -L -b "$TMP/god3" -c "$TMP/god3" "$URL/w4os/settings" "${fields[@]}" --data-urlencode "data[theme]=quark2")
     assert_matches 'value="quark2"[^>]*checked' "$page"
     assert_contains '/user/themes/quark2/' "$(curl -s -L -b "$TMP/god3" "$URL/")"
     assert_not_contains '/user/themes/w4os/' "$(curl -s -L -b "$TMP/god3" "$URL/")"
@@ -76,12 +76,12 @@ test_a_theme_saved_shows_at_once_on_the_settings_page_and_on_the_site() {
 save_settings() {
     local jar=$1 form name fields=()
     shift
-    form=$(curl -s -b "$jar" -c "$jar" "$URL/account/settings")
+    form=$(curl -s -b "$jar" -c "$jar" "$URL/w4os/settings")
     for name in __form-name__ __unique_form_id__ form-nonce; do
         fields+=(--data-urlencode "$name=$(echo "$form" | sed -n "s/.*name=\"$name\" value=\"\([^\"]*\)\".*/\1/p" | head -1)")
     done
     for name in "$@"; do fields+=(--data-urlencode "$name"); done
-    curl -s -o /dev/null -b "$jar" -c "$jar" "$URL/account/settings" "${fields[@]}"
+    curl -s -o /dev/null -b "$jar" -c "$jar" "$URL/w4os/settings" "${fields[@]}"
 }
 
 test_the_brand_is_the_site_s_shown_by_every_theme_what_a_theme_kept_before_becomes_it() {
@@ -100,7 +100,7 @@ test_the_brand_is_the_site_s_shown_by_every_theme_what_a_theme_kept_before_becom
     sleep 3
     sign_in_as "$TMP/god4" "God Test"
     # Shown as the site's, saved as the site's: out of the theme, the theme's own favicon no brand of the site
-    assert_contains 'friendly-fowl-brand.png' "$(curl -s -b "$TMP/god4" "$URL/account/settings")"
+    assert_contains 'friendly-fowl-brand.png' "$(curl -s -b "$TMP/god4" "$URL/w4os/settings")"
     json="{\"$mine\":{\"name\":\"friendly-fowl-brand.png\",\"type\":\"image/png\",\"path\":\"$mine\"}}"
     save_settings "$TMP/god4" "data[theme]=w4os" "data[_json][logo]=$json" \
         "data[_json][favicon]={\"$icon\":{\"name\":\"opensimulator-logo-square.png\",\"type\":\"image/png\",\"path\":\"$icon\"}}"
@@ -141,11 +141,40 @@ test_the_settings_open_under_a_theme_that_names_its_folders_its_own_way() {
     sleep 3
     sign_in_as "$TMP/god5" "God Test"
     local page
-    assert_equals 200 "$(curl -s -o "$TMP/future2021.html" -w '%{http_code}' -b "$TMP/god5" "$URL/account/settings")"
+    assert_equals 200 "$(curl -s -o "$TMP/future2021.html" -w '%{http_code}' -b "$TMP/god5" "$URL/w4os/settings")"
     page=$(cat "$TMP/future2021.html")
     # Its favicon asked like the others
     assert_contains '&quot;name&quot;&#x3A;&quot;favicon&quot;' "$page"
     assert_equals 200 "$(curl -s -o /dev/null -w '%{http_code}' "$URL/")"
+    sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
+    sleep 3
+}
+
+test_a_theme_without_a_logo_field_gets_the_site_s_logo_in_its_own_file_and_its_own_back_without_it() {
+    built || return 0
+    # Woo takes its logo from images/logo.png, no field for it (a theme of dev/themes.txt)
+    [ -d "$ROOT/build/dev/user/themes/woo" ] || { bashunit::skip "no woo (dev/build.sh)"; return 0; }
+    cp -R "$ROOT/build/dev/user/themes/woo" "$SITE/user/themes/"
+    local mine=user/data/theme/images/logo/friendly-fowl-brand.png own
+    own=$(md5 -q "$SITE/user/themes/woo/images/logo.png" 2>/dev/null || md5sum "$SITE/user/themes/woo/images/logo.png" | cut -d' ' -f1)
+    mkdir -p "$SITE/user/data/theme/images/logo"
+    cp "$SITE/user/themes/w4os/images/logo/opensimulator-logo.png" "$SITE/$mine"
+    cp "$SITE/user/config/plugins/w4os.yaml" "$TMP/w4os-woo.yaml"
+    printf '%s\n' 'brand:' '  logo:' "    $mine:" '      name: friendly-fowl-brand.png' '      type: image/png' "      path: $mine" \
+        >>"$SITE/user/config/plugins/w4os.yaml"
+    sed -i.bak -E "s/^(  theme:).*/\1 woo/" "$SITE/user/config/system.yaml"
+    sleep 3
+    sign_in_as "$TMP/god7" "God Test"
+    curl -s -o /dev/null "$URL/"
+    assert_files_equals "$SITE/$mine" "$SITE/user/themes/woo/images/logo.png"
+    assert_file_exists "$SITE/user/data/w4os/theme-files/woo/images/logo.png"
+    # The settings page: no notice for the logo under Woo
+    assert_not_contains "affiche pas de logo" "$(curl -s -b "$TMP/god7" "$URL/fr/w4os/settings")"
+    # No brand for the site: Woo's own logo back
+    cp "$TMP/w4os-woo.yaml" "$SITE/user/config/plugins/w4os.yaml"
+    sleep 3
+    curl -s -o /dev/null "$URL/"
+    assert_equals "$own" "$(md5 -q "$SITE/user/themes/woo/images/logo.png" 2>/dev/null || md5sum "$SITE/user/themes/woo/images/logo.png" | cut -d' ' -f1)"
     sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
     sleep 3
 }

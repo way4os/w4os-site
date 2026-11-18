@@ -36,10 +36,10 @@ test_the_menu_is_the_same_under_themes_of_other_structures() {
         assert_contains 'href="/profile"' "$page"
         assert_contains 'href="/account"' "$page"
         assert_contains 'href="/account/logout"' "$page"
-        assert_not_contains 'href="/account/dashboard"' "$page"
+        assert_not_contains 'href="/w4os"' "$page"
         page=$(home "$theme" "$TMP/god")
-        assert_contains 'href="/account/dashboard"' "$page"
-        assert_contains 'href="/account/settings"' "$page"
+        assert_contains 'href="/w4os"' "$page"
+        assert_contains 'href="/w4os/settings"' "$page"
     done
     sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
 }
@@ -56,4 +56,23 @@ test_logout_signs_out_as_the_login_plugin_does() {
     built || return 0
     sign_in_as "$TMP/ada3" "Ada Love"
     assert_contains "login.logout" "$(curl -s -o /dev/null -w '%{redirect_url}' -b "$TMP/ada3" "$URL/account/logout")"
+}
+
+test_the_admin_pages_have_their_own_route_the_old_addresses_lead_there() {
+    built || return 0
+    sign_in_as "$TMP/god6" "God Test"
+    local old new got
+    for old in dashboard:/w4os avatars:/w4os/avatars avatars/edit:/w4os/avatars/edit regions:/w4os/regions \
+        regions/region:/w4os/regions/region simulators:/w4os/simulators settings:/w4os/settings; do
+        new=${old#*:}; old=${old%%:*}
+        got=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -b "$TMP/god6" "$URL/account/$old")
+        assert_equals "301 $URL$new" "$got"
+    done
+    # The query of the old address kept
+    assert_equals "301 $URL/w4os/regions/region?uuid=r1" \
+        "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -b "$TMP/god6" "$URL/account/regions/region?uuid=r1")"
+    # No admin page linked under /account any more: /account is the visitor's own
+    assert_equals 200 "$(curl -s -o "$TMP/dashboard.html" -w '%{http_code}' -b "$TMP/god6" "$URL/w4os")"
+    assert_empty "$(grep -oE 'href="/account/[^"]*"' "$TMP/dashboard.html" | grep -v '/account/logout')"
+    assert_contains 'href="/w4os/settings"' "$(cat "$TMP/dashboard.html")"
 }
