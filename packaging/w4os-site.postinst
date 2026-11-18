@@ -12,6 +12,14 @@ configure)
     /usr/share/w4os-site/bin/w4os-site-tree configure
     # The caches of an install of before (the site keeps its own now)
     rm -rf /var/cache/w4os-site
+    # A site of before just moved: Apache serves it from its new root (w4os-site-tree rewrote the configuration it had)
+    if [ -n "$new" ] && [ -d /var/lib/w4os-site.migrated ] && [ -d /run/systemd/system ] && systemctl is-active -q apache2 2>/dev/null; then
+        if apache2ctl configtest >/dev/null 2>&1; then
+            systemctl reload apache2
+        else
+            echo "w4os-site: Apache refuses its configuration, not reloaded: apache2ctl configtest"
+        fi
+    fi
     if [ -n "$new" ] && [ -z "$2" ]; then
         echo "w4os-site: run 'sudo w4os-site setup' to connect the site to a grid, then 'sudo w4os-site web'."
     fi
