@@ -10,6 +10,8 @@ test_a_home_page_of_an_earlier_version_still_shows_with_the_blocks_around_its_te
     mkdir -p "$SITE/user/pages/05.old-home"
     printf '%s\n' '---' "title: 'Old home'" 'cache_enable: false' 'template: w4os/splash' '---' '# Old welcome' '' 'Some text.' \
         >"$SITE/user/pages/05.old-home/default.md"
+    # Grav finds the new page once its cache is cleared, as after an upgrade (the package clears it)
+    find "$SITE/cache" -mindepth 1 -delete 2>/dev/null || true
     local status page
     status=$(curl -s -o "$TMP/old-home.html" -w '%{http_code}' "$URL/old-home")
     page=$(cat "$TMP/old-home.html")
