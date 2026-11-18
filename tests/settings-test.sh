@@ -21,7 +21,7 @@ test_a_god_finds_the_theme_among_the_ones_installed_the_site_s_chosen_under_the_
     assert_contains "<title>Site settings" "$page"
     assert_not_contains "w4os.settings_title" "$page"
     assert_contains "Theme" "$page"
-    assert_matches '<option value="w4os"[^>]*selected' "$page"
+    assert_matches '<option [^>]*selected[^>]*value="w4os"[^>]*>w4os site</option>' "$page"
     assert_matches '<option value="quark2"[^>]*>Quark 2</option>' "$page"
 }
 
