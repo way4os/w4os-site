@@ -86,7 +86,7 @@ put() {
 
 # install: the seed where the site is served, a new site
 install_site() {
-    mkdir -p "$(dirname "$ROOT")"
+    [ -d "$(dirname "$ROOT")" ] || install -d -m 755 "$(dirname "$ROOT")"
     cp -Rp "$SEED" "$ROOT"
 }
 
