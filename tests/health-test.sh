@@ -19,6 +19,9 @@ test_the_health_says_when_it_was_checked_and_a_new_time_once_checked_again() {
     before=$(curl -s -b "$TMP/god" "$URL/w4os/health")
     assert_contains 'checked 1 hour ago' "$before"
     assert_contains 'href="/w4os/health?refresh=1"' "$before"
+    # The addresses of the grid by their use, then file and section, each its key
+    assert_contains '<code>AssetServerURI</code>' "$before"
+    assert_contains '<code>Robust.HG.ini</code> <span class="text-secondary">[LoginService]</span>' "$before"
     after=$(curl -s -b "$TMP/god" "$URL/w4os/health?refresh=1")
     assert_not_contains 'checked 1 hour ago' "$after"
     assert_matches 'checked [0-9]+ seconds? ago' "$after"

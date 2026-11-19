@@ -66,6 +66,14 @@ if ($path === '/api/health') {
         ['file' => 'get_grid_info', 'title' => '', 'rows' => [['id' => 'l1', 'label' => 'login', 'kind' => 'address', 'url' => 'http://127.0.0.1/', 'level' => 'ok', 'status' => '200', 'ms' => 3, 'checkedAt' => (int) file_get_contents($file)]]],
     ]]]]);
 }
+if ($path === '/api/addresses') {
+    // Where the services of the grid are, each its use, its file, its section and key
+    $answer(200, ['data' => ['type' => 'addresses', 'id' => 'demo', 'attributes' => ['services' => [
+        ['key' => 'asset', 'url' => 'http://127.0.0.1:8003', 'source' => 'provider', 'usage' => 'robust-simulators', 'file' => 'OpenSim.ini', 'section' => 'AssetService', 'setting' => 'AssetServerURI', 'label' => 'service_asset', 'description' => 'service_asset_help'],
+        ['key' => 'motd', 'url' => 'http://127.0.0.1/helpers/motd.php', 'source' => 'config', 'usage' => 'page', 'file' => 'Robust.HG.ini', 'section' => 'LoginService', 'setting' => 'MessageUrl', 'label' => 'service_motd', 'description' => 'service_motd_help'],
+        ['key' => 'guide', 'url' => null, 'source' => null, 'usage' => 'page', 'file' => 'Robust.HG.ini', 'section' => 'LoginService', 'setting' => 'DestinationGuide', 'label' => 'service_guide', 'description' => 'service_guide_help'],
+    ]]]]);
+}
 if ($path === '/api/avatars') {
     // The avatars of the grid, with the number of avatars each value of a filter gives (meta.counts)
     $answer(200, ['data' => [$ada, $god], 'meta' => ['total' => 2, 'page' => 1, 'perPage' => 50, 'counts' => [
