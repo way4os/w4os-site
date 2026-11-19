@@ -57,7 +57,7 @@ stale() {
 # newer SOURCE COPY: whether COPY has every file of SOURCE as it is (COPY may have more, the files a build adds; a link of SOURCE
 # that points into the built tree only is left out)
 newer() {
-    [ -e "$2" ] && [ -z "$(diff -rq "$1" "$2" 2>&1 | grep -v -e "^Only in $2" -e "^diff: $1/.*: No such file or directory")" ]
+    [ -e "$2" ] && [ -z "$(LC_ALL=C diff -rq "$1" "$2" 2>&1 | grep -v -e "^Only in $2" -e "^diff: $1/.*: No such file or directory")" ]
 }
 
 # built: whether the Grav tree is there to test, and current, the test skipped otherwise
