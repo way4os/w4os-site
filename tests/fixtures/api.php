@@ -44,6 +44,15 @@ if (in_array(rawurldecode($path), ['/api/avatars/g1', '/api/avatars/God Test'], 
     $answer(200, ['data' => $god]);
 }
 // The rule of the avatar models of the grid, kept for the site of the test (in the temporary folder of the system)
+if ($path === '/api/health') {
+    // The last report an hour ago; checked now when asked (refresh)
+    $file = sys_get_temp_dir().'/w4os-fake-health-'.(int) ($_SERVER['SERVER_PORT'] ?? 0);
+    is_file($file) || file_put_contents($file, (string) (time() - 3600));
+    ($_GET['refresh'] ?? '') === '1' && file_put_contents($file, (string) time());
+    $answer(200, ['data' => ['type' => 'health', 'id' => 'demo', 'attributes' => ['level' => 'ok', 'checkedAt' => (int) file_get_contents($file), 'cached' => ($_GET['refresh'] ?? '') !== '1', 'groups' => [
+        ['file' => 'get_grid_info', 'title' => '', 'rows' => [['id' => 'l1', 'label' => 'login', 'kind' => 'address', 'url' => 'http://127.0.0.1/', 'level' => 'ok', 'status' => '200', 'ms' => 3, 'checkedAt' => (int) file_get_contents($file)]]],
+    ]]]]);
+}
 if ($path === '/api/avatars') {
     // The avatars of the grid, with the number of avatars each value of a filter gives (meta.counts)
     $answer(200, ['data' => [$ada, $god], 'meta' => ['total' => 2, 'page' => 1, 'perPage' => 50, 'counts' => [
