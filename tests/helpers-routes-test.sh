@@ -6,28 +6,16 @@
 # shellcheck source=site.sh
 source "$(dirname "${BASH_SOURCE[0]}")/site.sh"
 
-# serving PREFIX: the site set to serve the helpers itself under PREFIX, with the bundled engine and the config folder of the grids
-# it is given (a small one in the temporary folder: the grid demo, its web site the site, its helpers set there under /helpers by
-# its economy)
+# serving PREFIX: the site set to serve the helpers itself under PREFIX, with the bundled engine; its grid is what the engine of the
+# grid's machine says of it through its API (the fake API's site-description: the grid demo, its web site the site, its helpers
+# set there under /helpers by its economy), never a folder of config
 serving() {
-    local install="$TMP/opensim"
-    if [ ! -f "$install/opensim.conf" ]; then
-        mkdir -p "$install/etc/grids/demo" "$install/etc/robust.d" "$install/cache" "$install/var" "$install/logs" "$install/data"
-        printf '%s\n' '[Grid]' 'GridName = Demo Grid' >"$install/etc/grids/demo/demo.conf"
-        printf '%s\n' '[Const]' '    BaseURL = "http://127.0.0.1"' "    WebURL = \"$URL\"" '    PublicPort = 8002' '    PrivatePort = 8003' \
-            '[GridInfoService]' '    gridname = "Demo Grid"' '    gridnick = "demo"' "    economy = \"$URL/helpers/\"" \
-            >"$install/etc/grids/demo/Robust.HG.ini"
-        ln -s "$install/etc/grids/demo/Robust.HG.ini" "$install/etc/robust.d/demo.ini"
-        printf '%s\n' '[Defaults]' "EtcRoot = $install/etc" "CacheRoot = $install/cache" "VarRoot = $install/var" \
-            "LogsRoot = $install/logs" "DataRoot = $install/data" >"$install/opensim.conf"
-    fi
     # Already so: nothing to change
     grep -qx "url: '$URL$1'" "$SITE/user/config/plugins/w4os.yaml" && return 0
     sed -i.bak -e "/^url:/d" -e "/^serve_helpers:/d" -e "/^engine:/d" -e "/^grid:/d" -e "/^bundled:/,/^[^ ]/{/^bundled:/d;/^  /d;}" \
         "$SITE/user/config/plugins/w4os.yaml"
     rm -f "$SITE/user/config/plugins/w4os.yaml.bak"
-    printf '%s\n' "url: '$URL$1'" 'serve_helpers: true' 'engine: bundled' 'grid: demo' 'bundled:' "  config: '$install/etc'" \
-        >>"$SITE/user/config/plugins/w4os.yaml"
+    printf '%s\n' "url: '$URL$1'" 'serve_helpers: true' 'engine: bundled' 'grid: demo' >>"$SITE/user/config/plugins/w4os.yaml"
     # The settings read again by Grav (it tells a change by the time of the file, to the second)
     sleep 2
     if [ ! -d "$SITE/user/pages/09.helpers-faq" ]; then

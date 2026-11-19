@@ -88,6 +88,20 @@ if ($path === '/api/parcels') {
     ]]];
     $answer(200, ['data' => $parcels, 'meta' => ['total' => count($parcels), 'page' => 1, 'perPage' => 50]]);
 }
+if (preg_match('#^/api(/grids/[^/]+)?/site-description$#', $path) === 1) {
+    // What the engine of the grid's machine says of it for the helpers of a site: the grid demo, its web site the site (the next port),
+    // its helpers set there under /helpers by its economy; no file, no secret
+    $site = 'http://127.0.0.1:'.((int) ($_SERVER['SERVER_PORT'] ?? 0) + 1);
+    $answer(200, ['data' => ['type' => 'site-descriptions', 'id' => 'demo', 'attributes' => [
+        'grid' => ['nick' => 'demo', 'name' => 'Demo Grid', 'baseHostname' => '127.0.0.1', 'publicPort' => 8002, 'standalone' => false],
+        'config' => ['Robust' => [
+            'Const' => ['BaseURL' => 'http://127.0.0.1', 'WebURL' => $site, 'PublicPort' => '8002', 'PrivatePort' => '8003'],
+            'GridInfoService' => ['gridname' => 'Demo Grid', 'gridnick' => 'demo', 'economy' => "$site/helpers/"],
+        ]],
+        'destinations' => null,
+        'checkedAt' => gmdate('Y-m-d\TH:i:s\Z'),
+    ]]]);
+}
 if ($path === '/api/tasks') {
     // The tasks of the grid's search (and one of another grid)
     $answer(200, ['data' => [

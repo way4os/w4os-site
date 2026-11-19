@@ -13,7 +13,7 @@ sign_in_as() {
         -d "task=login.login" --data-urlencode "login-form-nonce=$nonce"
 }
 
-test_a_god_changes_the_economy_of_the_grid_but_not_what_its_options_set() {
+test_a_god_gives_the_address_of_the_economy_elsewhere_and_what_provide_hides_is_not_sent() {
     built || return 0
     sign_in_as "$TMP/god" "God Test"
     local page fields name location sent
@@ -21,7 +21,8 @@ test_a_god_changes_the_economy_of_the_grid_but_not_what_its_options_set() {
     assert_contains '<title>Economy Settings' "$page"
     assert_contains '/w4os/search' "$(echo "$page" | sed 's/&#x2F;/\//g')"
     assert_contains 'name="data[economyUrl]"' "$page"
-    assert_matches 'name="data\[economyModule\]"[^>]*disabled' "$page"
+    assert_contains 'name="data[economyModule]"' "$page"
+    assert_not_matches 'name="data\[economyModule\]"[^>]*disabled' "$page"
     fields=()
     for name in __form-name__ __unique_form_id__ form-nonce; do
         fields+=(--data-urlencode "$name=$(echo "$page" | sed -n "s/.*name=\"$name\" value=\"\([^\"]*\)\".*/\1/p" | head -1)")
