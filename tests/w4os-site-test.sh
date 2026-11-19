@@ -50,6 +50,8 @@ test_setup_connects_the_site_and_keeps_the_key_out_of_the_config() {
 
 test_setup_needs_the_address_of_the_engine_api_never_the_helpers_api() {
     local output
+    # A machine with the engine installed has its local listener, which answers
+    [ ! -e /usr/share/opensim-engine ] || { bashunit::skip "the engine is installed here: its local listener answers"; return 0; }
     # Only the helpers' address: refused (no address of the engine API, or the one of the local listener when the machine has
     # opensim, which does not answer here), never their /api
     output=$(site setup --url "http://127.0.0.1:$PORT" --key osk_test)

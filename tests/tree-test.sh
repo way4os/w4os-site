@@ -109,5 +109,5 @@ test_the_web_user_writes_only_its_own_tree_never_what_opensim_owns() {
     assert_equals 'chown -R "$OWNER:$OWNER" "$ROOT"' "$(grep -o 'chown .*' "$root/bin/w4os-site-tree")"
     assert_not_contains "g+w" "$(cat "$root/bin/w4os-site-tree" "$root/packaging/w4os-site.postinst")"
     "$TREE" configure >/dev/null
-    assert_equals 755 "$(stat -f %Lp "$(dirname "$W4OS_SITE_ROOT")" 2>/dev/null || stat -c %a "$(dirname "$W4OS_SITE_ROOT")")"
+    assert_equals 755 "$(stat -c %a "$(dirname "$W4OS_SITE_ROOT")" 2>/dev/null || stat -f %Lp "$(dirname "$W4OS_SITE_ROOT")")"
 }
