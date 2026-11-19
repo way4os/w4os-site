@@ -3,7 +3,8 @@
 # plugin bundles reaching a running grid over the network (ursull's friendly_fowl): the grid's blocks, a profile with its picture,
 # the guide and the search served by the site itself, under the prefix of its helpers.
 #
-# TEST SHORTCUT: the config of the grid is read from /etc/opensim, a mirror of ursull's (DEVELOPERS.md, "A grid to try the
+# The site describes the grid from its login address (W4OS_STANDALONE_LOGIN, ursull's by default), as a site installed elsewhere
+# does, no folder of config read. TEST SHORTCUT: the access to its database is taken from /etc/opensim, a mirror of ursull's (DEVELOPERS.md, "A grid to try the
 # standalone site"); a real remote install would get what lives in the ini files from the grid's engine API instead. The database
 # is reached over the network at W4OS_STANDALONE_DB (host:port, ursull's by default), with the credentials of the grid's config,
 # given to the site's own settings and never printed.
@@ -37,7 +38,7 @@ standalone() {
         echo 'engine: bundled'
         echo "grid: $GRID"
         echo 'bundled:'
-        echo "  config: '/etc/opensim'"
+        echo "  login: '${W4OS_STANDALONE_LOGIN:-http://192.168.8.69:8012}'"
         echo '  database:'
         echo "    host: '$DB'"
         echo "    name: '$name'"
