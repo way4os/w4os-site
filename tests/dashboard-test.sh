@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # The dashboard of the admin, end to end: its cards in their order, in columns; the regions and the simulators online of all, the
-# counts of the avatars in one card by their plain names, the recent users with a link to them all.
+# counts of the avatars in one card by their plain names, the recent avatars with a link to them all.
 
 # shellcheck source=site.sh
 source "$(dirname "${BASH_SOURCE[0]}")/site.sh"
@@ -13,7 +13,7 @@ sign_in_as() {
         -d "task=login.login" --data-urlencode "login-form-nonce=$nonce"
 }
 
-test_a_god_sees_the_counts_of_the_avatars_in_one_card_and_the_recent_users() {
+test_a_god_sees_the_counts_of_the_avatars_in_one_card_and_the_recent_avatars() {
     built || return 0
     sign_in_as "$TMP/god" "God Test"
     local page
@@ -21,7 +21,7 @@ test_a_god_sees_the_counts_of_the_avatars_in_one_card_and_the_recent_users() {
     assert_contains 'class="w4os-dashboard"' "$page"
     assert_equals 1 "$(grep -c 'Service Account' <<<"$page")"
     assert_contains '/w4os/avatars?status=pending"' "$page"
-    assert_contains 'Recent users' "$page"
+    assert_contains 'Recent Avatars' "$page"
     assert_contains 'See all' "$page"
     assert_not_contains 'row-deck' "$page"
 }

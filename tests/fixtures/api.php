@@ -15,10 +15,12 @@ if (($_SERVER['HTTP_AUTHORIZATION'] ?? '') !== 'Bearer osk_test') {
 }
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $ada = ['type' => 'avatars', 'id' => 'a1', 'attributes' => [
-    'uuid' => 'a1', 'name' => 'Ada Love', 'slug' => 'ada-love', 'email' => 'ada@example.org', 'level' => 0, 'status' => 'active',
+    'uuid' => 'a1', 'name' => 'Ada Love', 'slug' => 'ada-love', 'email' => 'ada@example.org', 'level' => 0, 'status' => 'active', 'shownRole' => 'resident',
+    'estates' => 0, 'regions' => 0, 'parcels' => 1,
 ]];
 $god = ['type' => 'avatars', 'id' => 'g1', 'attributes' => [
-    'uuid' => 'g1', 'name' => 'God Test', 'slug' => 'god-test', 'email' => 'god@example.org', 'level' => 200, 'status' => 'active',
+    'uuid' => 'g1', 'name' => 'God Test', 'slug' => 'god-test', 'email' => 'god@example.org', 'level' => 200, 'status' => 'active', 'shownRole' => 'god',
+    'estates' => 1, 'regions' => 3, 'parcels' => 5,
 ]];
 $answer = function (int $status, array $document) {
     http_response_code($status);
@@ -171,12 +173,16 @@ if (preg_match('#^/api/settings/(economy|search|guide|offline|assets)$#', $path,
         $values = array_merge($values, (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []));
         file_put_contents($file, json_encode($values));
     }
-    // The guide: handled by a page of the site that does not exist (/nowhere), its line of the grid's files under its path
-    $m[1] === 'guide' && $values = ['provide' => true, 'path' => '/nowhere'] + $values;
-    $meta = $m[1] !== 'guide' ? [] : ['meta' => [
-        'snippets' => ['path' => [['file' => 'Robust.HG.ini', 'text' => "[GridInfoService]\n    DestinationGuide = http://127.0.0.1/nowhere"]]],
-        'service' => ['key' => 'guide', 'base' => 'http://127.0.0.1', 'handledBy' => 'site', 'block' => 'destination_guide'],
-    ]];
+    // The guide: handled by a page of the site that does not exist (nowhere: a path never starts with a slash)
+    $m[1] === 'guide' && $values = ['provide' => true, 'path' => 'nowhere'] + $values;
+    // The lines of the files of the grid the page needs, one block for each file; the address its path is under
+    $lines = [
+        'economy' => [['file' => 'Robust.HG.ini', 'text' => "[GridInfoService]\n    economy = http://127.0.0.1/helpers/"], ['file' => 'OpenSim.ini', 'text' => "[Economy]\n    economymodule = BetaGridLikeMoneyModule"]],
+        'guide' => [['file' => 'Robust.HG.ini', 'text' => "[LoginService]\n    DestinationGuide = http://127.0.0.1/nowhere"], ['file' => 'Helpers.ini', 'text' => "[Helpers]\n    GuideSource = https://2do.directory/helpers/guide.php"]],
+    ];
+    $meta = ['meta' => ['snippets' => $lines[$m[1]] ?? []] + ($m[1] !== 'guide' ? [] : [
+        'service' => ['key' => 'guide', 'prefix' => 'http://127.0.0.1/', 'base' => 'http://127.0.0.1', 'handledBy' => 'site', 'block' => 'destination_guide'],
+    ])];
     $answer(200, ['data' => ['type' => 'settings', 'id' => $m[1], 'attributes' => $values]] + $meta);
 }
 // The simulators and the regions of the grid, as many as their filters keep (running, status)
@@ -190,7 +196,7 @@ $keep = function (array $rows) {
 if (preg_match('#^/api(/grids/[^/]+)?/simulators$#', $path) === 1) {
     $simulator = fn (string $id, string $name, int $regions, ?int $cpu, ?int $memoryUsed, bool $running) => ['type' => 'simulators', 'id' => $id, 'attributes' => [
         'uuid' => $id, 'name' => $name, 'slug' => strtolower($name), 'uri' => 'http://sim.example.org:'.(9000 + (int) substr($id, 1)), 'grid' => 'demo',
-        'server' => 'sim.example.org', 'httpPort' => 9000 + (int) substr($id, 1), 'regions' => $regions, 'area' => $regions * 65536, 'avatars' => $running ? 1 : 0,
+        'server' => 'sim.example.org', 'httpPort' => 9000 + (int) substr($id, 1), 'regions' => $regions, 'area' => $regions * 65536, 'avatars' => $running ? 1 : 0, 'prims' => $running ? $regions * 2150 : null,
         'cpu' => $cpu, 'memory' => $memoryUsed === null ? null : (int) round($memoryUsed * 100 / 16384), 'memoryUsed' => $memoryUsed, 'memoryTotal' => $running ? 16384 : null,
         'enabled' => true, 'running' => $running ? 'yes' : 'no', 'state' => $running ? 'running' : 'stopped',
     ]];
@@ -198,7 +204,7 @@ if (preg_match('#^/api(/grids/[^/]+)?/simulators$#', $path) === 1) {
 }
 if (preg_match('#^/api(/grids/[^/]+)?/regions$#', $path) === 1) {
     $region = fn (string $id, string $name, string $server, bool $online) => ['type' => 'regions', 'id' => $id, 'attributes' => [
-        'uuid' => $id, 'name' => $name, 'uri' => 'demo:'.$name, 'ownerName' => 'God Test', 'owner' => 'g1', 'serverName' => $server, 'avatars' => $online ? 1 : 0,
+        'uuid' => $id, 'name' => $name, 'uri' => 'demo:'.$name, 'ownerName' => 'God Test', 'owner' => 'g1', 'serverName' => $server, 'avatars' => $online ? 1 : 0, 'prims' => $online ? 2150 : null, 'scripts' => $online ? 312 : null,
         'size' => 256, 'location' => '1000,1000', 'flagNames' => [], 'status' => $online ? 'online' : 'offline',
     ]];
     $answer(200, $keep([$region('r1', 'Plaza', 'Plaza', true), $region('r2', 'Sandbox', 'Sandbox', true), $region('r3', 'Welcome', 'Welcome', false)]));
