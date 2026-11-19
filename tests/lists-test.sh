@@ -22,7 +22,7 @@ test_a_god_sees_the_avatars_with_their_views_and_the_number_each_value_of_a_filt
     # The views above the list, as w4os-wp has them: All, then type, active, presence, the values that give avatars
     assert_contains 'class="list-inline w4os-views' "$page"
     assert_contains '>All <span class="text-secondary">(2)</span></a>' "$page"
-    assert_contains '>User Avatar <span class="text-secondary">(2)</span></a>' "$page"
+    assert_contains '>Resident <span class="text-secondary">(2)</span></a>' "$page"
     assert_contains '>Active <span class="text-secondary">(2)</span></a>' "$page"
     assert_contains '>Online <span class="text-secondary">(1)</span></a>' "$page"
     assert_not_contains 'type=model' "$page"
