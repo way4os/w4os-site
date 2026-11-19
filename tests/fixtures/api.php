@@ -74,6 +74,20 @@ if ($path === '/api/addresses') {
         ['key' => 'guide', 'url' => null, 'source' => null, 'usage' => 'page', 'file' => 'Robust.HG.ini', 'section' => 'LoginService', 'setting' => 'DestinationGuide', 'label' => 'setting_destination_guide', 'description' => 'setting_destination_guide_help'],
     ]]]]);
 }
+if ($path === '/api/regions/r1') {
+    // A region of the grid, and its parcels
+    $answer(200, ['data' => ['type' => 'regions', 'id' => 'r1', 'attributes' => [
+        'uuid' => 'r1', 'name' => 'Test East', 'location' => '8015,8012', 'size' => '256x256', 'enabled' => true, 'online' => true, 'local' => true, 'hyperlink' => false,
+    ]]]);
+}
+if ($path === '/api/parcels') {
+    $region = (string) ($_GET['filter']['region'] ?? '');
+    $parcels = $region !== 'r1' ? [] : [['type' => 'parcels', 'id' => 'p1', 'attributes' => [
+        'uuid' => 'p1', 'name' => 'Plaza', 'region' => 'r1', 'regionName' => 'Test East', 'ownerName' => 'God Test', 'area' => 65536,
+        'uri' => '127.0.0.1:8002/Test East/128/128/25', 'teleport' => 'hop://127.0.0.1:8002/Test%20East/128/128/25',
+    ]]];
+    $answer(200, ['data' => $parcels, 'meta' => ['total' => count($parcels), 'page' => 1, 'perPage' => 50]]);
+}
 if ($path === '/api/avatars' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // A new avatar: what was sent kept for the test, the avatar made
     $sent = (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []);
