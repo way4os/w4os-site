@@ -74,6 +74,14 @@ if ($path === '/api/addresses') {
         ['key' => 'guide', 'url' => null, 'source' => null, 'usage' => 'page', 'file' => 'Robust.HG.ini', 'section' => 'LoginService', 'setting' => 'DestinationGuide', 'label' => 'setting_destination_guide', 'description' => 'setting_destination_guide_help'],
     ]]]]);
 }
+if ($path === '/api/avatars' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    // A new avatar: what was sent kept for the test, the avatar made
+    $sent = (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []);
+    file_put_contents(sys_get_temp_dir().'/w4os-fake-new-avatar-'.(int) ($_SERVER['SERVER_PORT'] ?? 0).'.json', json_encode($sent));
+    $answer(201, ['data' => ['type' => 'avatars', 'id' => 'n1', 'attributes' => [
+        'uuid' => 'n1', 'name' => trim(($sent['firstName'] ?? '').' '.($sent['lastName'] ?? '')), 'level' => 0, 'status' => 'active',
+    ]]]);
+}
 if ($path === '/api/avatars') {
     // The avatars of the grid, with the number of avatars each value of a filter gives (meta.counts)
     $answer(200, ['data' => [$ada, $god], 'meta' => ['total' => 2, 'page' => 1, 'perPage' => 50, 'counts' => [
