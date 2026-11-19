@@ -44,6 +44,13 @@ if (in_array(rawurldecode($path), ['/api/avatars/g1', '/api/avatars/God Test'], 
     $answer(200, ['data' => $god]);
 }
 // The rule of the avatar models of the grid, kept for the site of the test (in the temporary folder of the system)
+if ($path === '/api/avatars') {
+    // The avatars of the grid, with the number of avatars each value of a filter gives (meta.counts)
+    $answer(200, ['data' => [$ada, $god], 'meta' => ['total' => 2, 'page' => 1, 'perPage' => 50, 'counts' => [
+        'online' => ['online' => 1, 'offline' => 1], 'type' => ['user' => 2, 'model' => 0, 'service' => 0], 'active' => ['yes' => 2, 'no' => 0],
+        'status' => ['active' => 2, 'disabled' => 0, 'pending' => 0, 'banned' => 0],
+    ]]]);
+}
 if ($path === '/api/avatar-models') {
     // The models the rule of the grid picks (the settings below), or the one its filters ask
     $file = sys_get_temp_dir().'/w4os-fake-models-'.(int) ($_SERVER['SERVER_PORT'] ?? 0).'.json';
