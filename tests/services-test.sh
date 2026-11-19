@@ -51,6 +51,19 @@ test_a_god_sees_the_lines_of_the_grid_and_is_told_the_page_of_the_service_is_mis
     assert_contains 'The site has no page at /nowhere' "$after"
 }
 
+test_a_god_runs_the_indexing_of_the_search_now() {
+    built || return 0
+    sign_in_as "$TMP/god" "God Test"
+    local page nonce after
+    page=$(curl -s -b "$TMP/god" -c "$TMP/god" "$URL/w4os/search")
+    assert_contains 'Index the regions' "$page"
+    assert_contains 'no simulator due' "$page"
+    assert_not_contains 'another grid' "$page"
+    nonce=$(echo "$page" | sed -n 's/.*name="nonce" value="\([^"]*\)".*/\1/p' | head -1)
+    after=$(curl -s -L -b "$TMP/god" -c "$TMP/god" "$URL/w4os/search" --data-urlencode "action=run_task" --data-urlencode "task=demo:search-parse" --data-urlencode "nonce=$nonce")
+    assert_contains '2 regions indexed' "$after"
+}
+
 test_a_resident_never_gets_them() {
     built || return 0
     sign_in_as "$TMP/ada" "Ada Love"

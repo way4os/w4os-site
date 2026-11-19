@@ -88,6 +88,16 @@ if ($path === '/api/parcels') {
     ]]];
     $answer(200, ['data' => $parcels, 'meta' => ['total' => count($parcels), 'page' => 1, 'perPage' => 50]]);
 }
+if ($path === '/api/tasks') {
+    // The tasks of the grid's search (and one of another grid)
+    $answer(200, ['data' => [
+        ['type' => 'tasks', 'id' => 'demo:search-parse', 'attributes' => ['name' => 'search-parse', 'scope' => 'demo', 'label' => 'Index the regions', 'lastRun' => 1795093084, 'status' => 'ran', 'message' => 'no simulator due']],
+        ['type' => 'tasks', 'id' => 'other:search-parse', 'attributes' => ['name' => 'search-parse', 'scope' => 'other', 'label' => 'Index the regions of another grid']],
+    ]]);
+}
+if (preg_match('#^/api/tasks/([^/]+)/runs$#', $path, $task) === 1 && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $answer(200, ['data' => ['type' => 'tasks', 'id' => urldecode($task[1]), 'attributes' => ['name' => 'search-parse', 'status' => 'ran', 'message' => '2 regions indexed']]]);
+}
 if ($path === '/api/posts') {
     // The posts of every avatar of the grid, newest first
     $answer(200, ['data' => [
