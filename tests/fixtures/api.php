@@ -70,8 +70,8 @@ if ($path === '/api/addresses') {
     // Where the services of the grid are, each its use, its file, its section and key
     $answer(200, ['data' => ['type' => 'addresses', 'id' => 'demo', 'attributes' => ['services' => [
         ['key' => 'asset', 'url' => 'http://127.0.0.1:8003', 'source' => 'provider', 'usage' => 'robust-simulators', 'file' => 'OpenSim.ini', 'section' => 'AssetService', 'setting' => 'AssetServerURI', 'label' => 'service_asset', 'description' => 'service_asset_help'],
-        ['key' => 'motd', 'url' => 'http://127.0.0.1/helpers/motd.php', 'source' => 'config', 'usage' => 'page', 'file' => 'Robust.HG.ini', 'section' => 'LoginService', 'setting' => 'MessageUrl', 'label' => 'service_motd', 'description' => 'service_motd_help'],
-        ['key' => 'guide', 'url' => null, 'source' => null, 'usage' => 'page', 'file' => 'Robust.HG.ini', 'section' => 'LoginService', 'setting' => 'DestinationGuide', 'label' => 'service_guide', 'description' => 'service_guide_help'],
+        ['key' => 'motd', 'url' => 'http://127.0.0.1/helpers/motd.php', 'source' => 'config', 'usage' => 'page', 'file' => 'Robust.HG.ini', 'section' => 'LoginService', 'setting' => 'MessageUrl', 'label' => 'setting_message_url', 'description' => 'setting_message_url_help'],
+        ['key' => 'guide', 'url' => null, 'source' => null, 'usage' => 'page', 'file' => 'Robust.HG.ini', 'section' => 'LoginService', 'setting' => 'DestinationGuide', 'label' => 'setting_destination_guide', 'description' => 'setting_destination_guide_help'],
     ]]]]);
 }
 if ($path === '/api/avatars') {
