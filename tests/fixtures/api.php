@@ -1,6 +1,14 @@
 <?php
 // A fake engine API for the tests: /api/info with the key osk_test; the avatars Ada Love (a resident) and God Test (a god, level
 // 200) sign in with the password "secret"; /api/openapi.json the contract of the engine the site ships (W4OS_FAKE_OPENAPI)
+// The grid info of a running grid (the bundled engine describes the grid from it): its helpers set on the site (economy, the
+// next port), under /helpers
+if (parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) === '/get_grid_info') {
+    $site = 'http://127.0.0.1:'.((int) ($_SERVER['SERVER_PORT'] ?? 0) + 1);
+    header('Content-Type: text/xml');
+    echo '<gridinfo><platform>OpenSim</platform><gridname>Demo Grid</gridname><gridnick>demo</gridnick><login>http://127.0.0.1:'.(int) ($_SERVER['SERVER_PORT'] ?? 0).'/</login><economy>'.$site.'/helpers/</economy></gridinfo>';
+    exit;
+}
 if (($_SERVER['HTTP_AUTHORIZATION'] ?? '') !== 'Bearer osk_test') {
     http_response_code(401);
     exit;
