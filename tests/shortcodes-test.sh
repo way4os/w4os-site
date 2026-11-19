@@ -22,6 +22,7 @@ test_a_manager_finds_the_shortcodes_with_what_they_show_and_their_options() {
     assert_contains 'General information (grid name and login uri)' "$page"
     assert_contains 'Title level (h1 to h6)' "$page"
     assert_contains '[w4os-home]' "$page"
+    assert_contains 'include_hypergrid=1' "$page"
 }
 
 test_a_resident_never_gets_it() {
