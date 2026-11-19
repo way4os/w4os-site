@@ -29,3 +29,9 @@ test_a_resident_never_gets_it() {
     sign_in_as "$TMP/ada" "Ada Love"
     assert_not_contains 'Available Shortcodes' "$(curl -s -L -b "$TMP/ada" "$URL/w4os/shortcodes")"
 }
+
+test_a_visitor_is_sent_to_sign_in_first() {
+    built || return 0
+    local jar="$TMP/visitor"
+    assert_equals "$URL/login" "$(curl -s -o /dev/null -c "$jar" -b "$jar" -w '%{redirect_url}' "$URL/w4os/shortcodes")"
+}
