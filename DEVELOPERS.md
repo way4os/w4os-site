@@ -49,3 +49,17 @@ The installer is tested on a site in a temporary folder (`W4OS_SITE_DATA`, `W4OS
 Signing in and staying signed in are tested end to end (`tests/remember-test.sh`): the Grav tree built (`build/w4os-site/grav`, or `W4OS_SITE_BUILD`) set up as the zip has it in a temporary folder, served by PHP alone with several workers, its engine the same fake API; each cookie jar of curl is a browser. Skipped while no tree is built, or while the tree is older than the code it is made of (the plugin next to this project or `W4OS_PLUGIN`, w4os-views, the theme: the test names which): a run that passes is the code of now. `W4OS_TEST_KEEP=1` leaves the site and its logs.
 
 The site itself is tried on a development machine, never on a live grid: install the package there, `w4os-site setup` with the helpers of a test grid, `w4os-site web apache --port <port> --install`. No real mail: addresses of `example.org`, and the tokens taken from the API with `send: false`.
+
+## A grid to try the standalone site
+
+The site on its own, from this folder (`php -S`, as the tests do), its bundled engine and helpers reaching a running grid over the
+network: `W4OS_STANDALONE_GRID=friendly_fowl lib/bashunit/bashunit tests/standalone-test.sh`. A test shortcut gives it the config
+of the grid: `/etc/opensim` of this machine is a mirror of the one of the grid's machine (a real remote install would get what lives
+in the ini files from the grid's engine API). Refresh it (read-only on the grid's side, readable by its owner alone here):
+
+```bash
+rsync -a --delete --chmod=go-rwx --rsync-path="sudo -n rsync" -e ssh "$DEPLOY_HOST:/etc/opensim/" /etc/opensim/
+```
+
+The database is reached at `W4OS_STANDALONE_DB` (host:port, the grid's machine by default): its server must listen on the network
+and grant the site's user from this machine. The pictures need PHP `imagick` with JPEG 2000 (OpenJPEG).

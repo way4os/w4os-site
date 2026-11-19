@@ -5,7 +5,7 @@
 #
 # TEST SHORTCUT: the config of the grid is read from /etc/opensim, a mirror of ursull's (DEVELOPERS.md, "A grid to try the
 # standalone site"); a real remote install would get what lives in the ini files from the grid's engine API instead. The database
-# is reached at W4OS_STANDALONE_DB (host:port, an SSH tunnel to ursull by default), with the credentials of the grid's config,
+# is reached over the network at W4OS_STANDALONE_DB (host:port, ursull's by default), with the credentials of the grid's config,
 # given to the site's own settings and never printed.
 #
 # Runs only when asked: W4OS_STANDALONE_GRID=friendly_fowl lib/bashunit/bashunit tests/standalone-test.sh
@@ -14,7 +14,7 @@
 source "$(dirname "${BASH_SOURCE[0]}")/site.sh"
 
 GRID=${W4OS_STANDALONE_GRID:-}
-DB=${W4OS_STANDALONE_DB:-127.0.0.1:13306}
+DB=${W4OS_STANDALONE_DB:-192.168.8.69:3306}
 
 standalone() {
     built || return 1
@@ -37,6 +37,7 @@ standalone() {
         echo 'engine: bundled'
         echo "grid: $GRID"
         echo 'bundled:'
+        echo "  config: '/etc/opensim'"
         echo '  database:'
         echo "    host: '$DB'"
         echo "    name: '$name'"
