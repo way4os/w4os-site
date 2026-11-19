@@ -7,9 +7,9 @@ template: default
 body_classes: layout-fluid
 ---
 [w4os-home]
-# [w4os text="welcome_title" /]
+# [w4os text="welcome_title"]
 
-<p class="lead">[w4os slogan /]</p>
+<p class="lead">[w4os slogan]</p>
 
 [w4os-guest][w4os-register][Erstelle deinen Avatar](/register) und verbinde dich dann mit einem beliebigen OpenSimulator-Viewer.[/w4os-register][/w4os-guest]
 [/w4os-home]

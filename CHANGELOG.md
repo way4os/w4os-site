@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- update (pages): the login URI of the default pages as [login-uri], their shortcodes without a closing slash
 - fix (tree): the folder of the site made 755 whatever the umask of the machine
 - fix (sessions): several browsers signed in at once, and several pages a browser opens at once, no longer taken for a stolen "remember me" cookie (w4os plugin); a stolen one lands on the sign-in page with a message, not an error page
 - update (sessions): signed in until signing out: "remember me" checked and lasting a year, a session a day without a visit, the sessions in a folder of the site (`user/data/sessions`, the package's `/var/lib/w4os-site/sessions`) out of the reach of the system's cleaning, which took them after 24 minutes; the avatars kept as accounts so "remember me" finds them

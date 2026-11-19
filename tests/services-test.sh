@@ -42,6 +42,7 @@ test_a_god_sees_the_lines_of_the_grid_and_is_told_the_page_of_the_service_is_mis
     assert_contains 'Robust.HG.ini' "$page"
     assert_contains 'DestinationGuide = http://127.0.0.1/nowhere' "$page"
     assert_contains 'form-switch' "$page"
+    assert_matches 'input-group-text">http://127.0.0.1' "$page"
     fields=()
     for name in __form-name__ __unique_form_id__ form-nonce; do
         fields+=(--data-urlencode "$name=$(echo "$page" | sed -n "s/.*name=\"$name\" value=\"\([^\"]*\)\".*/\1/p" | head -1)")

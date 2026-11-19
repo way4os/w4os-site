@@ -18,11 +18,11 @@ test_a_manager_finds_the_shortcodes_with_what_they_show_and_their_options() {
     local page
     page=$(curl -s -b "$TMP/god" "$URL/w4os/shortcodes")
     assert_contains '<title>Available Shortcodes' "$page"
-    assert_contains '[w4os block=&quot;grid-info&quot; /]' "$page"
+    assert_contains '[grid-info]' "$page"
     assert_contains 'General information (grid name and login uri)' "$page"
     assert_contains 'Title level (h1 to h6)' "$page"
     assert_contains '[w4os-home]' "$page"
-    assert_contains 'include_hypergrid=1' "$page"
+    assert_contains 'include-hypergrid' "$page"
 }
 
 test_a_resident_never_gets_it() {
@@ -35,4 +35,15 @@ test_a_visitor_is_sent_to_sign_in_first() {
     built || return 0
     local jar="$TMP/visitor"
     assert_equals "$URL/login" "$(curl -s -o /dev/null -c "$jar" -b "$jar" -w '%{redirect_url}' "$URL/w4os/shortcodes")"
+}
+
+test_the_shortcodes_of_the_site_need_no_closing_slash() {
+    built || return 0
+    local help home
+    help=$(curl -s "$URL/help")
+    assert_contains 'class="w4os-login-uri"' "$help"
+    assert_not_contains '[login-uri]' "$help"
+    home=$(curl -s "$URL/")
+    assert_not_contains '[w4os text=' "$home"
+    assert_not_contains '[w4os slogan]' "$home"
 }
