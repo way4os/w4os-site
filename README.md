@@ -7,7 +7,7 @@ It is [Grav](https://getgrav.org) with the [w4os plugin](https://github.com/magi
 ## Requirements
 
 - A Debian or Ubuntu server with PHP 8.3 or newer and a web server (Apache, Caddy or nginx; PHP-FPM recommended).
-- An OpenSimulator grid, on this machine or another one: with its OpenSim helpers version 3 and an API key for the site, or with its Robust database reachable from the site (the w4os plugin carries the engine and the helpers: no OpenSim package is needed on the server of the site).
+- An OpenSimulator grid, on this machine or another one: with its engine API (opensim-engine) and an API key for the site, or with its Robust database reachable from the site (the w4os plugin carries the engine and the helpers: no OpenSim package is needed on the server of the site).
 
 ## Install
 
@@ -32,7 +32,7 @@ sudo w4os-site web apache --host grid.example.org --install
 ```
 
 - `setup` connects the site to the API of the grid (the bundled engine is set in `/var/lib/opensim/www/user/config/plugins/w4os.yaml`, `engine: bundled`, see the README of the plugin). It asks the address of the engine API, its own and never under the helpers (`https://grid.example.org/api`, or `http://127.0.0.1:8780/api` on the machine of the grid, served by `opensim web GRID api`), the address of the helpers of the grid for the blocks (`https://grid.example.org/helpers`), and the API key of the site, made on the machine of the grid with `opensim api-key create w4os-site`; it checks that the API answers, sets `engine: remote` and names the site after the grid. Options: `--api`, `--url`, `--key`, `--grid` (when the API serves several grids), `--title`, and `--no-mail` for a test site (the engine mails nothing, the confirmation links are shown on the page; `--mail` turns the mails back on).
-- `web apache|caddy|nginx [--host <name>] [--port <port>]` prints the configuration of the web server for the site; `--install` writes and enables it (Apache). On a machine of the grid with the helpers package, the Apache one serves the helpers of the grid (`/helpers`) from their package, as `opensim web GRID snippet apache` prints it: the site is then a client of the engine API (`setup --api`) and leaves the helpers to their package.
+- `web apache|caddy|nginx [--host <name>] [--port <port>]` prints the configuration of the web server for the site; `--install` writes and enables it (Apache). It routes nothing to the helpers of the grid: the site serves its own helpers when it is set so (the setting **Serve the helpers** of the w4os plugin, under the prefix of its helpers address); helpers installed apart are the web server's business, and their requests never reach the site.
 - `status` tells what the site is connected to and whether the API answers.
 
 The top bar has the menu of the site in the middle, and on the right the languages (oli-langswitcher), the menu of the visitor (sign in, or the avatar signed in) and the day and night switch. The languages are those of the OpenSim suite (`languages.supported` in `/var/lib/opensim/www/user/config/system.yaml`).

@@ -103,18 +103,18 @@ test_web_apache_listens_on_its_own_port() {
     assert_not_contains "{{" "$output"
 }
 
-test_web_apache_serves_the_helpers_from_their_package_when_the_machine_has_them() {
+test_the_web_configurations_route_nothing_to_the_helpers_even_on_a_machine_that_has_their_package() {
     # A machine of the grid: the helpers package and the opensim command, which prints their snippet
     mkdir -p "$SITE/helpers/public" "$SITE/bin"
-    printf '#!/bin/sh\n[ "$1 $2 $3 $4" = "web demo snippet apache" ] || exit 1\necho "# Helpers of the grid demo."\necho "AliasMatch \\"^/(?:helpers|health)(?:/.*)?$\\" \\"/usr/share/opensim-helpers/public/index.php\\""\n' >"$SITE/bin/opensim"
+    printf '#!/bin/sh\necho "AliasMatch \\"^/(?:helpers|health)(?:/.*)?$\\" \\"/usr/share/opensim-helpers/public/index.php\\""\n' >"$SITE/bin/opensim"
     chmod +x "$SITE/bin/opensim"
-    printf "grid: demo\n" >>"$SITE/user/config/plugins/w4os.yaml"
-    local output
-    output=$(PATH="$SITE/bin:$PATH" W4OS_SITE_HELPERS="$SITE/helpers" site web apache --host grid.example.org --port 8830)
-    assert_contains 'AliasMatch "^/(?:helpers|health)(?:/.*)?$" "/usr/share/opensim-helpers/public/index.php"' "$output"
-    assert_not_contains "{{" "$output"
-    # Without the package, the site serves what it serves (the plugin's serve_helpers, with the bundled engine)
-    assert_not_contains "AliasMatch" "$(PATH="$SITE/bin:$PATH" W4OS_SITE_HELPERS="$SITE/none" site web apache --host grid.example.org)"
+    local server output
+    for server in apache caddy nginx; do
+        output=$(PATH="$SITE/bin:$PATH" W4OS_SITE_HELPERS="$SITE/helpers" site web "$server" --host grid.example.org --port 8830)
+        assert_not_contains "opensim-helpers" "$output"
+        assert_not_contains "AliasMatch" "$output"
+        assert_not_contains "{{" "$output"
+    done
 }
 
 test_web_apache_on_port_80_adds_no_listen() {

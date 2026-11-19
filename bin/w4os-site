@@ -134,18 +134,6 @@ status() {
     curl -fsS --max-time 15 -o /dev/null "$url/blocks/grid-info" && echo "blocks:  answer" || warning "blocks:  do not answer"
 }
 
-# The helpers of the grid served by their package, on a machine of the grid that has it: what the opensim command prints for
-# this web server, indented for a virtual host; nothing elsewhere (the site then serves what it serves itself)
-helpers_snippet() {
-    local grid snippet
-    [ -d "${W4OS_SITE_HELPERS:-/usr/share/opensim-helpers}/public" ] && command -v opensim >/dev/null || return 0
-    grid=$(yaml_get "$CONFIG/plugins/w4os.yaml" grid)
-    snippet=$(opensim web ${grid:+"$grid"} snippet "$1" 2>/dev/null | sed -n '/^[^#]/,$p') || return 0
-    [ -n "$snippet" ] || return 0
-    printf '\n\n    # The helpers of the grid, served by their package (opensim web %s snippet %s)\n' "${grid:-GRID}" "$1"
-    printf '%s' "$snippet" | sed 's/^/    /'
-}
-
 # The socket of PHP-FPM, when there is one
 php_socket() {
     local socket
@@ -180,7 +168,6 @@ web() {
         conf=${conf//\{\{port\}\}/$port}
         conf=${conf//\{\{listen\}\}/$listen}
         conf=${conf//\{\{php\}\}/$php}
-        conf=${conf//\{\{helpers\}\}/$(helpers_snippet apache)}
         if [ -z "$install" ]; then
             printf '%s\n' "$conf"
             return

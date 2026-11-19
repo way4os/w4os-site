@@ -34,7 +34,6 @@ recommends:
   - php-fpm | php8.3-fpm | php8.4-fpm
 suggests:
   - apache2 | caddy | nginx
-  - opensim-helpers
 
 contents:
   - src: build/w4os-site/grav
