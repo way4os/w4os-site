@@ -147,6 +147,12 @@ if (preg_match('#^/api/settings/(economy|search|guide|offline|assets)$#', $path,
         $values = array_merge($values, (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []));
         file_put_contents($file, json_encode($values));
     }
-    $answer(200, ['data' => ['type' => 'settings', 'id' => $m[1], 'attributes' => $values]]);
+    // The guide: handled by a page of the site that does not exist (/nowhere), its line of the grid's files under its path
+    $m[1] === 'guide' && $values = ['provide' => true, 'path' => '/nowhere'] + $values;
+    $meta = $m[1] !== 'guide' ? [] : ['meta' => [
+        'snippets' => ['path' => [['file' => 'Robust.HG.ini', 'text' => "[GridInfoService]\n    DestinationGuide = http://127.0.0.1/nowhere"]]],
+        'service' => ['key' => 'guide', 'base' => 'http://127.0.0.1', 'handledBy' => 'site', 'block' => 'destination_guide'],
+    ]];
+    $answer(200, ['data' => ['type' => 'settings', 'id' => $m[1], 'attributes' => $values]] + $meta);
 }
 http_response_code(404);

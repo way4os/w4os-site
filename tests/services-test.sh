@@ -34,6 +34,23 @@ test_a_god_changes_the_economy_of_the_grid_but_not_what_its_options_set() {
     assert_contains '"economyModule":"BetaGridLikeMoneyModule"' "$sent"
 }
 
+test_a_god_sees_the_lines_of_the_grid_and_is_told_the_page_of_the_service_is_missing() {
+    built || return 0
+    sign_in_as "$TMP/god" "God Test"
+    local page fields name after
+    page=$(curl -s -b "$TMP/god" -c "$TMP/god" "$URL/w4os/guide")
+    assert_contains 'Robust.HG.ini' "$page"
+    assert_contains 'DestinationGuide = http://127.0.0.1/nowhere' "$page"
+    assert_contains 'form-switch' "$page"
+    fields=()
+    for name in __form-name__ __unique_form_id__ form-nonce; do
+        fields+=(--data-urlencode "$name=$(echo "$page" | sed -n "s/.*name=\"$name\" value=\"\([^\"]*\)\".*/\1/p" | head -1)")
+    done
+    after=$(curl -s -L -b "$TMP/god" -c "$TMP/god" "$URL/w4os/guide" "${fields[@]}" --data-urlencode "data[provide]=1" --data-urlencode "data[path]=/nowhere" --data-urlencode "data[guideSource]=destinations.txt")
+    assert_contains 'Settings saved.' "$after"
+    assert_contains 'The site has no page at /nowhere' "$after"
+}
+
 test_a_resident_never_gets_them() {
     built || return 0
     sign_in_as "$TMP/ada" "Ada Love"
