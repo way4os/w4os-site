@@ -44,6 +44,11 @@ if (in_array(rawurldecode($path), ['/api/avatars/g1', '/api/avatars/God Test'], 
     $answer(200, ['data' => $god]);
 }
 // The rule of the avatar models of the grid, kept for the site of the test (in the temporary folder of the system)
+if (preg_match('#^/api/health/([a-z0-9]+)$#', $path, $line) === 1) {
+    // One line checked now
+    $line[1] === 'l1' || $answer(404, ['status' => 404, 'title' => 'Not found']);
+    $answer(200, ['data' => ['type' => 'health-checks', 'id' => 'l1', 'attributes' => ['label' => 'login', 'kind' => 'address', 'url' => 'http://127.0.0.1/', 'level' => 'ok', 'status' => '200', 'ms' => 2, 'checkedAt' => time()]]]);
+}
 if ($path === '/api/health') {
     // The last report an hour ago; checked now when asked (refresh)
     $file = sys_get_temp_dir().'/w4os-fake-health-'.(int) ($_SERVER['SERVER_PORT'] ?? 0);
