@@ -38,9 +38,8 @@ vendor/bin/build-tools build deb | tail -1
 deb=$(ls -t dist/w4os-site_*.deb | head -1)
 
 scp -q "$deb" "$host:/tmp/"
-# The package as it is built, whatever its version says against the one installed (another branch, an older commit)
 # shellcheck disable=SC2029
-ssh "$host" "sudo -n DEBIAN_FRONTEND=noninteractive NEEDRESTART_SUSPEND=1 apt-get install -y -qq --reinstall --allow-downgrades '/tmp/$(basename "$deb")' >/dev/null && rm -f '/tmp/$(basename "$deb")' &&
+ssh "$host" "sudo -n DEBIAN_FRONTEND=noninteractive NEEDRESTART_SUSPEND=1 apt-get install -y -qq --reinstall '/tmp/$(basename "$deb")' >/dev/null && rm -f '/tmp/$(basename "$deb")' &&
     sudo -n find /var/lib/opensim/www/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
 # The themes of development (dev/themes.txt), never in the package
 dev/themes.sh | tail -1
