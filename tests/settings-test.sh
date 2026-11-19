@@ -178,3 +178,22 @@ test_a_theme_without_a_logo_field_gets_the_site_s_logo_in_its_own_file_and_its_o
     sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
     sleep 3
 }
+
+test_hypertext_shows_the_favicon_of_the_site_from_the_file_it_takes_it_from() {
+    built || return 0
+    [ -d "$ROOT/build/dev/user/themes/hypertext" ] || { bashunit::skip "no hypertext (dev/build.sh)"; return 0; }
+    cp -R "$ROOT/build/dev/user/themes/hypertext" "$SITE/user/themes/"
+    local icon=user/data/theme/images/favicon/friendly-fowl-icon.png
+    mkdir -p "$SITE/user/data/theme/images/favicon"
+    cp "$SITE/user/themes/w4os/images/favicon/opensimulator-logo-square.png" "$SITE/$icon"
+    cp "$SITE/user/config/plugins/w4os.yaml" "$TMP/w4os-hypertext.yaml"
+    printf '%s\n' 'brand:' '  favicon:' "    $icon:" '      name: friendly-fowl-icon.png' '      type: image/png' "      path: $icon" \
+        >>"$SITE/user/config/plugins/w4os.yaml"
+    sed -i.bak -E "s/^(  theme:).*/\1 hypertext/" "$SITE/user/config/system.yaml"
+    sleep 3
+    assert_contains 'favicon/favicon.png' "$(curl -s -L "$URL/fr/")"
+    assert_files_equals "$SITE/$icon" "$SITE/user/images/favicon/favicon.png"
+    cp "$TMP/w4os-hypertext.yaml" "$SITE/user/config/plugins/w4os.yaml"
+    sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
+    sleep 3
+}
