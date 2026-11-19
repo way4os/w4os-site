@@ -25,3 +25,14 @@ test_a_god_sees_the_counts_of_the_avatars_in_one_card_and_the_recent_users() {
     assert_contains 'See all' "$page"
     assert_not_contains 'row-deck' "$page"
 }
+
+test_a_god_sees_the_simulators_and_the_regions_running_of_all_and_their_list() {
+    built || return 0
+    sign_in_as "$TMP/god2" "God Test"
+    local page list
+    page=$(curl -s -b "$TMP/god2" "$URL/w4os")
+    assert_equals 2 "$(grep -c '>2/3<' <<<"$page")"
+    list=$(curl -s -b "$TMP/god2" "$URL/w4os/simulators")
+    assert_contains 'Plaza' "$list"
+    assert_contains 'Sandbox' "$list"
+}

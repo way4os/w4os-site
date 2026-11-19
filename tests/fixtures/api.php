@@ -179,4 +179,28 @@ if (preg_match('#^/api/settings/(economy|search|guide|offline|assets)$#', $path,
     ]];
     $answer(200, ['data' => ['type' => 'settings', 'id' => $m[1], 'attributes' => $values]] + $meta);
 }
+// The simulators and the regions of the grid, as many as their filters keep (running, status)
+$keep = function (array $rows) {
+    foreach ((array) ($_GET['filter'] ?? []) as $name => $value) {
+        $rows = array_filter($rows, fn ($row) => ! array_key_exists($name, $row['attributes']) || (string) $row['attributes'][$name] === (string) $value);
+    }
+
+    return ['data' => array_values($rows), 'meta' => ['total' => count($rows), 'page' => 1, 'perPage' => 50]];
+};
+if (preg_match('#^/api(/grids/[^/]+)?/simulators$#', $path) === 1) {
+    $simulator = fn (string $id, string $name, int $regions, ?int $cpu, ?int $memoryUsed, bool $running) => ['type' => 'simulators', 'id' => $id, 'attributes' => [
+        'uuid' => $id, 'name' => $name, 'slug' => strtolower($name), 'uri' => 'http://sim.example.org:'.(9000 + (int) substr($id, 1)), 'grid' => 'demo',
+        'server' => 'sim.example.org', 'httpPort' => 9000 + (int) substr($id, 1), 'regions' => $regions, 'area' => $regions * 65536, 'avatars' => $running ? 1 : 0,
+        'cpu' => $cpu, 'memory' => $memoryUsed === null ? null : (int) round($memoryUsed * 100 / 16384), 'memoryUsed' => $memoryUsed, 'memoryTotal' => $running ? 16384 : null,
+        'enabled' => true, 'running' => $running ? 'yes' : 'no', 'state' => $running ? 'running' : 'stopped',
+    ]];
+    $answer(200, $keep([$simulator('s1', 'Plaza', 4, 35, 6200, true), $simulator('s2', 'Sandbox', 1, 78, 15565, true), $simulator('s3', 'Welcome', 2, null, null, false)]));
+}
+if (preg_match('#^/api(/grids/[^/]+)?/regions$#', $path) === 1) {
+    $region = fn (string $id, string $name, string $server, bool $online) => ['type' => 'regions', 'id' => $id, 'attributes' => [
+        'uuid' => $id, 'name' => $name, 'uri' => 'demo:'.$name, 'ownerName' => 'God Test', 'owner' => 'g1', 'serverName' => $server, 'avatars' => $online ? 1 : 0,
+        'size' => 256, 'location' => '1000,1000', 'flagNames' => [], 'status' => $online ? 'online' : 'offline',
+    ]];
+    $answer(200, $keep([$region('r1', 'Plaza', 'Plaza', true), $region('r2', 'Sandbox', 'Sandbox', true), $region('r3', 'Welcome', 'Welcome', false)]));
+}
 http_response_code(404);
