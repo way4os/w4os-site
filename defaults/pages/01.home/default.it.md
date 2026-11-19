@@ -7,9 +7,9 @@ template: default
 body_classes: layout-fluid
 ---
 [w4os-home]
-# [w4os text="welcome_title"]
+# Benvenuto su [grid-name]
 
-<p class="lead">[w4os slogan]</p>
+<p class="lead">[site-slogan]</p>
 
 [w4os-guest][w4os-register][Crea il tuo avatar](/register), poi connettiti con qualsiasi viewer OpenSimulator.[/w4os-register][/w4os-guest]
 [/w4os-home]

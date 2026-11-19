@@ -44,6 +44,7 @@ test_the_shortcodes_of_the_site_need_no_closing_slash() {
     assert_contains 'class="w4os-login-uri"' "$help"
     assert_not_contains '[login-uri]' "$help"
     home=$(curl -s "$URL/")
-    assert_not_contains '[w4os text=' "$home"
-    assert_not_contains '[w4os slogan]' "$home"
+    assert_contains 'Welcome to Demo Grid' "$home"
+    assert_not_contains '[grid-name]' "$home"
+    assert_not_contains '[site-slogan]' "$home"
 }
