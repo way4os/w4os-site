@@ -205,7 +205,7 @@ if (preg_match('#^/api(/grids/[^/]+)?/simulators$#', $path) === 1) {
 if (preg_match('#^/api(/grids/[^/]+)?/regions$#', $path) === 1) {
     $region = fn (string $id, string $name, string $server, bool $online) => ['type' => 'regions', 'id' => $id, 'attributes' => [
         'uuid' => $id, 'name' => $name, 'uri' => 'demo:'.$name, 'ownerName' => 'God Test', 'owner' => 'g1', 'serverName' => $server, 'avatars' => $online ? 1 : 0, 'prims' => $online ? 2150 : null, 'scripts' => $online ? 312 : null,
-        'size' => 256, 'location' => '1000,1000', 'flagNames' => [], 'status' => $online ? 'online' : 'offline',
+        'size' => 256, 'location' => '1000, 1000', 'flagNames' => [], 'status' => $online ? 'online' : 'offline',
     ]];
     $answer(200, $keep([$region('r1', 'Plaza', 'Plaza', true), $region('r2', 'Sandbox', 'Sandbox', true), $region('r3', 'Welcome', 'Welcome', false)]));
 }
