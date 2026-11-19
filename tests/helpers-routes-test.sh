@@ -6,8 +6,8 @@
 # shellcheck source=site.sh
 source "$(dirname "${BASH_SOURCE[0]}")/site.sh"
 
-# serving PREFIX: the site set to serve the helpers itself under PREFIX, with the bundled engine and the grid of an OpenSim install
-# of the server (a small one in the temporary folder: the grid demo, its web site the site, its helpers set there under /helpers by
+# serving PREFIX: the site set to serve the helpers itself under PREFIX, with the bundled engine and the config folder of the grids
+# it is given (a small one in the temporary folder: the grid demo, its web site the site, its helpers set there under /helpers by
 # its economy)
 serving() {
     local install="$TMP/opensim"
@@ -26,7 +26,7 @@ serving() {
     sed -i.bak -e "/^url:/d" -e "/^serve_helpers:/d" -e "/^engine:/d" -e "/^grid:/d" -e "/^bundled:/,/^[^ ]/{/^bundled:/d;/^  /d;}" \
         "$SITE/user/config/plugins/w4os.yaml"
     rm -f "$SITE/user/config/plugins/w4os.yaml.bak"
-    printf '%s\n' "url: '$URL$1'" 'serve_helpers: true' 'engine: bundled' 'grid: demo' 'bundled:' "  opensim_conf: '$install/opensim.conf'" \
+    printf '%s\n' "url: '$URL$1'" 'serve_helpers: true' 'engine: bundled' 'grid: demo' 'bundled:' "  config: '$install/etc'" \
         >>"$SITE/user/config/plugins/w4os.yaml"
     # The settings read again by Grav (it tells a change by the time of the file, to the second)
     sleep 2
