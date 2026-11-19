@@ -1,6 +1,6 @@
 <?php
 // A fake engine API for the tests: /api/info with the key osk_test; the avatars Ada Love (a resident) and God Test (a god, level
-// 200) sign in with the password "secret"
+// 200) sign in with the password "secret"; /api/openapi.json the contract of the engine the site ships (W4OS_FAKE_OPENAPI)
 if (($_SERVER['HTTP_AUTHORIZATION'] ?? '') !== 'Bearer osk_test') {
     http_response_code(401);
     exit;
@@ -18,6 +18,11 @@ $answer = function (int $status, array $document) {
     echo json_encode($document);
     exit;
 };
+if ($path === '/api/openapi.json' && is_file((string) getenv('W4OS_FAKE_OPENAPI'))) {
+    header('Content-Type: application/json');
+    readfile((string) getenv('W4OS_FAKE_OPENAPI'));
+    exit;
+}
 if ($path === '/api/info') {
     $answer(200, ['data' => ['type' => 'info', 'id' => 'demo', 'attributes' => ['elements' => ['gridname' => 'Demo Grid', 'gridnick' => 'demo']]]]);
 }
@@ -37,5 +42,15 @@ if (in_array(rawurldecode($path), ['/api/avatars/a1', '/api/avatars/Ada Love'], 
 }
 if (in_array(rawurldecode($path), ['/api/avatars/g1', '/api/avatars/God Test'], true)) {
     $answer(200, ['data' => $god]);
+}
+// The rule of the avatar models of the grid, kept for the site of the test (in the temporary folder of the system)
+if ($path === '/api/settings/models') {
+    $file = sys_get_temp_dir().'/w4os-fake-models-'.(int) ($_SERVER['SERVER_PORT'] ?? 0).'.json';
+    $rule = is_file($file) ? (array) json_decode((string) file_get_contents($file), true) : ['match' => 'any', 'pattern' => 'Default', 'list' => []];
+    if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
+        $rule = array_merge($rule, (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []));
+        file_put_contents($file, json_encode($rule));
+    }
+    $answer(200, ['data' => ['type' => 'settings', 'id' => 'models', 'attributes' => $rule]]);
 }
 http_response_code(404);

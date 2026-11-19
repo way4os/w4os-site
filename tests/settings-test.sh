@@ -197,3 +197,25 @@ test_hypertext_shows_the_favicon_of_the_site_from_the_file_it_takes_it_from() {
     sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
     sleep 3
 }
+
+test_a_god_saves_the_rule_of_the_avatar_models_with_a_list_of_avatars() {
+    built || return 0
+    sign_in_as "$TMP/god8" "God Test"
+    local form fields name rule
+    rule="$(php -r "echo sys_get_temp_dir();")/w4os-fake-models-$API_PORT.json"
+    # The list shows when the rule takes the avatars of a list
+    echo '{"match":"uuid","pattern":"Default","list":[]}' >"$rule"
+    form=$(curl -s -b "$TMP/god8" -c "$TMP/god8" "$URL/w4os/models")
+    assert_contains 'name="data[list][]"' "$form"
+    fields=()
+    for name in __form-name__ __unique_form_id__ form-nonce; do
+        fields+=(--data-urlencode "$name=$(echo "$form" | sed -n "s/.*name=\"$name\" value=\"\([^\"]*\)\".*/\1/p" | head -1)")
+    done
+    curl -s -o "$TMP/models-saved.html" -L -b "$TMP/god8" -c "$TMP/god8" "$URL/w4os/models" "${fields[@]}" \
+        --data-urlencode "data[match]=uuid" --data-urlencode "data[pattern]=Default" --data-urlencode "data[list][]=g1" \
+        --data-urlencode "data[list][]=a1"
+    assert_not_contains "Array to string" "$(cat "$TMP/models-saved.html")"
+    assert_contains '"match":"uuid"' "$(cat "$rule")"
+    assert_contains '"list":["g1","a1"]' "$(cat "$rule")"
+    rm -f "$rule"
+}

@@ -16,7 +16,10 @@ set_up_before_script() {
     site_tree "$GRAV_TREE" "$ROOT/defaults" "$SITE"
     API_PORT=$((20000 + RANDOM % 20000))
     PORT=$((API_PORT + 1))
-    php -S "127.0.0.1:$API_PORT" "$ROOT/tests/fixtures/api.php" >/dev/null 2>&1 &
+    # The contract of the engine the site ships, for the fake API to serve
+    php -r 'require $argv[1]; echo json_encode(OpenSim\Api\Contract::document());' "$SITE/user/plugins/w4os/vendor/autoload.php" \
+        >"$TMP/openapi.json"
+    W4OS_FAKE_OPENAPI="$TMP/openapi.json" php -S "127.0.0.1:$API_PORT" "$ROOT/tests/fixtures/api.php" >/dev/null 2>&1 &
     API_PID=$!
     cat >>"$SITE/user/config/plugins/w4os.yaml" <<EOF
 api_url: 'http://127.0.0.1:$API_PORT/api'
