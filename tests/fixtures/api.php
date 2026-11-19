@@ -44,6 +44,25 @@ if (in_array(rawurldecode($path), ['/api/avatars/g1', '/api/avatars/God Test'], 
     $answer(200, ['data' => $god]);
 }
 // The rule of the avatar models of the grid, kept for the site of the test (in the temporary folder of the system)
+if ($path === '/api/avatar-models') {
+    // The models the rule of the grid picks (the settings below), or the one its filters ask
+    $file = sys_get_temp_dir().'/w4os-fake-models-'.(int) ($_SERVER['SERVER_PORT'] ?? 0).'.json';
+    $rule = (array) ($_GET['filter'] ?? []) + (is_file($file) ? (array) json_decode((string) file_get_contents($file), true) : ['match' => 'any', 'pattern' => 'Default', 'list' => []]);
+    $list = is_array($rule['list'] ?? null) ? $rule['list'] : array_filter(explode(',', (string) ($rule['list'] ?? '')));
+    $avatars = ['m1' => 'Default Ruth', 'm2' => 'Default Roth', 'a1' => 'Ada Love', 'g1' => 'God Test'];
+    $picked = array_filter($avatars, function ($name, $uuid) use ($rule, $list) {
+        [$first, $last] = explode(' ', $name);
+        return match ($rule['match'] ?? 'any') {
+            'uuid' => in_array($uuid, $list, true),
+            'first' => $first === ($rule['pattern'] ?? ''),
+            'last' => $last === ($rule['pattern'] ?? ''),
+            default => in_array($rule['pattern'] ?? '', [$first, $last], true),
+        };
+    }, ARRAY_FILTER_USE_BOTH);
+    $answer(200, ['data' => array_values(array_map(fn ($uuid) => ['type' => 'avatar-models', 'id' => $uuid, 'attributes' => [
+        'uuid' => $uuid, 'name' => $avatars[$uuid], 'label' => $avatars[$uuid], 'picture' => '00000000-0000-0000-0000-000000000000',
+    ]], array_keys($picked)))]);
+}
 if ($path === '/api/settings/models') {
     $file = sys_get_temp_dir().'/w4os-fake-models-'.(int) ($_SERVER['SERVER_PORT'] ?? 0).'.json';
     $rule = is_file($file) ? (array) json_decode((string) file_get_contents($file), true) : ['match' => 'any', 'pattern' => 'Default', 'list' => []];

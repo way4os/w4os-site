@@ -198,16 +198,26 @@ test_hypertext_shows_the_favicon_of_the_site_from_the_file_it_takes_it_from() {
     sleep 3
 }
 
-test_a_god_saves_the_rule_of_the_avatar_models_with_a_list_of_avatars() {
+test_a_god_chooses_a_custom_list_of_avatar_models_and_its_avatars_in_one_save_seeing_the_models_they_pick() {
     built || return 0
     # The god's session of before: Grav limits the sign-ins of an account
     [ -s "$TMP/god" ] || sign_in_as "$TMP/god" "God Test"
     local form fields name rule
     rule="$(php -r "echo sys_get_temp_dir();")/w4os-fake-models-$API_PORT.json"
-    # The list shows when the rule takes the avatars of a list
-    echo '{"match":"uuid","pattern":"Default","list":[]}' >"$rule"
+    echo '{"match":"any","pattern":"Default","list":[]}' >"$rule"
     form=$(curl -s -b "$TMP/god" -c "$TMP/god" "$URL/w4os/models")
+    # Match as radios, the list in the form though the rule takes names (hidden by the script until the custom list is chosen),
+    # the models the rule picks under it, the page under Avatars in the menu
+    assert_contains 'type="radio"' "$form"
+    assert_contains 'value="uuid"' "$form"
     assert_contains 'name="data[list][]"' "$form"
+    assert_contains 'w4os-unmet' "$form"
+    assert_contains 'data-w4os-conditions=' "$form"
+    assert_contains 'Default Ruth' "$form"
+    assert_contains 'dropdown-item active' "$form"
+    # The models of a rule before it is saved
+    assert_contains 'God Test' "$(curl -s -b "$TMP/god" "$URL/w4os/models?format=preview&filter%5Bmatch%5D=uuid&filter%5Blist%5D=g1")"
+    assert_not_contains 'Default Ruth' "$(curl -s -b "$TMP/god" "$URL/w4os/models?format=preview&filter%5Bmatch%5D=uuid&filter%5Blist%5D=g1")"
     fields=()
     for name in __form-name__ __unique_form_id__ form-nonce; do
         fields+=(--data-urlencode "$name=$(echo "$form" | sed -n "s/.*name=\"$name\" value=\"\([^\"]*\)\".*/\1/p" | head -1)")
