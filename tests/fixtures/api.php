@@ -131,4 +131,15 @@ if ($path === '/api/settings/models') {
     }
     $answer(200, ['data' => ['type' => 'settings', 'id' => 'models', 'attributes' => $rule]]);
 }
+if (preg_match('#^/api/settings/(economy|search|guide|offline|assets)$#', $path, $m) === 1) {
+    // The settings of a service: the economy of the grid set by its options (its module), the rest changed here
+    $file = sys_get_temp_dir().'/w4os-fake-'.$m[1].'-'.(int) ($_SERVER['SERVER_PORT'] ?? 0).'.json';
+    $values = is_file($file) ? (array) json_decode((string) file_get_contents($file), true)
+        : ['economyUrl' => '', 'economyModule' => 'BetaGridLikeMoneyModule', 'currencyRate' => null];
+    if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
+        $values = array_merge($values, (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []));
+        file_put_contents($file, json_encode($values));
+    }
+    $answer(200, ['data' => ['type' => 'settings', 'id' => $m[1], 'attributes' => $values]]);
+}
 http_response_code(404);
