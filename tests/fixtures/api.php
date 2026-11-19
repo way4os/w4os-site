@@ -88,6 +88,13 @@ if ($path === '/api/parcels') {
     ]]];
     $answer(200, ['data' => $parcels, 'meta' => ['total' => count($parcels), 'page' => 1, 'perPage' => 50]]);
 }
+if ($path === '/api/posts') {
+    // The posts of every avatar of the grid, newest first
+    $answer(200, ['data' => [
+        ['type' => 'posts', 'id' => 'f2', 'attributes' => ['uuid' => 'f2', 'content' => 'Opening night at the Plaza', 'author' => 'g1', 'name' => 'God Test', 'created' => '2026-11-19T10:00:00Z']],
+        ['type' => 'posts', 'id' => 'f1', 'attributes' => ['uuid' => 'f1', 'content' => 'Hello from Ada', 'author' => 'a1', 'name' => 'Ada Love', 'created' => '2026-11-18T09:00:00Z']],
+    ], 'meta' => ['total' => 2, 'page' => 1, 'perPage' => 50]]);
+}
 if ($path === '/api/avatars' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // A new avatar: what was sent kept for the test, the avatar made
     $sent = (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []);
