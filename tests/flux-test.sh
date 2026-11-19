@@ -22,8 +22,8 @@ test_a_god_lists_the_posts_of_the_grid() {
     assert_contains 'Opening night at the Plaza' "$page"
     assert_contains 'Hello from Ada' "$page"
     assert_contains 'Ada Love' "$page"
-    assert_contains 'Search Flux Posts' "$page"
-    assert_contains 'Delete this post?' "$page"
+    assert_contains 'placeholder="Search&#x20;Flux&#x20;Posts"' "$page"
+    assert_contains 'data-w4os-ask="Delete&#x20;this&#x20;post&#x3F;"' "$page"
 }
 
 test_a_resident_never_gets_them() {
