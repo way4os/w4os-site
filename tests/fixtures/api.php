@@ -82,6 +82,20 @@ if ($path === '/api/regions/r1') {
         'uuid' => 'r1', 'name' => 'Test East', 'location' => '8015,8012', 'size' => '256x256', 'enabled' => true, 'online' => true, 'local' => true, 'hyperlink' => false,
     ]]]);
 }
+if ($path === '/api/simulators/s1') {
+    // A simulator of the grid: its address, its console, its database the grid's by default (null), changed here
+    $file = sys_get_temp_dir().'/w4os-fake-simulator-'.(int) ($_SERVER['SERVER_PORT'] ?? 0).'.json';
+    $values = is_file($file) ? (array) json_decode((string) file_get_contents($file), true)
+        : ['consoleUser' => 'console', 'consolePort' => 9010, 'httpPort' => 9001, 'database' => null];
+    if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
+        $values = array_merge($values, (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []));
+        ($values['database']['useDefault'] ?? false) === true && $values['database'] = null;
+        file_put_contents($file, json_encode($values));
+    }
+    $answer(200, ['data' => ['type' => 'simulators', 'id' => 's1', 'attributes' => [
+        'uuid' => 's1', 'name' => 'Plaza', 'slug' => 'plaza', 'uri' => 'http://sim.example.org:9001', 'enabled' => true, 'state' => 'running',
+    ] + $values]]);
+}
 if ($path === '/api/parcels') {
     $region = (string) ($_GET['filter']['region'] ?? '');
     $parcels = $region !== 'r1' ? [] : [['type' => 'parcels', 'id' => 'p1', 'attributes' => [
