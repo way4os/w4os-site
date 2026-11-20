@@ -9,6 +9,8 @@
 #       what the site is connected to, and whether the API answers
 #   w4os-site web apache|caddy|nginx [--host <name>] [--port <port>] [--install]
 #       the configuration of a web server for the site (printed; installed and enabled with --install, Apache only)
+#   w4os-site --version
+#       the version of the site
 
 PGM=w4os-site
 COMMANDOPTS=setup,status,web
@@ -200,6 +202,19 @@ web() {
     esac
 }
 
+# The version of the site: the package that installed it, else its git version in a clone, else the one being worked on
+if [[ " $* " == *" --version "* || " $* " == *" -V "* ]]; then
+    here=$(cd "$(dirname "$(realpath "$0")")/.." && pwd)
+    version=
+    if [[ "$here" == /usr/share/w4os-site* ]]; then
+        version=$(dpkg-query -W -f='${Version}' w4os-site 2>/dev/null) || version=
+    fi
+    [[ -n "$version" || ! -e "$here/.git" ]] || version=$(git -C "$here" describe --tags --always --dirty 2>/dev/null) || version=
+    [[ -n "$version" || ! -f "$here/.version" ]] || version="$(<"$here/.version") (development)"
+    echo "w4os-site ${version:-unknown}"
+    exit 0
+fi
+
 case ${COMMAND:-} in
 setup | status | web)
     # Older bash-tools keep the command in the arguments
@@ -207,7 +222,7 @@ setup | status | web)
     $COMMAND "$@"
     ;;
 *)
-    sed -n '3,10p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '3,12p' "$0" | sed 's/^# \{0,1\}//'
     exit 1
     ;;
 esac

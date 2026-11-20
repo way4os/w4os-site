@@ -29,6 +29,14 @@ site() {
     "$ROOT/bin/w4os-site" "$@" </dev/null 2>&1
 }
 
+test_version_tells_the_version_of_the_site() {
+    local output
+    output=$(site --version)
+    assert_exit_code 0
+    assert_matches '^w4os-site [^ ]+' "$output"
+    assert_not_contains "unknown" "$output"
+}
+
 test_status_says_when_the_site_is_not_connected() {
     local output
     output=$(site status)
