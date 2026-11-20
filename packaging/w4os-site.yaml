@@ -30,6 +30,8 @@ depends:
   - php-xml | php8.3-xml | php8.4-xml
   - php-zip | php8.3-zip | php8.4-zip
   - php-intl | php8.3-intl | php8.4-intl
+  # The web assets (the pictures of the grid, JPEG 2000) are decoded by Imagick and nothing else
+  - php-imagick | php8.3-imagick | php8.4-imagick
 recommends:
   - php-fpm | php8.3-fpm | php8.4-fpm
 suggests:

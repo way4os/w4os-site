@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- change (packaging): php-imagick is required, it decodes the web assets of the grid (JPEG 2000)
 - new (packaging): the copyright file of the package
 - update (pages): the login URI of the default pages as [login-uri], their title as [grid-name], their slogan as [site-slogan], without a closing slash
 - fix (tree): the folder of the site made 755 whatever the umask of the machine
