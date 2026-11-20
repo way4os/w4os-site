@@ -164,11 +164,23 @@ if ($path === '/api/settings/models') {
     }
     $answer(200, ['data' => ['type' => 'settings', 'id' => 'models', 'attributes' => $rule]]);
 }
-if (preg_match('#^/api/settings/(economy|search|guide|offline|assets)$#', $path, $m) === 1) {
-    // The settings of a service: the economy of the grid set by its options (its module), the rest changed here
+// A picture of the grid (its open operation): a pixel of PNG for any UUID
+if (preg_match('#^/api/assets/[0-9a-fA-F-]{36}\.(jpg|png)$#', $path) === 1) {
+    header('Content-Type: image/png');
+    header('Cache-Control: public, max-age=86400');
+    echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+    exit;
+}
+if (preg_match('#^/api/settings/(economy|search|guide|offline|assets|grid|avatars)$#', $path, $m) === 1) {
+    // The settings of a service: the economy of the grid set by its options (its module), the rest changed here; the grid's, its
+    // assets on Robust (their default), its profiles on a server of their own
     $file = sys_get_temp_dir().'/w4os-fake-'.$m[1].'-'.(int) ($_SERVER['SERVER_PORT'] ?? 0).'.json';
-    $values = is_file($file) ? (array) json_decode((string) file_get_contents($file), true)
-        : ['economyUrl' => '', 'economyModule' => 'BetaGridLikeMoneyModule', 'currencyRate' => null];
+    $values = is_file($file) ? (array) json_decode((string) file_get_contents($file), true) : match ($m[1]) {
+        'grid' => ['loginUri' => 'http://127.0.0.1:8002', 'gridName' => 'My grid', 'gridNick' => 'mygrid', 'gridServerUri' => 'http://127.0.0.1:8003',
+            'consoleUser' => 'console', 'consolePort' => 8004, 'assetServerUri' => null, 'profileServiceUrl' => 'http://127.0.0.1:8005', 'excludeFromStats' => ['models', 'nomail']],
+        'avatars' => ['allowMultipleAvatars' => true, 'reservedNames' => ['Default', 'Test', 'Admin']],
+        default => ['economyUrl' => '', 'economyModule' => 'BetaGridLikeMoneyModule', 'currencyRate' => null],
+    };
     if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
         $values = array_merge($values, (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []));
         file_put_contents($file, json_encode($values));
