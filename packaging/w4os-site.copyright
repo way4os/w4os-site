@@ -1,0 +1,30 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: w4os-site
+Source: https://w4os.org
+
+Files: *
+Copyright: 2015-2026 Olivier van Helden <olivier@van-helden.net>
+           Gudule Lapointe <gudule@speculoos.world>
+License: AGPL-3.0-or-later
+ The full text of the GNU Affero General Public License, version 3, is at
+ https://www.gnu.org/licenses/agpl-3.0.txt.
+
+Files: site/*
+Copyright: Trilby Media, LLC and the authors of Grav, its plugins and its themes
+License: MIT
+ Grav, its plugins (error, problems, shortcode-core, email, form, login,
+ langswitcher) and the theme Quark2 are under the MIT license, whose text is in
+ /usr/share/w4os-site/site/LICENSE.txt and in the folder of each of them.
+
+Files: site/user/plugins/w4os/* site/user/plugins/oli-langswitcher/* site/user/themes/w4os/*
+Copyright: 2015-2026 Olivier van Helden <olivier@van-helden.net>
+           Gudule Lapointe <gudule@speculoos.world>
+License: AGPL-3.0-or-later
+ The w4os plugin (with the OpenSim engine and helpers it carries), the plugin
+ oli-langswitcher and the theme w4os are under the license of the site.
+
+Files: site/user/themes/w4os/css/fontawesome/* site/user/themes/w4os/css/webfonts/*
+Copyright: Fonticons, Inc.
+License: Font-Awesome-Free
+ Font Awesome Free: icons CC BY 4.0, fonts SIL OFL 1.1, code MIT, as told in
+ /usr/share/w4os-site/site/user/themes/w4os/css/fontawesome/LICENSE.txt.

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- new (packaging): the copyright file of the package
 - update (pages): the login URI of the default pages as [login-uri], their title as [grid-name], their slogan as [site-slogan], without a closing slash
 - fix (tree): the folder of the site made 755 whatever the umask of the machine
 - fix (sessions): several browsers signed in at once, and several pages a browser opens at once, no longer taken for a stolen "remember me" cookie (w4os plugin); a stolen one lands on the sign-in page with a message, not an error page

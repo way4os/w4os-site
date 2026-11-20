@@ -36,6 +36,10 @@ suggests:
   - apache2 | caddy | nginx
 
 contents:
+  - src: packaging/w4os-site.copyright
+    dst: /usr/share/doc/w4os-site/copyright
+    file_info:
+      mode: 0644
   - src: build/w4os-site/grav
     dst: /usr/share/w4os-site/site
     type: tree
