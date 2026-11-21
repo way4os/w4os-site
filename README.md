@@ -16,7 +16,7 @@ It is [Grav](https://getgrav.org) with the [w4os plugin](https://github.com/magi
 The site as a zip (`w4os-site-<version>.zip`, on the release): Grav, its plugins, the theme, Font Awesome and the defaults of a new site, nothing to build or download.
 
 1. Unzip it where the web server serves it (`unzip w4os-site-<version>.zip -d /var/www/`), and give the web server the folders it writes: `user/config`, `user/pages`, `user/accounts`, `user/data` (with `user/data/sessions`, the sessions), `assets`, `images`, `cache`, `tmp`, `logs` and `backup` of `w4os-site/`.
-2. Point the web server at `w4os-site/` (the configurations Grav gives are in `webserver-configs/`), with PHP 8.3 or later and its extensions curl, gd, mbstring, xml, zip and intl (pdo_mysql too, for the engine bundled with the plugin).
+2. Point the web server at `w4os-site/` (the configurations Grav gives are in `webserver-configs/`), with PHP 8.3 or later and its extensions curl, gd, mbstring, xml, zip, intl and imagick (with ImageMagick's OpenJPEG delegate, `libopenjp2-7` on Debian, for the JPEG 2000 pictures of the grid; pdo_mysql too, for the engine bundled with the plugin).
 3. Connect it to the grid in `user/config/plugins/w4os.yaml`: `engine: remote`, `api_url` (the engine API, `https://grid.example.org/api`), `url` (the helpers, for the blocks) and `grid`; the API key of the site (`opensim api-key create w4os-site`, on the machine of the grid) in `user/data/w4os/api.json`, `{"api_key": "osk_..."}`, readable by the web server only. With Grav's admin, the settings page of the plugin does both.
 
 To try it on a computer: `php -S localhost:8000 system/router.php` in `w4os-site/`.

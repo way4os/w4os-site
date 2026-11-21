@@ -132,6 +132,15 @@ test_the_texts_of_quark2_are_in_every_language_of_the_site() {
         "$ROOT/build/w4os-site/grav/vendor/autoload.php" "$quark2" "$ROOT/theme/w4os/languages.yaml")"
 }
 
+test_the_zip_asks_the_php_extensions_the_package_depends_on() {
+    local readme extension missing=
+    readme=$(grep -m1 'its extensions' "$ROOT/README.md")
+    for extension in $(sed -n '/^depends:/,/^recommends:/s/^  - php-\([a-z]*\) |.*/\1/p' "$ROOT/packaging/w4os-site.yaml"); do
+        [[ $readme == *"$extension"* ]] || missing="$missing $extension"
+    done
+    assert_empty "$missing"
+}
+
 test_web_apache_listens_on_its_own_port() {
     local output
     output=$(site web apache --host grid.example.org --port 8830)
