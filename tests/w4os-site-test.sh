@@ -176,6 +176,29 @@ test_web_takes_the_host_and_the_port_of_the_address_of_the_site_when_not_given()
     assert_not_contains "Listen" "$(site web apache --host other.example.org)"
 }
 
+test_web_caddy_is_a_site_block_of_its_own_to_import_next_to_other_sites() {
+    mkdir -p "$SITE/webserver-configs"
+    printf '# Grav\n\nlocalhost\nencode gzip\nroot * .\n@denied path_regexp ^/cache/\nroute {\n\trespond @denied 403\n\tphp_fastcgi 127.0.0.1:9000\n\tfile_server\n}\n' \
+        >"$SITE/webserver-configs/Caddyfile"
+    printf "custom_base_url: 'https://site.example.org'\n" >>"$SITE/user/config/system.yaml"
+    local output
+    output=$(W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy)
+    assert_contains $'site.example.org {\n\tencode gzip' "$output"
+    assert_contains "root * $SITE" "$output"
+    assert_contains 'php_fastcgi unix/' "$output"
+    assert_equals '}' "$(echo "$output" | tail -1)"
+    assert_not_contains 'localhost' "$output"
+    assert_contains $'\ngrid.example.org:8830 {' "$(W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --host grid.example.org --port 8830)"
+    printf "custom_base_url: 'http://grid.example.org:8830'\n" >>"$SITE/user/config/system.yaml"
+    sed -i.bak "/custom_base_url: 'https/d" "$SITE/user/config/system.yaml"
+    assert_contains $'\nhttp://grid.example.org:8830 {' "$(W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy)"
+    # Caddy takes it next to another site, where it is installed
+    if command -v caddy >/dev/null; then
+        { echo "$output"; printf 'other.example.org {\n\trespond ok\n}\n'; } >"$SITE/Caddyfile.test"
+        assert_equals 0 "$(caddy adapt --config "$SITE/Caddyfile.test" --adapter caddyfile >/dev/null 2>&1; echo $?)"
+    fi
+}
+
 test_web_apache_on_port_80_adds_no_listen() {
     assert_not_contains "Listen" "$(site web apache --host grid.example.org)"
 }

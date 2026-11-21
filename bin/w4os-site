@@ -158,8 +158,11 @@ web() {
         esac
     done
     # The host and the port of the address of the site (custom_base_url) when not given, never the name of the machine
-    local url
+    local url scheme=
     url=$(yaml_get "$CONFIG/system.yaml" custom_base_url)
+    if [ -z "$host" ]; then
+        [[ $url != *://* ]] || scheme=${url%%://*}
+    fi
     url=${url#*://}
     url=${url%%/*}
     if [ -z "$host" ]; then
@@ -168,7 +171,7 @@ web() {
     fi
     host=${host:-localhost}
     local socket
-    socket=$(php_socket)
+    socket=${W4OS_SITE_PHP_SOCKET:-$(php_socket)}
     case $server in
     apache)
         port=${port:-80}
@@ -204,7 +207,15 @@ web() {
         ;;
     caddy)
         [ -n "$socket" ] || die "Caddy needs PHP-FPM"
-        sed "s|^localhost|${host}${port:+:$port}|; s|^root \* \.|root * $ROOT|; s|php_fastcgi .*|php_fastcgi unix/$socket|" "$ROOT/webserver-configs/Caddyfile"
+        # A site block of its own (Grav's Caddyfile, made for a site alone, in braces), for the Caddyfile of the machine to import
+        # next to its other sites; http:// when the address of the site says so, else Caddy's https
+        local address=${host}${port:+:$port}
+        [ "$scheme" != http ] || address="http://$address"
+        printf '# The w4os site, made by w4os-site web caddy: import this file in the Caddyfile of the machine\n%s {\n' "$address"
+        local tab=$'\t'
+        sed -e '1,/^localhost$/d' -e "s|^root \* \.|root * $ROOT|" -e "s|php_fastcgi .*|php_fastcgi unix/$socket|" -e "s/^\(.\)/$tab\1/" \
+            "$ROOT/webserver-configs/Caddyfile"
+        echo '}'
         ;;
     nginx)
         sed "s|root /home/USER/www/html;|root $ROOT;|; s|server_name localhost;|server_name $host;|; s|listen 80;|listen ${port:-80};|; s|unix:/var/run/php/php-fpm.sock|unix:${socket:-/run/php/php-fpm.sock}|" "$ROOT/webserver-configs/nginx.conf"
