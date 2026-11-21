@@ -1,4 +1,6 @@
 enabled: true
+# The menus of the visitor (the w4os plugin's: the admin, the avatar) in the top bar, not as entries of the menu
+w4os_menus: true
 # The settings of Quark2
 header-fixed: true
 header-animated: true

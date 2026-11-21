@@ -47,6 +47,24 @@ test_the_menu_is_the_same_under_themes_of_other_structures() {
     sed -i.bak -E "s/^(  theme:).*/\1 w4os/" "$SITE/user/config/system.yaml"
 }
 
+test_the_w4os_theme_has_the_menus_of_the_visitor_in_its_top_bar_the_search_at_the_end_of_the_main_menu() {
+    built || return 0
+    sign_in_as "$TMP/god7" "God Test"
+    local page navigation
+    page=$(home w4os "$TMP/anon7")
+    navigation=$(echo "$page" | sed -n '/<ul class="navigation">/,/<\/ul>/p' | head -40)
+    assert_contains 'href="/search"' "$navigation"
+    assert_not_contains 'href="/profile"' "$navigation"
+    assert_contains 'class="w4os-visitor-menus"' "$page"
+    assert_contains 'class="w4os-visitor-menus w4os-menus-open"' "$page"
+    assert_contains 'href="/register"' "$page"
+    page=$(home w4os "$TMP/god7")
+    # The admin, then the avatar, always last
+    assert_contains 'w4os-admin-menu' "$page"
+    assert_contains 'login.logout' "$page"
+    [ "$(echo "$page" | grep -o 'w4os-admin-menu\|login\.logout' | head -2 | tr '\n' ' ')" = 'w4os-admin-menu login.logout ' ] || fail "the admin menu is not before the avatar's"
+}
+
 test_my_avatar_is_the_profile_of_the_avatar_signed_in_and_the_registration_for_a_visitor() {
     built || return 0
     sign_in_as "$TMP/ada2" "Ada Love"

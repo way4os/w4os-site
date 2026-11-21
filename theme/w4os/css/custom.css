@@ -58,7 +58,10 @@ a:hover { color: var(--q2-link-hover); }
 }
 .login-status-wrapper { display: none; }
 .w4os-toggle-label { margin-left: .5rem; }
-.overlay .w4os-user-menu, .overlay .oli-langswitcher { margin-bottom: 1rem; }
+.w4os-visitor-menus { display: inline-flex; align-items: center; gap: 1rem; }
+.w4os-visitor-menus.w4os-menus-open { display: block; margin-bottom: 1rem; }
+.overlay .oli-langswitcher { margin-bottom: 1rem; }
+@media (max-width: 860px) { .navbar-section.actions .w4os-visitor-menus { display: none; } }
 .navbar-section.actions .oli-langswitcher { margin: 0; }
 
 /* The login form: the placeholders show, the labels stay for screen readers */

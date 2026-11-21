@@ -1,0 +1,8 @@
+{# Quark2's main menu (1.1.22), with the search of the grid (a page of the w4os plugin) at its end: the plugin's own entries of the
+   menu are off (plugins.w4os.menu: false), the menus of the visitor are in the top bar (partials/theme-toggle.html.twig). #}
+{% import 'macros/macros.html.twig' as macros %}
+
+<ul {{ tree ? 'class="tree navigation"' : 'class="navigation"' }}>
+    {{ macros.nav_loop(pages) }}
+    {% if w4os_route('search') %}<li><a href="{{ base_url_relative ~ w4os_route('search') }}"{% if uri.path == base_url_relative ~ w4os_route('search') %} class="active"{% endif %}>{{ 'w4os.search'|t }}</a></li>{% endif %}
+</ul>

@@ -1,6 +1,11 @@
-{# The tools of the top bar, right of the centered menu (the search, my avatar and the admin are entries of the menu itself, the w4os
-   plugin's): Quark2's day and night switch, then the languages (Grav's standard switcher), last. #}
+{# The tools of the top bar, right of the centered menu: the menus of the visitor (the w4os plugin's: the admin for the managers, then
+   the avatar, always after it so that it never moves), Quark2's day and night switch, then the languages (Grav's standard
+   switcher), last. In the menu of a phone (labeled), the menus of the visitor shown as they are. #}
 {% set labeled = labeled|default(false) %}
+<div class="w4os-visitor-menus{{ labeled ? ' w4os-menus-open' }}">
+    {% include 'w4os/admin-menu.html.twig' ignore missing %}
+    {% include 'w4os/user-menu.html.twig' ignore missing %}
+</div>
 <button type="button"
         class="theme-toggle"
         data-theme-toggle
