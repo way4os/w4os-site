@@ -77,3 +77,24 @@ body.layout-fluid #header > .container, body.layout-fluid #footer > .container {
 
 /* A card with no header (the blocks of the dashboard) spaced at its top as one with a header */
 .card > .card-body:first-child { padding-top: 1.25rem; }
+
+/* The components of a page, for its text (as w4os.org has them): sections of the home page apart (a line above each h2 of its
+   main column); .home-intro, a text with its picture beside it where there is room; .tool-cards and .install-cards, a list made
+   cards (<div class="tool-cards" markdown="1"> around a Markdown list, an icon of the theme first in each item) */
+.w4os-home-main > h2 { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent); }
+.content-item { container-type: inline-size; }
+.home-intro { display: grid; gap: 1.75rem; align-items: center; margin-bottom: 2rem; }
+.home-intro img { width: 100%; height: auto; display: block; border-radius: .6rem; }
+.home-intro p:has(img) { margin: 0; }
+@container (min-width: 40rem) { .home-intro { grid-template-columns: 3fr 2fr; } }
+.tool-cards ul, .install-cards ul { display: grid; gap: 1.25rem; margin: 1.75rem 0; padding: 0; list-style: none; }
+.tool-cards ul { grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); }
+.install-cards ul { grid-template-columns: 1fr; }
+@container (min-width: 28rem) { .install-cards ul { grid-template-columns: repeat(2, 1fr); } }
+@container (min-width: 60rem) { .install-cards ul { grid-template-columns: repeat(4, 1fr); } }
+.tool-cards li, .install-cards li { list-style: none; margin: 0; padding: 1.1rem 1.2rem 1.25rem; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: .7rem; transition: border-color .2s, transform .2s; }
+.tool-cards li::before, .tool-cards li::marker, .install-cards li::before, .install-cards li::marker { content: none; }
+.tool-cards li:hover, .install-cards li:hover { border-color: var(--q2-accent); transform: translateY(-2px); }
+.tool-cards li > i, .install-cards li > i { display: block; margin-bottom: .6rem; font-size: 1.5rem; color: var(--q2-accent); }
+.install-cards li { border-top: 3px solid var(--q2-accent); background: color-mix(in srgb, var(--q2-accent) 5%, transparent); }
+.install-cards li a:last-child { display: inline-block; margin-top: .5rem; font-weight: 600; }
