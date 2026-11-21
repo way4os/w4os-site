@@ -40,6 +40,9 @@ h5 { font-size: 1rem; }
     --q2-focus-ring: color-mix(in oklab, var(--w4os-secondary) 60%, transparent);
 }
 a:hover { color: var(--q2-link-hover); }
+/* The Connect block of the w4os plugin: the step to do now framed and its number filled with the accent */
+.w4os-start { --w4os-accent: var(--q2-accent); }
+.w4os-start-step.is-next::before { color: var(--q2-accent-contrast); }
 .navbar-brand { display: inline-flex; align-items: center; gap: .5rem; }
 .w4os-credits { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .25rem .6rem; }
 .w4os-credits > span:first-child { opacity: .75; }
