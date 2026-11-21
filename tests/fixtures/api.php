@@ -34,7 +34,9 @@ if ($path === '/api/openapi.json' && is_file((string) getenv('W4OS_FAKE_OPENAPI'
     exit;
 }
 if ($path === '/api/info') {
-    $answer(200, ['data' => ['type' => 'info', 'id' => 'demo', 'attributes' => ['elements' => ['gridname' => 'Demo Grid', 'gridnick' => 'demo']]]]);
+    $answer(200, ['data' => ['type' => 'info', 'id' => 'demo', 'attributes' => ['login' => 'grid.example.org:8002', 'loginUrl' => 'http://grid.example.org:8002', 'uri' => 'grid.example.org:8002',
+        'addGrid' => ['hop' => 'hop:///app/gridmanager/addgrid/grid.example.org%3A8002', 'secondlife' => 'secondlife:///app/gridmanager/addgrid/grid.example.org%3A8002'],
+        'elements' => ['gridname' => 'Demo Grid', 'gridnick' => 'demo']]]]);
 }
 if ($path === '/api/sign-ins' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $sent = (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []);

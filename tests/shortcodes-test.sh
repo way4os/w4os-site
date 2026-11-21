@@ -41,10 +41,19 @@ test_the_shortcodes_of_the_site_need_no_closing_slash() {
     built || return 0
     local help home
     help=$(curl -s "$URL/help")
-    assert_contains 'class="w4os-login-uri"' "$help"
-    assert_not_contains '[login-uri]' "$help"
+    assert_not_contains '[getting-started]' "$help"
     home=$(curl -s "$URL/")
     assert_contains 'Welcome to Demo Grid' "$home"
     assert_not_contains '[grid-name]' "$home"
     assert_not_contains '[site-slogan]' "$home"
+}
+
+test_the_help_page_guides_a_newcomer_step_by_step_with_the_button_that_adds_the_grid() {
+    built || return 0
+    local help
+    help=$(curl -s "$URL/help")
+    assert_contains 'class="w4os-start-step w4os-start-avatar is-next"' "$help"
+    assert_contains 'hop&#x3A;&#x2F;&#x2F;&#x2F;app&#x2F;gridmanager&#x2F;addgrid&#x2F;grid.example.org&#x25;3A8002' "$help"
+    assert_contains '<code class="w4os-login-uri">grid.example.org:8002</code>' "$help"
+    assert_contains 'Add Demo Grid to your viewer' "$help"
 }
