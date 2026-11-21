@@ -1,5 +1,6 @@
 ---
 title: 'Aide'
+cache_enable: false
 ---
 
 [getting-started]

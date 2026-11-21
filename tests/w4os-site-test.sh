@@ -104,6 +104,15 @@ test_the_default_pages_link_to_registration_only_while_it_is_open() {
     assert_empty "$unguarded"
 }
 
+test_the_default_pages_that_show_the_visitor_are_never_cached() {
+    # A page with [getting-started] or [w4os-guest] shows the visitor's own: Grav would serve every visitor the first one's
+    local page uncached=
+    for page in $(grep -l -e '\[getting-started' -e '\[w4os-guest\]' "$ROOT"/defaults/pages/*/*.md); do
+        sed -n '2,/^---$/p' "$page" | grep -q '^cache_enable: false$' || uncached="$uncached $page"
+    done
+    assert_empty "$uncached"
+}
+
 test_web_apache_listens_on_its_own_port() {
     local output
     output=$(site web apache --host grid.example.org --port 8830)

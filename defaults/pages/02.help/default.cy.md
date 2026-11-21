@@ -1,5 +1,6 @@
 ---
 title: 'Cymorth'
+cache_enable: false
 ---
 
 [getting-started]

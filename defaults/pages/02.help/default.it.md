@@ -1,5 +1,6 @@
 ---
 title: 'Aiuto'
+cache_enable: false
 ---
 
 [getting-started]

@@ -1,5 +1,6 @@
 ---
 title: 'Ajuda'
+cache_enable: false
 ---
 
 [getting-started]
