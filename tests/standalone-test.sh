@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # The site on its own: its folder served by php -S on a machine with no OpenSim package, the engine and the helpers the w4os
-# plugin bundles reaching a running grid over the network (ursull's friendly_fowl): the grid's blocks, a profile with its picture,
+# plugin bundles reaching a running grid over the network (friendly_fowl at dev.w4os.org): the grid's blocks, a profile with its picture,
 # the guide and the search served by the site itself, under the prefix of its helpers.
 #
-# The site describes the grid from its login address (W4OS_STANDALONE_LOGIN, ursull's by default), as a site installed elsewhere
-# does, no folder of config read. TEST SHORTCUT: the access to its database is taken from /etc/opensim, a mirror of ursull's (DEVELOPERS.md, "A grid to try the
+# The site describes the grid from its login address (W4OS_STANDALONE_LOGIN, dev.w4os.org:8012 by default), as a site installed elsewhere
+# does, no folder of config read. TEST SHORTCUT: the access to its database is taken from /etc/opensim, a mirror of the one of dev.w4os.org (DEVELOPERS.md, "A grid to try the
 # standalone site"); a real remote install would get what lives in the ini files from the grid's engine API instead. The database
-# is reached over the network at W4OS_STANDALONE_DB (host:port, ursull's by default), with the credentials of the grid's config,
+# is reached over the network at W4OS_STANDALONE_DB (host:port, dev.w4os.org:3306 by default), with the credentials of the grid's config,
 # given to the site's own settings and never printed.
 #
 # Runs only when asked: W4OS_STANDALONE_GRID=friendly_fowl lib/bashunit/bashunit tests/standalone-test.sh
@@ -15,7 +15,7 @@
 source "$(dirname "${BASH_SOURCE[0]}")/site.sh"
 
 GRID=${W4OS_STANDALONE_GRID:-}
-DB=${W4OS_STANDALONE_DB:-192.168.8.69:3306}
+DB=${W4OS_STANDALONE_DB:-dev.w4os.org:3306}
 
 standalone() {
     built || return 1
@@ -38,7 +38,7 @@ standalone() {
         echo 'engine: bundled'
         echo "grid: $GRID"
         echo 'bundled:'
-        echo "  login: '${W4OS_STANDALONE_LOGIN:-http://192.168.8.69:8012}'"
+        echo "  login: '${W4OS_STANDALONE_LOGIN:-http://dev.w4os.org:8012}'"
         echo '  database:'
         echo "    host: '$DB'"
         echo "    name: '$name'"
