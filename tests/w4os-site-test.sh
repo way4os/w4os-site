@@ -59,7 +59,7 @@ test_setup_connects_the_site_and_keeps_the_key_out_of_the_config() {
 test_setup_needs_the_address_of_the_engine_api_never_the_helpers_api() {
     local output
     # A machine with the engine installed has its local listener, which answers
-    [ ! -e /usr/share/opensim-engine ] || { bashunit::skip "the engine is installed here: its local listener answers"; return 0; }
+    [ ! -e /usr/share/w4os-engine ] || { bashunit::skip "the engine is installed here: its local listener answers"; return 0; }
     # Only the helpers' address: refused (no address of the engine API, or the one of the local listener when the machine has
     # opensim, which does not answer here), never their /api
     output=$(site setup --url "http://127.0.0.1:$PORT" --key osk_test)
@@ -116,12 +116,12 @@ test_web_apache_listens_on_its_own_port() {
 test_the_web_configurations_route_nothing_to_the_helpers_even_on_a_machine_that_has_their_package() {
     # A machine of the grid: the helpers package and the opensim command, which prints their snippet
     mkdir -p "$SITE/helpers/public" "$SITE/bin"
-    printf '#!/bin/sh\necho "AliasMatch \\"^/(?:helpers|health)(?:/.*)?$\\" \\"/usr/share/opensim-helpers/public/index.php\\""\n' >"$SITE/bin/opensim"
+    printf '#!/bin/sh\necho "AliasMatch \\"^/(?:helpers|health)(?:/.*)?$\\" \\"/usr/share/w4os-helpers/public/index.php\\""\n' >"$SITE/bin/opensim"
     chmod +x "$SITE/bin/opensim"
     local server output
     for server in apache caddy nginx; do
         output=$(PATH="$SITE/bin:$PATH" W4OS_SITE_HELPERS="$SITE/helpers" site web "$server" --host grid.example.org --port 8830)
-        assert_not_contains "opensim-helpers" "$output"
+        assert_not_contains "w4os-helpers" "$output"
         assert_not_contains "AliasMatch" "$output"
         assert_not_contains "{{" "$output"
     done

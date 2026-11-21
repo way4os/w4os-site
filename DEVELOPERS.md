@@ -26,7 +26,7 @@ build-tools comes from `../build-tools` (composer path repository, as for opensi
 
 The zip is the Grav tree of the package with its writable folders inside (the defaults of a new site in `user/config` and `user/pages`), no link outside and no `.env`: it is unzipped anywhere and configured.
 
-The package ships the same tree as its seed, `/usr/share/w4os-site/site`, never served. Its postinst runs `bin/w4os-site-tree configure`: a new site is the seed copied to `/var/lib/opensim/www`, the web user's (a site of before, `/usr/share/w4os-site/grav` and `/var/lib/w4os-site`, moved into it); an existing site gets, unit by unit (Grav, each plugin, each theme), what the seed has where the site still has the files the package put, as the manifest (`user/data/w4os-site/manifest`) records them, and keeps the rest. `tests/tree-test.sh` runs it in a temporary folder.
+The package ships the same tree as its seed, `/usr/share/w4os-site/site`, never served. Its postinst runs `bin/w4os-site-tree configure`: a new site is the seed copied to `/var/lib/w4os/www`, the web user's (a site of before, `/usr/share/w4os-site/grav` and `/var/lib/w4os-site`, moved into it); an existing site gets, unit by unit (Grav, each plugin, each theme), what the seed has where the site still has the files the package put, as the manifest (`user/data/w4os-site/manifest`) records them, and keeps the rest. `tests/tree-test.sh` runs it in a temporary folder.
 
 `packaging/build` clones each dependency at its tag into `build/sources`, extracts its committed tree, and installs the composer dependencies of what does not ship them. Nothing is enabled in a web server by installing the package.
 

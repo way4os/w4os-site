@@ -21,7 +21,7 @@ standalone() {
     built || return 1
     [ -n "$GRID" ] || { bashunit::skip "W4OS_STANDALONE_GRID not set (a running grid, its config in /etc/opensim)"; return 1; }
     [ -f "/etc/opensim/grids/$GRID/Robust.HG.ini" ] || { bashunit::skip "no /etc/opensim/grids/$GRID"; return 1; }
-    [ ! -e /usr/share/opensim-helpers ] && [ ! -e /usr/share/opensim-engine ] || { bashunit::skip "an OpenSim package is installed here"; return 1; }
+    [ ! -e /usr/share/w4os-helpers ] && [ ! -e /usr/share/w4os-engine ] || { bashunit::skip "an OpenSim package is installed here"; return 1; }
     grep -q '^engine: bundled' "$SITE/user/config/plugins/w4os.yaml" && return 0
     # The database of the grid's accounts, from its config: the site's own settings, as a site installed elsewhere has them
     local source user password name

@@ -4,17 +4,20 @@
 #
 #   w4os-site-tree configure
 #       a new site: the site the package ships (its seed) copied where it is served, the content of an install of before moved
-#       into it (the content of the site, the plugins and themes added to it, the web server configuration it wrote); an existing
+#       into it (the content of the site, the plugins and themes added to it, the web server configuration it wrote); a site in
+#       the folder of before (/var/lib/opensim/www) moved to its folder, a link left where it was; an existing
 #       site: what the package ships of it replaced where the site still has it as the package put it (Grav, each plugin, each
 #       theme), the rest left as it is and said
 #
-# The places, for the tests: W4OS_SITE_SEED (/usr/share/w4os-site/site), W4OS_SITE_ROOT (/var/lib/opensim/www), W4OS_SITE_OLD
-# (/var/lib/w4os-site, the content of the site of before), W4OS_SITE_OLD_TREE (/usr/share/w4os-site/grav, its Grav of before),
-# W4OS_SITE_APACHE (/etc/apache2/sites-available/w4os-site.conf), W4OS_SITE_OWNER (www-data).
+# The places, for the tests: W4OS_SITE_SEED (/usr/share/w4os-site/site), W4OS_SITE_ROOT (/var/lib/w4os/www), W4OS_SITE_PREVIOUS
+# (/var/lib/opensim/www, the folder of the site before), W4OS_SITE_OLD (/var/lib/w4os-site, the content of the site of before),
+# W4OS_SITE_OLD_TREE (/usr/share/w4os-site/grav, its Grav of before), W4OS_SITE_APACHE (/etc/apache2/sites-available/w4os-site.conf),
+# W4OS_SITE_OWNER (www-data).
 set -eo pipefail
 
 SEED=${W4OS_SITE_SEED:-/usr/share/w4os-site/site}
-ROOT=${W4OS_SITE_ROOT:-/var/lib/opensim/www}
+ROOT=${W4OS_SITE_ROOT:-/var/lib/w4os/www}
+PREVIOUS=${W4OS_SITE_PREVIOUS:-/var/lib/opensim/www}
 OLD=${W4OS_SITE_OLD:-/var/lib/w4os-site}
 OLD_TREE=${W4OS_SITE_OLD_TREE:-/usr/share/w4os-site/grav}
 APACHE=${W4OS_SITE_APACHE:-/etc/apache2/sites-available/w4os-site.conf}
@@ -124,6 +127,24 @@ migrate() {
     say "the site is now in $ROOT (its content of before kept in $OLD.migrated)"
 }
 
+# move: the site of the folder of before moved to its folder, a link left there for what still serves it from there; the Apache
+# configuration w4os-site web wrote (its first line says so) serves it from its folder, any other is the admin's to change
+move() {
+    [ -d "$(dirname "$ROOT")" ] || install -d -m 755 "$(dirname "$ROOT")"
+    mv "$PREVIOUS" "$ROOT"
+    ln -s "$ROOT" "$PREVIOUS"
+    if [ -f "$APACHE" ] && grep -q "$PREVIOUS" "$APACHE"; then
+        if head -1 "$APACHE" | grep -q '^# The w4os site'; then
+            sed -i.bak "s#$PREVIOUS#$ROOT#g" "$APACHE"
+            rm -f "$APACHE.bak"
+            say "$APACHE: the site served from $ROOT"
+        else
+            say "$APACHE serves $PREVIOUS: change it to $ROOT"
+        fi
+    fi
+    say "the site is now in $ROOT ($PREVIOUS links to it)"
+}
+
 # upgrade: each unit the site has as the package put it replaced by the seed's, the others left and said; the new ones added
 upgrade() {
     local old="$ROOT/$MANIFEST" new kept unit
@@ -161,6 +182,7 @@ manifest_unit() {
 }
 
 configure() {
+    [ -d "$ROOT" ] || [ -L "$PREVIOUS" ] || [ ! -d "$PREVIOUS" ] || move
     if [ ! -d "$ROOT" ]; then
         install_site
         [ ! -d "$OLD" ] || [ -d "$OLD.migrated" ] || migrate

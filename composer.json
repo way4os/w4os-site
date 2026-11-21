@@ -1,5 +1,5 @@
 {
-    "name": "magicoli/w4os-site",
+    "name": "w4os/w4os-site",
     "description": "The light website of an OpenSimulator grid: Grav with the w4os plugin, as a zip and a Debian package.",
     "type": "project",
     "license": "AGPL-3.0-or-later",

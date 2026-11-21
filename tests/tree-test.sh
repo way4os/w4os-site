@@ -4,7 +4,8 @@
 
 set_up() {
     TMP=$(mktemp -d)
-    export W4OS_SITE_SEED="$TMP/share/site" W4OS_SITE_ROOT="$TMP/lib/opensim/www" W4OS_SITE_OLD="$TMP/lib/w4os-site"
+    export W4OS_SITE_SEED="$TMP/share/site" W4OS_SITE_ROOT="$TMP/lib/w4os/www" W4OS_SITE_OLD="$TMP/lib/w4os-site"
+    export W4OS_SITE_PREVIOUS="$TMP/lib/opensim/www"
     export W4OS_SITE_OLD_TREE="$TMP/share/grav" W4OS_SITE_APACHE="$TMP/apache/w4os-site.conf"
     TREE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/bin/w4os-site-tree"
     seed 1
@@ -70,6 +71,28 @@ test_the_site_of_before_moves_into_the_new_one_its_content_its_additions_its_apa
     assert_not_contains "moved" "$("$TREE" configure)"
 }
 
+test_the_site_in_the_folder_of_before_moves_to_its_folder_a_link_left_where_it_was() {
+    "$TREE" configure >/dev/null
+    mkdir -p "$(dirname "$W4OS_SITE_PREVIOUS")" "$(dirname "$W4OS_SITE_APACHE")"
+    mv "$W4OS_SITE_ROOT" "$W4OS_SITE_PREVIOUS"
+    echo "site: mine" >"$W4OS_SITE_PREVIOUS/user/config/site.yaml"
+    printf '%s\n' '# The w4os site, written by w4os-site web' '<VirtualHost *:80>' "    DocumentRoot $W4OS_SITE_PREVIOUS" \
+        "    <Directory $W4OS_SITE_PREVIOUS>" '    </Directory>' '</VirtualHost>' >"$W4OS_SITE_APACHE"
+    seed 2
+
+    output=$("$TREE" configure)
+
+    assert_equals "site: mine" "$(cat "$W4OS_SITE_ROOT/user/config/site.yaml")"
+    assert_equals "w4os 2" "$(cat "$W4OS_SITE_ROOT/user/plugins/w4os/w4os.php")"
+    assert_equals "$W4OS_SITE_ROOT" "$(readlink "$W4OS_SITE_PREVIOUS")"
+    assert_contains "DocumentRoot $W4OS_SITE_ROOT" "$(cat "$W4OS_SITE_APACHE")"
+    assert_not_contains "$W4OS_SITE_PREVIOUS" "$(cat "$W4OS_SITE_APACHE")"
+    assert_contains "the site is now in $W4OS_SITE_ROOT" "$output"
+    # Once moved, an upgrade leaves the link as it is
+    "$TREE" configure >/dev/null
+    assert_equals "$W4OS_SITE_ROOT" "$(readlink "$W4OS_SITE_PREVIOUS")"
+}
+
 test_an_upgrade_replaces_only_what_the_site_has_as_the_package_put_it() {
     "$TREE" configure >/dev/null
     # The site's own: a theme changed by hand, a logo copied into it, a plugin updated with GPM, a plugin removed
@@ -104,7 +127,7 @@ test_the_web_user_writes_only_its_own_tree_never_what_opensim_owns() {
     local root
     root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
     # The home of the suite made 755 when missing, never given to the web user; the web user gets the site's tree alone
-    assert_contains "install -d -m 755 /var/lib/opensim" "$(cat "$root/packaging/w4os-site.postinst")"
+    assert_contains "install -d -m 755 /var/lib/w4os" "$(cat "$root/packaging/w4os-site.postinst")"
     assert_not_contains "chown" "$(cat "$root/packaging/w4os-site.postinst")"
     assert_equals 'chown -R "$OWNER:$OWNER" "$ROOT"' "$(grep -o 'chown .*' "$root/bin/w4os-site-tree")"
     assert_not_contains "g+w" "$(cat "$root/bin/w4os-site-tree" "$root/packaging/w4os-site.postinst")"

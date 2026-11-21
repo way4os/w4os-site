@@ -20,7 +20,7 @@ set -eo pipefail
 
 SHARE=${W4OS_SITE_SHARE:-/usr/share/w4os-site}
 # The site, a standard Grav site the web user owns (bin/w4os-site-tree makes it)
-ROOT=${W4OS_SITE_ROOT:-/var/lib/opensim/www}
+ROOT=${W4OS_SITE_ROOT:-/var/lib/w4os/www}
 CONFIG="$ROOT/user/config"
 KEY_FILE="$ROOT/user/data/w4os/api.json"
 OWNER=${W4OS_SITE_OWNER:-www-data}

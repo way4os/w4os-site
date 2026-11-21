@@ -7,7 +7,7 @@ It is [Grav](https://getgrav.org) with the [w4os plugin](https://github.com/magi
 ## Requirements
 
 - A Debian or Ubuntu server with PHP 8.3 or newer and a web server (Apache, Caddy or nginx; PHP-FPM recommended).
-- An OpenSimulator grid, on this machine or another one: with its engine API (opensim-engine) and an API key for the site, or with its Robust database reachable from the site (the w4os plugin carries the engine and the helpers: no OpenSim package is needed on the server of the site).
+- An OpenSimulator grid, on this machine or another one: with its engine API (w4os-engine) and an API key for the site, or with its Robust database reachable from the site (the w4os plugin carries the engine and the helpers: no OpenSim package is needed on the server of the site).
 
 ## Install
 
@@ -23,7 +23,7 @@ To try it on a computer: `php -S localhost:8000 system/router.php` in `w4os-site
 
 ### Debian, with apt
 
-On Debian and Ubuntu, the package installs the same site, a standard Grav site in `/var/lib/opensim/www` that the web server's user owns, and Grav's own tools (GPM, the admin) update like any other:
+On Debian and Ubuntu, the package installs the same site, a standard Grav site in `/var/lib/w4os/www` that the web server's user owns, and Grav's own tools (GPM, the admin) update like any other:
 
 ```bash
 sudo apt install w4os-site            # or: sudo apt install ./w4os-site_<version>_all.deb
@@ -31,13 +31,13 @@ sudo w4os-site setup                  # asks the address of the helpers and the 
 sudo w4os-site web apache --host grid.example.org --install
 ```
 
-- `setup` connects the site to the API of the grid (the bundled engine is set in `/var/lib/opensim/www/user/config/plugins/w4os.yaml`, `engine: bundled`, see the README of the plugin). It asks the address of the engine API, its own and never under the helpers (`https://grid.example.org/api`, or `http://127.0.0.1:8780/api` on the machine of the grid, served by `opensim web GRID api`), the address of the helpers of the grid for the blocks (`https://grid.example.org/helpers`), and the API key of the site, made on the machine of the grid with `opensim api-key create w4os-site`; it checks that the API answers, sets `engine: remote` and names the site after the grid. Options: `--api`, `--url`, `--key`, `--grid` (when the API serves several grids), `--title`, and `--no-mail` for a test site (the engine mails nothing, the confirmation links are shown on the page; `--mail` turns the mails back on).
+- `setup` connects the site to the API of the grid (the bundled engine is set in `/var/lib/w4os/www/user/config/plugins/w4os.yaml`, `engine: bundled`, see the README of the plugin). It asks the address of the engine API, its own and never under the helpers (`https://grid.example.org/api`, or `http://127.0.0.1:8780/api` on the machine of the grid, served by `opensim web GRID api`), the address of the helpers of the grid for the blocks (`https://grid.example.org/helpers`), and the API key of the site, made on the machine of the grid with `opensim api-key create w4os-site`; it checks that the API answers, sets `engine: remote` and names the site after the grid. Options: `--api`, `--url`, `--key`, `--grid` (when the API serves several grids), `--title`, and `--no-mail` for a test site (the engine mails nothing, the confirmation links are shown on the page; `--mail` turns the mails back on).
 - `web apache|caddy|nginx [--host <name>] [--port <port>]` prints the configuration of the web server for the site; `--install` writes and enables it (Apache). It routes nothing to the helpers of the grid: the site serves its own helpers when it is set so (the setting **Serve the helpers** of the w4os plugin, under the prefix of its helpers address); helpers installed apart are the web server's business, and their requests never reach the site.
 - `status` tells what the site is connected to and whether the API answers.
 
-The top bar has the menu of the site in the middle, and on the right the languages (oli-langswitcher), the menu of the visitor (sign in, or the avatar signed in) and the day and night switch. The languages are those of the OpenSim suite (`languages.supported` in `/var/lib/opensim/www/user/config/system.yaml`).
+The top bar has the menu of the site in the middle, and on the right the languages (oli-langswitcher), the menu of the visitor (sign in, or the avatar signed in) and the day and night switch. The languages are those of the OpenSim suite (`languages.supported` in `/var/lib/w4os/www/user/config/system.yaml`).
 
-Then edit the pages in `/var/lib/opensim/www/user/pages` (Markdown, English and French), with the blocks of the helpers. Links between pages are written without the language (`[Create your avatar](/register)`): Grav adds it.
+Then edit the pages in `/var/lib/w4os/www/user/pages` (Markdown, English and French), with the blocks of the helpers. Links between pages are written without the language (`[Create your avatar](/register)`): Grav adds it.
 
 ```markdown
 [w4os block="grid-info" /]
@@ -49,7 +49,7 @@ Then edit the pages in `/var/lib/opensim/www/user/pages` (Markdown, English and 
 
 A visitor stays signed in as on a social network: until they sign out. "Remember me" is checked on the sign-in page and lasts a year; without it, the session lasts a day without a visit. A session back by "remember me" takes the avatar as the engine has it then: its level and its rights of now, and a banned, disabled or deleted avatar is signed out.
 
-| Setting | Where (`user/config` of the site: `/var/lib/opensim/www/user/config` with the package) | Default |
+| Setting | Where (`user/config` of the site: `/var/lib/w4os/www/user/config` with the package) | Default |
 | --- | --- | --- |
 | How long "remember me" lasts, in seconds; `enabled: false` removes it | `plugins/login.yaml`, `rememberme.timeout` | `31536000` (a year) |
 | How long a session lasts without a visit, in seconds | `system.yaml`, `session.timeout` and `session.options.gc_maxlifetime` | `86400` (a day) |
@@ -62,13 +62,15 @@ The sessions are kept in a folder of the site, not the system's: Debian and Ubun
 
 | What | Where |
 | --- | --- |
-| The site: Grav, its plugins and themes, its pages, settings, accounts, API key, sessions, caches and logs (a standard Grav site, the web server's user's) | `/var/lib/opensim/www`, the document root |
+| The site: Grav, its plugins and themes, its pages, settings, accounts, API key, sessions, caches and logs (a standard Grav site, the web server's user's) | `/var/lib/w4os/www`, the document root |
 | The site the package ships, for a new site and its upgrades (never served) | `/usr/share/w4os-site/site` |
-| What the package put in the site, file by file | `/var/lib/opensim/www/user/data/w4os-site/manifest` |
+| What the package put in the site, file by file | `/var/lib/w4os/www/user/data/w4os-site/manifest` |
 
 An upgrade of the package replaces Grav, a plugin or a theme of the site only where the site still has it as the package put it; one the site changed or updated (GPM, the admin) is left as it is, and the upgrade says so, as is a plugin the site removed. The pages, the settings and the accounts are never touched; neither is the site by the removal of the package, even purged.
 
-A site installed by a version before this one (Grav in `/usr/share/w4os-site/grav`, the content in `/var/lib/w4os-site`) moves to `/var/lib/opensim/www` at the upgrade, with its content, the plugins and themes added to it, and the root of the Apache configuration `w4os-site web` wrote; the folders of before are kept in `/var/lib/w4os-site.migrated`.
+A site installed by a version before this one (Grav in `/usr/share/w4os-site/grav`, the content in `/var/lib/w4os-site`) moves to `/var/lib/w4os/www` at the upgrade, with its content, the plugins and themes added to it, and the root of the Apache configuration `w4os-site web` wrote; the folders of before are kept in `/var/lib/w4os-site.migrated`.
+
+A site in `/var/lib/opensim/www` (the versions before w4os took its name) moves to `/var/lib/w4os/www` at the upgrade, `/var/lib/opensim/www` left as a link to it, so that the web server configurations that serve it from there keep working; the Apache configuration `w4os-site web` wrote serves it from its new folder.
 
 ## Grav admin (optional)
 
@@ -76,7 +78,7 @@ The site needs no admin: the avatars are managed on the site itself, by the mana
 (`admin2`, with the `api` plugin it needs) can be added for the pages and the settings:
 
 ```bash
-cd /var/lib/opensim/www
+cd /var/lib/w4os/www
 sudo -u www-data php bin/gpm install admin2
 sudo -u www-data php bin/plugin login new-user    # an account of the site, with the admin access
 ```

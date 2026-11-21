@@ -17,7 +17,7 @@ set_up_before_script() {
     API_PORT=$((20000 + RANDOM % 20000))
     PORT=$((API_PORT + 1))
     # The contract of the engine the site ships, for the fake API to serve
-    php -r 'require $argv[1]; echo json_encode(OpenSim\Api\Contract::document());' "$SITE/user/plugins/w4os/vendor/autoload.php" \
+    php -r 'require $argv[1]; echo json_encode(W4OS\Engine\Api\Contract::document());' "$SITE/user/plugins/w4os/vendor/autoload.php" \
         >"$TMP/openapi.json"
     W4OS_FAKE_OPENAPI="$TMP/openapi.json" php -S "127.0.0.1:$API_PORT" "$ROOT/tests/fixtures/api.php" >/dev/null 2>&1 &
     API_PID=$!
@@ -48,7 +48,7 @@ stale() {
         [ -e "$plugin/$part" ] || continue
         newer "$plugin/$part" "$tree/user/plugins/w4os/$part" || changed+=("plugin $part")
     done
-    [ ! -d "$ROOT/../w4os-views/src" ] || newer "$ROOT/../w4os-views/src" "$tree/user/plugins/w4os/vendor/magicoli/w4os-views/src" ||
+    [ ! -d "$ROOT/../w4os-views/src" ] || newer "$ROOT/../w4os-views/src" "$tree/user/plugins/w4os/vendor/w4os/w4os-views/src" ||
         changed+=("w4os-views")
     newer "$ROOT/theme/w4os" "$tree/user/themes/w4os" || changed+=("theme")
     [ ${#changed[@]} -eq 0 ] || echo "the Grav tree is older than the code (${changed[*]}): dev/build.sh"

@@ -1,10 +1,10 @@
 #!/bin/sh
-# Purge removes nothing of the site (/var/lib/opensim/www, its content and its caches): it is the user's.
+# Purge removes nothing of the site (/var/lib/w4os/www, its content and its caches): it is the user's.
 set -e
 
 case "$1" in
 purge)
-    echo "w4os-site: the site is kept in /var/lib/opensim/www"
+    echo "w4os-site: the site is kept in /var/lib/w4os/www"
     ;;
 esac
 

@@ -1,5 +1,5 @@
 # The light website of an OpenSimulator grid, built by apt-package from build/w4os-site, prepared by packaging/build.
-# The site, a standard Grav site the web user owns and Grav's own tools update, in /var/lib/opensim/www (made from the seed the
+# The site, a standard Grav site the web user owns and Grav's own tools update, in /var/lib/w4os/www (made from the seed the
 # package keeps in /usr/share/w4os-site/site; its upgrades replace only what the site has as the package put it). Nothing is
 # enabled in a web server by installing it: w4os-site setup, then w4os-site web.
 name: w4os-site

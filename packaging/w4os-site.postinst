@@ -1,26 +1,29 @@
 #!/bin/sh
-# The site in /var/lib/opensim/www, a standard Grav site the web user owns: made from the seed of the package (with the content
-# of an install of before), or upgraded where it still has what the package put (bin/w4os-site-tree).
+# The site in /var/lib/w4os/www, a standard Grav site the web user owns: made from the seed of the package (with the content
+# of an install of before, or moved from /var/lib/opensim/www), or upgraded where it still has what the package put
+# (bin/w4os-site-tree).
 set -e
 
 case "$1" in
 configure)
-    # The home of the OpenSim suite; opensim-tools, when installed, makes it its account's (opensim, 755)
-    [ -d /var/lib/opensim ] || install -d -m 755 /var/lib/opensim
+    # The home of the w4os suite
+    [ -d /var/lib/w4os ] || install -d -m 755 /var/lib/w4os
     new=
-    [ -d /var/lib/opensim/www ] || new=1
+    moved=
+    [ -d /var/lib/w4os/www ] || new=1
+    [ -d /var/lib/w4os/www ] || [ -L /var/lib/opensim/www ] || [ ! -d /var/lib/opensim/www ] || moved=1
     /usr/share/w4os-site/bin/w4os-site-tree configure
     # The caches of an install of before (the site keeps its own now)
     rm -rf /var/cache/w4os-site
     # A site of before just moved: Apache serves it from its new root (w4os-site-tree rewrote the configuration it had)
-    if [ -n "$new" ] && [ -d /var/lib/w4os-site.migrated ] && [ -d /run/systemd/system ] && systemctl is-active -q apache2 2>/dev/null; then
+    if [ -n "$new" ] && { [ -n "$moved" ] || [ -d /var/lib/w4os-site.migrated ]; } && [ -d /run/systemd/system ] && systemctl is-active -q apache2 2>/dev/null; then
         if apache2ctl configtest >/dev/null 2>&1; then
             systemctl reload apache2
         else
             echo "w4os-site: Apache refuses its configuration, not reloaded: apache2ctl configtest"
         fi
     fi
-    if [ -n "$new" ] && [ -z "$2" ]; then
+    if [ -n "$new" ] && [ -z "$moved" ] && [ -z "$2" ]; then
         echo "w4os-site: run 'sudo w4os-site setup' to connect the site to a grid, then 'sudo w4os-site web'."
     fi
     ;;

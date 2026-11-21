@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "315c9f4d6f2b2b5f1bf3cf5eac7a9851",
+    "content-hash": "7daba364489ef340076627a5805ae9cc",
     "packages": [],
     "packages-dev": [
         {
@@ -64,7 +64,7 @@
             "dist": {
                 "type": "path",
                 "url": "../build-tools",
-                "reference": "f7b171ada20d97bb5051cbc941f64970354b52a9"
+                "reference": "c338eb5b6793e37dbcea641e807ef250f9cc7ead"
             },
             "require": {
                 "magicoli/bash-tools": "@dev"

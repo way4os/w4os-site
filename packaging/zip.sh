@@ -1,6 +1,6 @@
 # shellcheck shell=bash
 # The site as a zip, sourced by packaging/build: the Grav tree of the package (a standard Grav site, the same the package installs
-# in /var/lib/opensim/www), to unzip anywhere and configure, nothing to build or download.
+# in /var/lib/w4os/www), to unzip anywhere and configure, nothing to build or download.
 
 # site_zip GRAV DEFAULTS ZIP: the tree of GRAV as w4os-site/ in ZIP, with the config and pages of DEFAULTS
 site_zip() {

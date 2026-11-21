@@ -29,10 +29,10 @@ export W4OS_PLUGIN=$plugin
 # A project's commit, "+changes" when its tree is not clean
 commit() { echo "$(git -C "$1" log -1 --format=%h)$(git -C "$1" diff --quiet HEAD -- 2>/dev/null || echo +changes)"; }
 # The folder a package of the plugin's vendor folder links to (a sibling project in development)
-sibling() { (cd "$plugin/vendor/magicoli/$1" && pwd -P); }
+sibling() { (cd "$plugin/vendor/w4os/$1" && pwd -P); }
 
 (cd "$plugin" && rm -rf build && vendor/bin/build-tools build zip | tail -1)
-# The package of the site from its last commit, as the opensim projects build theirs (build-tools refuses uncommitted changes)
+# The package of the site from its last commit, as the w4os projects build theirs (build-tools refuses uncommitted changes)
 [ -x vendor/bin/build-tools ] || { echo "deploy: build-tools is not installed: composer install" >&2; exit 1; }
 vendor/bin/build-tools build deb | tail -1
 deb=$(ls -t dist/w4os-site_*.deb | head -1)
@@ -40,12 +40,12 @@ deb=$(ls -t dist/w4os-site_*.deb | head -1)
 scp -q "$deb" "$host:/tmp/"
 # shellcheck disable=SC2029
 ssh "$host" "sudo -n DEBIAN_FRONTEND=noninteractive NEEDRESTART_SUSPEND=1 apt-get install -y -qq --reinstall '/tmp/$(basename "$deb")' >/dev/null && rm -f '/tmp/$(basename "$deb")' &&
-    sudo -n find /var/lib/opensim/www/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
+    sudo -n find /var/lib/w4os/www/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
 # The themes of development (dev/themes.txt), never in the package
 dev/themes.sh | tail -1
 # The themes of development in the site, as the web user that owns it
-COPYFILE_DISABLE=1 tar --no-xattrs -C build/dev -cf - user | ssh "$host" "sudo -n -u www-data tar -xf - -C /var/lib/opensim/www && sudo -n find /var/lib/opensim/www/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
+COPYFILE_DISABLE=1 tar --no-xattrs -C build/dev -cf - user | ssh "$host" "sudo -n -u www-data tar -xf - -C /var/lib/w4os/www && sudo -n find /var/lib/w4os/www/cache -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
 # The site answers (DEPLOY_URL of the .env, its address)
 [ -z "${DEPLOY_URL:-}" ] || echo "site answers: $(curl -s -o /dev/null -w '%{http_code}' "$DEPLOY_URL/")"
 
-echo "on $host: plugin $(commit "$plugin"), engine $(commit "$(sibling opensim-engine)"), helpers $(commit "$(sibling opensim-helpers)"), site $(commit "$root")"
+echo "on $host: plugin $(commit "$plugin"), engine $(commit "$(sibling w4os-engine)"), helpers $(commit "$(sibling w4os-helpers)"), site $(commit "$root")"
