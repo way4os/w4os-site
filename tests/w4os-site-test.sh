@@ -127,6 +127,18 @@ test_the_web_configurations_route_nothing_to_the_helpers_even_on_a_machine_that_
     done
 }
 
+test_web_takes_the_host_and_the_port_of_the_address_of_the_site_when_not_given() {
+    local output
+    output=$(site web apache)
+    assert_contains "ServerName localhost" "$output"
+    printf "custom_base_url: 'http://site.example.org:8830'\n" >>"$SITE/user/config/system.yaml"
+    output=$(site web apache)
+    assert_contains "ServerName site.example.org" "$output"
+    assert_contains "Listen 8830" "$output"
+    assert_contains "ServerName other.example.org" "$(site web apache --host other.example.org)"
+    assert_not_contains "Listen" "$(site web apache --host other.example.org)"
+}
+
 test_web_apache_on_port_80_adds_no_listen() {
     assert_not_contains "Listen" "$(site web apache --host grid.example.org)"
 }
