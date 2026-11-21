@@ -64,3 +64,22 @@ test_the_zip_built_serves_its_pages_with_php_alone() {
     assert_equals 200 "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/user/themes/w4os/css/fontawesome/all.min.css")"
     kill "$server" 2>/dev/null || true
 }
+
+test_a_development_build_that_bundles_another_plugin_engine_or_helpers_gets_another_version() {
+    mkdir -p "$TMP/a/w4os" "$TMP/b/w4os"
+    echo 'engine 1' >"$TMP/a/w4os/engine.php"
+    echo 'engine 2' >"$TMP/b/w4os/engine.php"
+    echo "user/plugins/w4os grav-plugin-w4os-1.zip $(tree_digest "$TMP/a")" >"$TMP/a.bundled"
+    echo "user/plugins/w4os grav-plugin-w4os-1.zip $(tree_digest "$TMP/b")" >"$TMP/b.bundled"
+    cp "$TMP/a.bundled" "$TMP/a2.bundled"
+    local a b
+    a=$(bundled_version 0.1.0-dev+157.g41e480c "$TMP/a.bundled")
+    b=$(bundled_version 0.1.0-dev+157.g41e480c "$TMP/b.bundled")
+    assert_matches '^0\.1\.0-dev\+157\.g41e480c\.b[0-9a-f]{7}$' "$a"
+    assert_not_equals "$a" "$b"
+    assert_equals "$a" "$(bundled_version 0.1.0-dev+157.g41e480c "$TMP/a2.bundled")"
+    # A release as it is, the releases it bundles named by its dependencies.txt
+    assert_equals 1.0.0 "$(bundled_version 1.0.0 "$TMP/a.bundled")"
+    assert_contains 'bundled_version "$VERSION" build/w4os-site/grav/.bundled' "$(cat "$ROOT/packaging/build-zip")"
+    assert_contains '>>"$grav/.bundled"' "$(cat "$ROOT/packaging/build")"
+}

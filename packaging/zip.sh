@@ -32,3 +32,18 @@ standard_tree() {
         mkdir -p "$site/$dir"
     done
 }
+
+# tree_digest DIR: the digest of what DIR holds (its files, by their path and content), the same for the same content wherever it is
+tree_digest() {
+    (cd "$1" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 shasum -a 256) | shasum -a 256 | cut -c1-7
+}
+
+# bundled_version VERSION MANIFEST: the version of a build that bundles release zips of other projects (the plugin, with the engine
+# and the helpers in it; MANIFEST: a line by zip, its path, its file, the digest of its content). A development version tells what
+# it bundles (+157.g41e480c.b1a2b3c4: b, the digest of the manifest): another plugin, engine or helpers, another version, as a
+# change of the project is. A release (no +) bundles the releases its dependencies.txt names, its version as it is.
+bundled_version() {
+    local version=$1 manifest=$2
+    [[ $version == *+* && -s $manifest ]] || { echo "$version"; return; }
+    echo "$version.b$(shasum -a 256 "$manifest" | cut -c1-7)"
+}

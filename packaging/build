@@ -17,6 +17,8 @@ git archive HEAD theme defaults bin web | tar -x -C "$head"
 
 # shellcheck source=sources.sh
 source "$root/packaging/sources.sh"
+# shellcheck source=zip.sh
+source "$root/packaging/zip.sh"
 
 while read -r path source ref picked; do
     [[ -z ${path:-} || $path == \#* ]] && continue
@@ -29,6 +31,8 @@ while read -r path source ref picked; do
         [ -n "$zip" ] || { echo "No release zip: $source (build it in its project: vendor/bin/build-tools build zip)" >&2; exit 1; }
         rm -rf "$sources/zip" && mkdir -p "$sources/zip" "$grav/$path" && unzip -q "$zip" -d "$sources/zip"
         cp -R "$sources/zip"/*/. "$grav/$path/"
+        # What it bundles, for the version of the build and to tell it (packaging/zip.sh: bundled_version)
+        echo "$path $(basename "$zip") $(tree_digest "$grav/$path")" >>"$grav/.bundled"
         continue
     fi
     # Some files of a release only, each at its place (from=to)
@@ -54,8 +58,6 @@ cp -R "$head/theme/w4os/." "$grav/user/themes/w4os/"
 
 # A standard Grav site (the zip's tree, the package's seed): the content of a new site (the defaults) in user/, the folders Grav
 # writes in its own tree
-# shellcheck source=zip.sh
-source "$root/packaging/zip.sh"
 rm -rf "${grav:?}"/user/{config,pages,accounts,data}
 standard_tree "$grav" "$head/defaults"
 
