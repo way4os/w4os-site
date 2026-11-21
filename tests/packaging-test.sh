@@ -34,3 +34,27 @@ test_the_site_bundles_font_awesome_free_at_the_version_the_theme_loaded_and_load
     assert_contains "https://github.com/FortAwesome/Font-Awesome.git 7.0.1 css/all.min.css=fontawesome/all.min.css webfonts=webfonts LICENSE.txt=fontawesome/LICENSE.txt" "$(cat "$ROOT/dependencies.txt")"
     assert_contains "  local: true" "$(sed -n '/^fontawesome:/,/^[a-z]/p' "$ROOT/theme/w4os/w4os.yaml")"
 }
+
+test_the_build_takes_the_files_of_the_project_as_committed_never_the_working_tree() {
+    local build
+    build=$(cat "$ROOT/packaging/build")
+    assert_contains 'git archive HEAD theme defaults bin web' "$build"
+    assert_not_contains 'cp -R theme/' "$build"
+    assert_not_contains 'cp -R defaults' "$build"
+    assert_not_contains ' defaults "dist/' "$(cat "$ROOT/packaging/build-zip")"
+}
+
+test_the_zip_and_the_package_built_carry_nothing_of_macos() {
+    local zip deb junk='(^|/)(\._[^/]*|\.DS_Store|__MACOSX)(/|$)' checked=
+    zip=$(ls -t "$ROOT"/dist/w4os-site-*.zip 2>/dev/null | head -1)
+    deb=$(ls -t "$ROOT"/dist/w4os-site_*.deb 2>/dev/null | head -1)
+    if [ -n "$zip" ]; then
+        assert_empty "$(unzip -Z1 "$zip" | grep -E "$junk")"
+        checked=1
+    fi
+    if [ -n "$deb" ] && command -v dpkg-deb >/dev/null; then
+        assert_empty "$(dpkg-deb -c "$deb" | awk '{print $6}' | grep -E "$junk")"
+        checked=1
+    fi
+    [ -n "$checked" ] || bashunit::skip "no zip or package built (dev/build.sh zip, build-tools build deb)"
+}

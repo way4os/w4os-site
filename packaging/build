@@ -9,6 +9,11 @@ out="$root/build/w4os-site"
 grav="$out/grav"
 sources="$root/build/sources"
 rm -rf "$out" && mkdir -p "$grav" "$sources"
+# The files of the project as committed (git archive, as build-tools stages the w4os projects), never what the working tree
+# holds besides them (.DS_Store and ._* of macOS)
+head="$sources/head"
+rm -rf "$head" && mkdir -p "$head"
+git archive HEAD theme defaults bin web | tar -x -C "$head"
 
 # shellcheck source=sources.sh
 source "$root/packaging/sources.sh"
@@ -45,19 +50,19 @@ rm -f "$grav"/user/plugins/*/composer.lock
 
 # The theme of the site, with what dependencies.txt put in it (Font Awesome)
 mkdir -p "$grav/user/themes/w4os"
-cp -R theme/w4os/. "$grav/user/themes/w4os/"
+cp -R "$head/theme/w4os/." "$grav/user/themes/w4os/"
 
 # A standard Grav site (the zip's tree, the package's seed): the content of a new site (the defaults) in user/, the folders Grav
 # writes in its own tree
 # shellcheck source=zip.sh
 source "$root/packaging/zip.sh"
 rm -rf "${grav:?}"/user/{config,pages,accounts,data}
-standard_tree "$grav" defaults
+standard_tree "$grav" "$head/defaults"
 
 # The defaults of a new site, the installer, the web server template
-cp -R defaults "$out/defaults"
+cp -R "$head/defaults" "$out/defaults"
 mkdir -p "$out/bin" "$out/web"
-cp bin/w4os-site bin/w4os-site-tree "$out/bin/"
-cp web/* "$out/web/"
+cp "$head/bin/w4os-site" "$head/bin/w4os-site-tree" "$out/bin/"
+cp "$head"/web/* "$out/web/"
 
 echo "VERSION_GRAV=$(sed -n 's/^\. .* //p' dependencies.txt)" > "$root/build/packaging.env"

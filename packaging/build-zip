@@ -9,5 +9,5 @@ packaging/build
 # shellcheck source=zip.sh
 source packaging/zip.sh
 rm -f dist/w4os-site-*.zip
-site_zip build/w4os-site/grav defaults "dist/w4os-site-$VERSION.zip"
+site_zip build/w4os-site/grav build/sources/head/defaults "dist/w4os-site-$VERSION.zip"
 echo "dist/w4os-site-$VERSION.zip"
