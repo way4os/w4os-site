@@ -122,6 +122,16 @@ test_the_theme_has_the_components_of_a_page_as_w4os_org_has_them() {
     assert_contains '.content-item { container-type: inline-size; }' "$css"
 }
 
+test_the_texts_of_quark2_are_in_every_language_of_the_site() {
+    # Quark2 has English and Spanish: the theme of the site gives each of its texts in the others
+    local quark2="$ROOT/build/w4os-site/grav/user/themes/quark2/languages.yaml"
+    [ -f "$quark2" ] || { bashunit::skip "the site is not built"; return; }
+    assert_empty "$(php -r 'require $argv[1]; $y = "Symfony\Component\Yaml\Yaml"; $keys = function ($a, $p = "") use (&$keys) { $o = []; foreach ($a as $k => $v) { $o = array_merge($o, is_array($v) ? $keys($v, "$p$k.") : ["$p$k"]); } return $o; };
+        $en = $keys($y::parseFile($argv[2])["en"]); $own = $y::parseFile($argv[3]);
+        foreach (["fr", "de", "it", "nl", "pt-BR", "cy"] as $l) { foreach (array_diff($en, $keys($own[$l] ?? [])) as $k) { echo "$l $k\n"; } }' \
+        "$ROOT/build/w4os-site/grav/vendor/autoload.php" "$quark2" "$ROOT/theme/w4os/languages.yaml")"
+}
+
 test_web_apache_listens_on_its_own_port() {
     local output
     output=$(site web apache --host grid.example.org --port 8830)

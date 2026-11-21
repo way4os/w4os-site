@@ -1,0 +1,229 @@
+# Quark2's texts in the languages of the site Quark2 has none of (it has English and Spanish), merged with its own by Grav
+fr:
+  THEME_QUARK2:
+    ERROR:
+      BACK_HOME: 'Retour à l’accueil'
+    BLOG:
+      ITEM:
+        NEXT_POST: 'Suivant'
+        PREV_POST: 'Précédent'
+    SIDEBAR:
+      RELATED_POSTS:
+        HEADLINE: 'À lire aussi'
+      RANDOM_ARTICLE:
+        HEADLINE: 'Un coup de chance ?'
+        FEELING_LUCKY: 'Lire un article au hasard'
+      POPULAR_TAGS:
+        HEADLINE: 'Mots-clés populaires'
+      ARCHIVES:
+        HEADLINE: 'Archives'
+      SYNDICATE:
+        HEADLINE: 'S’abonner'
+    THEME_TOGGLE:
+      LABEL: 'Apparence'
+      AUTO: 'Auto'
+      LIGHT: 'Clair'
+      DARK: 'Sombre'
+      ARIA_LABEL: 'Apparence : %s'
+      TITLE: 'Apparence : %s (cliquer pour changer)'
+    ARIA:
+      PRIMARY_NAV: 'Principale'
+      MOBILE_NAV: 'Mobile'
+      MENU: 'Menu'
+      OPEN_MENU: 'Ouvrir le menu'
+      BREADCRUMB: 'Fil d’Ariane'
+      PAGINATION: 'Pagination'
+      POST_NAVIGATION: 'Navigation entre les pages'
+      SCORE: 'Score'
+      POST_COUNT: 'Nombre d’articles'
+      OPEN_POST: 'Ouvrir l’article'
+de:
+  THEME_QUARK2:
+    ERROR:
+      BACK_HOME: 'Zur Startseite'
+    BLOG:
+      ITEM:
+        NEXT_POST: 'Weiter'
+        PREV_POST: 'Zurück'
+    SIDEBAR:
+      RELATED_POSTS:
+        HEADLINE: 'Auch lesenswert'
+      RANDOM_ARTICLE:
+        HEADLINE: 'Lust auf Zufall?'
+        FEELING_LUCKY: 'Einen zufälligen Beitrag lesen'
+      POPULAR_TAGS:
+        HEADLINE: 'Beliebte Schlagwörter'
+      ARCHIVES:
+        HEADLINE: 'Archiv'
+      SYNDICATE:
+        HEADLINE: 'Abonnieren'
+    THEME_TOGGLE:
+      LABEL: 'Darstellung'
+      AUTO: 'Automatisch'
+      LIGHT: 'Hell'
+      DARK: 'Dunkel'
+      ARIA_LABEL: 'Darstellung: %s'
+      TITLE: 'Darstellung: %s (klicken zum Wechseln)'
+    ARIA:
+      PRIMARY_NAV: 'Hauptmenü'
+      MOBILE_NAV: 'Mobil'
+      MENU: 'Menü'
+      OPEN_MENU: 'Menü öffnen'
+      BREADCRUMB: 'Brotkrümelnavigation'
+      PAGINATION: 'Seitennavigation'
+      POST_NAVIGATION: 'Beitragsnavigation'
+      SCORE: 'Bewertung'
+      POST_COUNT: 'Anzahl der Beiträge'
+      OPEN_POST: 'Beitrag öffnen'
+it:
+  THEME_QUARK2:
+    ERROR:
+      BACK_HOME: 'Torna alla home'
+    BLOG:
+      ITEM:
+        NEXT_POST: 'Successivo'
+        PREV_POST: 'Precedente'
+    SIDEBAR:
+      RELATED_POSTS:
+        HEADLINE: 'Da leggere anche'
+      RANDOM_ARTICLE:
+        HEADLINE: 'Ti senti fortunato?'
+        FEELING_LUCKY: 'Leggi un articolo a caso'
+      POPULAR_TAGS:
+        HEADLINE: 'Tag popolari'
+      ARCHIVES:
+        HEADLINE: 'Archivio'
+      SYNDICATE:
+        HEADLINE: 'Iscriviti'
+    THEME_TOGGLE:
+      LABEL: 'Aspetto'
+      AUTO: 'Automatico'
+      LIGHT: 'Chiaro'
+      DARK: 'Scuro'
+      ARIA_LABEL: 'Aspetto: %s'
+      TITLE: 'Aspetto: %s (clicca per cambiare)'
+    ARIA:
+      PRIMARY_NAV: 'Principale'
+      MOBILE_NAV: 'Mobile'
+      MENU: 'Menu'
+      OPEN_MENU: 'Apri il menu'
+      BREADCRUMB: 'Briciole di pane'
+      PAGINATION: 'Paginazione'
+      POST_NAVIGATION: 'Navigazione tra gli articoli'
+      SCORE: 'Punteggio'
+      POST_COUNT: 'Numero di articoli'
+      OPEN_POST: 'Apri l’articolo'
+nl:
+  THEME_QUARK2:
+    ERROR:
+      BACK_HOME: 'Terug naar de startpagina'
+    BLOG:
+      ITEM:
+        NEXT_POST: 'Volgende'
+        PREV_POST: 'Vorige'
+    SIDEBAR:
+      RELATED_POSTS:
+        HEADLINE: 'Ook interessant'
+      RANDOM_ARTICLE:
+        HEADLINE: 'Zin in toeval?'
+        FEELING_LUCKY: 'Lees een willekeurig bericht'
+      POPULAR_TAGS:
+        HEADLINE: 'Populaire tags'
+      ARCHIVES:
+        HEADLINE: 'Archief'
+      SYNDICATE:
+        HEADLINE: 'Abonneren'
+    THEME_TOGGLE:
+      LABEL: 'Weergave'
+      AUTO: 'Automatisch'
+      LIGHT: 'Licht'
+      DARK: 'Donker'
+      ARIA_LABEL: 'Weergave: %s'
+      TITLE: 'Weergave: %s (klik om te wisselen)'
+    ARIA:
+      PRIMARY_NAV: 'Hoofdmenu'
+      MOBILE_NAV: 'Mobiel'
+      MENU: 'Menu'
+      OPEN_MENU: 'Menu openen'
+      BREADCRUMB: 'Kruimelpad'
+      PAGINATION: 'Paginering'
+      POST_NAVIGATION: 'Berichtnavigatie'
+      SCORE: 'Score'
+      POST_COUNT: 'Aantal berichten'
+      OPEN_POST: 'Bericht openen'
+pt-BR:
+  THEME_QUARK2:
+    ERROR:
+      BACK_HOME: 'Voltar ao início'
+    BLOG:
+      ITEM:
+        NEXT_POST: 'Próximo'
+        PREV_POST: 'Anterior'
+    SIDEBAR:
+      RELATED_POSTS:
+        HEADLINE: 'Leia também'
+      RANDOM_ARTICLE:
+        HEADLINE: 'Sentindo-se com sorte?'
+        FEELING_LUCKY: 'Ler um post aleatório'
+      POPULAR_TAGS:
+        HEADLINE: 'Tags populares'
+      ARCHIVES:
+        HEADLINE: 'Arquivo'
+      SYNDICATE:
+        HEADLINE: 'Assinar'
+    THEME_TOGGLE:
+      LABEL: 'Aparência'
+      AUTO: 'Automático'
+      LIGHT: 'Claro'
+      DARK: 'Escuro'
+      ARIA_LABEL: 'Aparência: %s'
+      TITLE: 'Aparência: %s (clique para alternar)'
+    ARIA:
+      PRIMARY_NAV: 'Principal'
+      MOBILE_NAV: 'Celular'
+      MENU: 'Menu'
+      OPEN_MENU: 'Abrir o menu'
+      BREADCRUMB: 'Trilha de navegação'
+      PAGINATION: 'Paginação'
+      POST_NAVIGATION: 'Navegação entre posts'
+      SCORE: 'Pontuação'
+      POST_COUNT: 'Número de posts'
+      OPEN_POST: 'Abrir o post'
+cy:
+  THEME_QUARK2:
+    ERROR:
+      BACK_HOME: 'Yn ôl i’r hafan'
+    BLOG:
+      ITEM:
+        NEXT_POST: 'Nesaf'
+        PREV_POST: 'Blaenorol'
+    SIDEBAR:
+      RELATED_POSTS:
+        HEADLINE: 'Darllenwch hefyd'
+      RANDOM_ARTICLE:
+        HEADLINE: 'Teimlo’n lwcus?'
+        FEELING_LUCKY: 'Darllen neges ar hap'
+      POPULAR_TAGS:
+        HEADLINE: 'Tagiau poblogaidd'
+      ARCHIVES:
+        HEADLINE: 'Archif'
+      SYNDICATE:
+        HEADLINE: 'Tanysgrifio'
+    THEME_TOGGLE:
+      LABEL: 'Golwg'
+      AUTO: 'Awtomatig'
+      LIGHT: 'Golau'
+      DARK: 'Tywyll'
+      ARIA_LABEL: 'Golwg: %s'
+      TITLE: 'Golwg: %s (cliciwch i newid)'
+    ARIA:
+      PRIMARY_NAV: 'Prif'
+      MOBILE_NAV: 'Symudol'
+      MENU: 'Dewislen'
+      OPEN_MENU: 'Agor y ddewislen'
+      BREADCRUMB: 'Briwsion bara'
+      PAGINATION: 'Tudalennu'
+      POST_NAVIGATION: 'Llywio rhwng negeseuon'
+      SCORE: 'Sgôr'
+      POST_COUNT: 'Nifer y negeseuon'
+      OPEN_POST: 'Agor y neges'
