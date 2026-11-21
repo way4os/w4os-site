@@ -14,8 +14,10 @@ sign_in_as() {
         -d "task=login.login" --data-urlencode "login-form-nonce=$nonce"
 }
 
-# home THEME JAR: the home page under a theme, as the browser JAR sees it
+# home THEME JAR: the home page under a theme, as the browser JAR sees it (Grav tells a change of its settings by the time of the
+# file, to the second: the theme changed a second after it last read them)
 home() {
+    sleep 1
     sed -i.bak -E "s/^(  theme:).*/\1 $1/" "$SITE/user/config/system.yaml"
     curl -s -L -b "$2" "$URL/"
 }
