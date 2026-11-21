@@ -1,0 +1,7 @@
+{# Quark2's date of a post (1.1.22), written the way the language of the page writes it (the w4os plugin's w4os_date) #}
+<span class="blog-date">
+    <time class="dt-published" datetime="{{ page.date|date('c') }}">
+        <i class="fa-solid fa-calendar" aria-hidden="true"></i>
+        {{ page.date|w4os_date }}
+    </time>
+</span>

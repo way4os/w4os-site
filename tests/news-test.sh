@@ -24,3 +24,9 @@ test_the_news_page_lists_its_posts_the_home_page_the_last_ones() {
     assert_contains 'class="w4os-latest"' "$home"
     assert_contains '>Hello world</a></h4>' "$home"
 }
+
+test_the_date_of_a_post_is_written_the_way_the_language_of_the_page_writes_it() {
+    built || return 0
+    assert_contains '21 nov' "$(curl -s "$URL/fr/news")"
+    assert_contains 'Nov 21, 2026' "$(curl -s "$URL/news")"
+}
