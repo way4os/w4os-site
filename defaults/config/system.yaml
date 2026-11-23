@@ -4,7 +4,9 @@ pages:
   theme: w4os
   markdown:
     extra: true
+  # Both named: Grav 1.7 takes this block as a whole
   process:
+    markdown: true
     twig: false
 languages:
   # English and the languages of the OpenSim suite (the locales of w4os-helpers, and Dutch)
