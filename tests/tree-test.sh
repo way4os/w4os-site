@@ -148,7 +148,7 @@ test_the_web_user_writes_only_its_own_tree_never_what_opensim_owns() {
     # The home of the suite made 755 when missing, never given to the web user; the web user gets the site's tree alone
     assert_contains "install -d -m 755 /var/lib/w4os" "$(cat "$root/packaging/w4os-site.postinst")"
     assert_not_contains "chown" "$(cat "$root/packaging/w4os-site.postinst")"
-    assert_equals 'chown -R "$OWNER:$OWNER" "$ROOT"' "$(grep -o 'chown .*' "$root/bin/w4os-site-tree")"
+    assert_equals 'chown -R "$OWNER:$GROUP" "$ROOT"' "$(grep -o 'chown .*' "$root/bin/w4os-site-tree")"
     assert_not_contains "g+w" "$(cat "$root/bin/w4os-site-tree" "$root/packaging/w4os-site.postinst")"
     "$TREE" configure >/dev/null
     assert_equals 755 "$(stat -c %a "$(dirname "$W4OS_SITE_ROOT")" 2>/dev/null || stat -f %Lp "$(dirname "$W4OS_SITE_ROOT")")"
@@ -184,4 +184,22 @@ test_a_package_without_the_units_for_old_php_keeps_the_seed_whatever_the_php() {
     php_at 80236 8.2.36
     "$TREE" configure >/dev/null
     assert_equals "grav 1" "$(cat "$W4OS_SITE_ROOT/system/defines.php")"
+}
+
+test_the_site_belongs_to_the_web_account_the_engine_resolves_www_data_without_one() {
+    local built home
+    built="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/build/w4os-site/grav"
+    # Nothing to read it with (no plugin, so no engine): www-data
+    assert_equals "www-data www-data" "$(bash -c 'source "$1"; web_account' _ "$TREE")"
+    if [ ! -f "$built/user/plugins/w4os/vendor/autoload.php" ]; then
+        bashunit::skip "no Grav tree built (dev/build.sh), whose w4os plugin carries the engine"
+        return
+    fi
+    # The engine's own reading of w4os.conf: the profile over [Defaults]
+    home=$(mktemp -d)
+    mkdir -p "$home/.config/w4os"
+    printf '%s\n' '[Defaults]' 'WebUser = www-data' 'WebGroup = www-data' 'DefaultProfile = mine' '' '[mine]' 'WebUser = siteweb' \
+        'WebGroup = webgrp' >"$home/.config/w4os/w4os.conf"
+    assert_equals "siteweb webgrp" "$(HOME=$home W4OS_SITE_ROOT=$built bash -c 'source "$1"; web_account' _ "$TREE")"
+    rm -rf "$home"
 }

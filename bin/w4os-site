@@ -24,7 +24,25 @@ SHARE=${W4OS_SITE_SHARE:-/usr/share/w4os-site}
 ROOT=${W4OS_SITE_ROOT:-/var/lib/w4os/www}
 CONFIG="$ROOT/user/config"
 KEY_FILE="$ROOT/user/data/w4os/api.json"
-OWNER=${W4OS_SITE_OWNER:-www-data}
+OWNER=${W4OS_SITE_OWNER:-}
+GROUP=${W4OS_SITE_GROUP:-$OWNER}
+
+# web_account: the account and group of the web server ("user group"), as the engine of the machine resolves them (WebUser and
+# WebGroup of w4os.conf, its profile over [Defaults]), read with the engine the site's w4os plugin carries; www-data without them
+web_account() {
+    local vendor
+    for vendor in "$ROOT/user/plugins/w4os/vendor" "${SEED:-$ROOT}/user/plugins/w4os/vendor"; do
+        [ -f "$vendor/autoload.php" ] || continue
+        ${W4OS_SITE_PHP:-php} -r 'require $argv[1]; $layout = W4OS\Engine\Config\Layout::load(); echo $layout->webUser(), " ", $layout->webGroup(), PHP_EOL;' \
+            "$vendor/autoload.php" 2>/dev/null && return
+    done
+    echo "www-data www-data"
+}
+
+# owner: OWNER and GROUP set from the engine's settings, unless the environment gives them
+owner() {
+    [ -n "$OWNER" ] || read -r OWNER GROUP < <(web_account) || true
+}
 
 # The value of a top-level key of a YAML file, quotes removed
 yaml_get() {
@@ -117,7 +135,8 @@ setup() {
     mkdir -p "$(dirname "$KEY_FILE")"
     printf '{"api_key":"%s"}\n' "$key" >"$KEY_FILE"
     chmod 640 "$KEY_FILE"
-    chown -R "$OWNER:$OWNER" "$CONFIG" "$ROOT/user/data" 2>/dev/null || true
+    owner
+    chown -R "$OWNER:$GROUP" "$CONFIG" "$ROOT/user/data" 2>/dev/null || true
     rm -rf "${W4OS_SITE_CACHE:-$ROOT/cache}"/* 2>/dev/null || true
     success "connected to ${name:-the grid} ($api)"
 }
@@ -237,7 +256,8 @@ web() {
         local base="http://$host"
         [ "$port" = 80 ] || base="$base:$port"
         yaml_set "$CONFIG/system.yaml" custom_base_url "$base"
-        chown "$OWNER:$OWNER" "$CONFIG/system.yaml" 2>/dev/null || true
+        owner
+        chown "$OWNER:$GROUP" "$CONFIG/system.yaml" 2>/dev/null || true
         rm -rf "${W4OS_SITE_CACHE:-$ROOT/cache}"/* 2>/dev/null || true
         check_site "$base" "$port" "$host" "$socket"
         ;;

@@ -13,8 +13,8 @@
 # The places, for the tests: W4OS_SITE_SEED (/usr/share/w4os-site/site), W4OS_SITE_ROOT (/var/lib/w4os/www), W4OS_SITE_PREVIOUS
 # (/var/lib/opensim/www, the folder of the site before), W4OS_SITE_OLD (/var/lib/w4os-site, the content of the site of before),
 # W4OS_SITE_OLD_TREE (/usr/share/w4os-site/grav, its Grav of before), W4OS_SITE_APACHE (/etc/apache2/sites-available/w4os-site.conf),
-# W4OS_SITE_OWNER (www-data), W4OS_SITE_LEGACY (/usr/share/w4os-site/site-grav17, the units for PHP older than 8.3), W4OS_SITE_PHP
-# (php, the PHP whose version chooses).
+# W4OS_SITE_OWNER and W4OS_SITE_GROUP (WebUser and WebGroup of the engine's w4os.conf, www-data without them), W4OS_SITE_LEGACY
+# (/usr/share/w4os-site/site-grav17, the units for PHP older than 8.3), W4OS_SITE_PHP (php, the PHP whose version chooses).
 set -eo pipefail
 
 SEED=${W4OS_SITE_SEED:-/usr/share/w4os-site/site}
@@ -23,7 +23,8 @@ PREVIOUS=${W4OS_SITE_PREVIOUS:-/var/lib/opensim/www}
 OLD=${W4OS_SITE_OLD:-/var/lib/w4os-site}
 OLD_TREE=${W4OS_SITE_OLD_TREE:-/usr/share/w4os-site/grav}
 APACHE=${W4OS_SITE_APACHE:-/etc/apache2/sites-available/w4os-site.conf}
-OWNER=${W4OS_SITE_OWNER:-www-data}
+OWNER=${W4OS_SITE_OWNER:-}
+GROUP=${W4OS_SITE_GROUP:-$OWNER}
 LEGACY=${W4OS_SITE_LEGACY:-/usr/share/w4os-site/site-grav17}
 # Set by configure where the units of LEGACY replace the seed's: PHP older than 8.3, which Grav 2 needs
 ON_LEGACY=
@@ -31,6 +32,18 @@ ON_LEGACY=
 MANIFEST=user/data/w4os-site/manifest
 
 say() { echo "w4os-site: $*"; }
+
+# web_account: the account and group of the web server ("user group"), as the engine of the machine resolves them (WebUser and
+# WebGroup of w4os.conf, its profile over [Defaults]), read with the engine the site's w4os plugin carries; www-data without them
+web_account() {
+    local vendor
+    for vendor in "$ROOT/user/plugins/w4os/vendor" "${SEED:-$ROOT}/user/plugins/w4os/vendor"; do
+        [ -f "$vendor/autoload.php" ] || continue
+        ${W4OS_SITE_PHP:-php} -r 'require $argv[1]; $layout = W4OS\Engine\Config\Layout::load(); echo $layout->webUser(), " ", $layout->webGroup(), PHP_EOL;' \
+            "$vendor/autoload.php" 2>/dev/null && return
+    done
+    echo "www-data www-data"
+}
 
 # file_sum FILE: its checksum
 file_sum() {
@@ -207,7 +220,8 @@ configure() {
     fi
     # What Grav compiled for the code of before
     rm -rf "${ROOT:?}/cache/"* 2>/dev/null || true
-    [ "$(id -u)" != 0 ] || chown -R "$OWNER:$OWNER" "$ROOT"
+    [ -n "$OWNER" ] || read -r OWNER GROUP < <(web_account) || true
+    [ "$(id -u)" != 0 ] || chown -R "$OWNER:$GROUP" "$ROOT"
     # The sessions, for the web server alone
     mkdir -p "$ROOT/user/data/sessions"
     chmod 700 "$ROOT/user/data/sessions"
