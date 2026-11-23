@@ -174,7 +174,7 @@ php_socket() {
 }
 
 # check_site BASE PORT HOST SOCKET: whether the site answers through PHP on this machine (its page with its title, never PHP's
-# source), said either way: what is missing when it does not
+# source), said either way: what is missing when it does not, with a non-zero status
 check_site() {
     local base=$1 port=$2 host=$3 socket=$4 page title
     title=$(yaml_get "$CONFIG/site.yaml" title)
@@ -183,6 +183,7 @@ check_site() {
     page=$(curl -s --max-time 15 -H "Host: $host" "http://127.0.0.1:$port/" 2>/dev/null || true)
     if grep -q '<title>' <<<"$page" && ! grep -q '<?php' <<<"$page" && { [ -z "$title" ] || grep -qF -- "$title" <<<"$page"; }; then
         success "the site answers at $base/"
+        return 0
     elif [ -n "$socket" ] && [ ! -S "$socket" ]; then
         # Its service by the name of its socket (php8.2-fpm), as Debian names both
         local service
@@ -196,6 +197,7 @@ check_site() {
     else
         warning "the site does not answer as it should at $base/: see /var/log/apache2/w4os-site-error.log"
     fi
+    return 1
 }
 
 web() {
@@ -245,13 +247,13 @@ web() {
         [ -n "$socket" ] || apache2ctl -M 2>/dev/null | grep -q php ||
             die "no PHP for Apache: no pool of PHP-FPM (/etc/php/<version>/fpm/pool.d) and no PHP module of Apache: apt install php-fpm, then this command again"
         printf '%s\n' "$conf" >/etc/apache2/sites-available/w4os-site.conf
-        a2enmod -q rewrite proxy_fcgi >/dev/null
-        a2ensite -q w4os-site >/dev/null
-        apache2ctl configtest 2>/dev/null || {
-            a2dissite -q w4os-site >/dev/null
-            die "Apache refuses the configuration, the site is not enabled: /etc/apache2/sites-available/w4os-site.conf"
+        local said
+        said=$(a2enmod -q rewrite proxy_fcgi 2>&1 && a2ensite -q w4os-site 2>&1) ||
+            die "Apache's modules or the site could not be enabled: $said"
+        said=$(apache2ctl configtest 2>&1) || {
+            a2dissite -q w4os-site >/dev/null 2>&1 || true
+            die "Apache refuses the configuration, the site is not enabled (/etc/apache2/sites-available/w4os-site.conf): $said"
         }
-        systemctl reload apache2
         # The address of the site in what it writes (the links of its mails, the pictures), whatever address it is visited at
         local base="http://$host"
         [ "$port" = 80 ] || base="$base:$port"
@@ -259,6 +261,13 @@ web() {
         owner
         chown "$OWNER:$GROUP" "$CONFIG/system.yaml" 2>/dev/null || true
         rm -rf "${W4OS_SITE_CACHE:-$ROOT/cache}"/* 2>/dev/null || true
+        # Apache takes the site at its reload: it runs, or it is started, never left unsaid
+        said=$(systemctl reload apache2 2>&1) || {
+            local pid=/run/apache2/apache2.pid
+            [ -s "$pid" ] && kill -0 "$(cat "$pid")" 2>/dev/null &&
+                die "the site is enabled, but Apache did not reload ($said): reload it (systemctl reload apache2, or apache2ctl graceful without systemd), then this command again"
+            die "the site is enabled, but Apache isn't running ($said): start it (systemctl start apache2, or apache2ctl start without systemd), then this command again"
+        }
         check_site "$base" "$port" "$host" "$socket"
         ;;
     caddy)
