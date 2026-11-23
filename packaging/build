@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Prepares what the Debian package installs, in build/w4os-site: Grav and its plugins at the versions of dependencies.txt
 # (their committed trees, with their composer dependencies), the theme, the defaults of a new site, the installer and the
-# web server template. Run by apt-package from the project root.
+# web server template; and in build/w4os-site/grav17 the units dependencies-grav17.txt gives instead for PHP older than 8.3
+# (Grav 1.7, the last Quark 2 for it). Run by apt-package from the project root.
 set -Eeuo pipefail
 cd "$(dirname "$0")/.."
 root="$PWD"
@@ -20,33 +21,39 @@ source "$root/packaging/sources.sh"
 # shellcheck source=zip.sh
 source "$root/packaging/zip.sh"
 
-while read -r path source ref picked; do
-    [[ -z ${path:-} || $path == \#* ]] && continue
-    # The plugin of another folder (W4OS_PLUGIN: a worktree of a branch, dev/deploy.sh)
-    [[ -z ${W4OS_PLUGIN:-} || $source != ../grav-plugin-w4os/* ]] || source="$(cd "$W4OS_PLUGIN" && pwd)/${source#../grav-plugin-w4os/}"
-    [[ $source == ../* ]] && source="$root/$source"
-    if [[ $source == *.zip ]]; then
-        # A release with its vendor folder, the newest of a glob
-        zip=$(ls -t $source 2>/dev/null | head -1)
-        [ -n "$zip" ] || { echo "No release zip: $source (build it in its project: vendor/bin/build-tools build zip)" >&2; exit 1; }
-        rm -rf "$sources/zip" && mkdir -p "$sources/zip" "$grav/$path" && unzip -q "$zip" -d "$sources/zip"
-        cp -R "$sources/zip"/*/. "$grav/$path/"
-        # What it bundles, for the version of the build and to tell it (packaging/zip.sh: bundled_version)
-        echo "$path $(basename "$zip") $(tree_digest "$grav/$path")" >>"$grav/.bundled"
-        continue
-    fi
-    # Some files of a release only, each at its place (from=to)
-    if [ -n "${picked:-}" ]; then
-        # shellcheck disable=SC2086
-        pick "$source" "$ref" "$grav/$path" $picked
-        continue
-    fi
-    extract "$source" "$ref" "$grav/$path"
-    # The PHP dependencies of what has some and does not ship them
-    if [ -f "$grav/$path/composer.json" ] && [ ! -d "$grav/$path/vendor" ] && grep -q '"require"' "$grav/$path/composer.json"; then
-        composer install -q --no-dev --no-interaction --optimize-autoloader -d "$grav/$path"
-    fi
-done < dependencies.txt
+# bundle LIST TREE: what LIST names, at its versions, in TREE
+bundle() {
+    local list=$1 grav=$2 path source ref picked zip
+    while read -r path source ref picked; do
+        [[ -z ${path:-} || $path == \#* ]] && continue
+        # The plugin of another folder (W4OS_PLUGIN: a worktree of a branch, dev/deploy.sh)
+        [[ -z ${W4OS_PLUGIN:-} || $source != ../grav-plugin-w4os/* ]] || source="$(cd "$W4OS_PLUGIN" && pwd)/${source#../grav-plugin-w4os/}"
+        [[ $source == ../* ]] && source="$root/$source"
+        if [[ $source == *.zip ]]; then
+            # A release with its vendor folder, the newest of a glob
+            zip=$(ls -t $source 2>/dev/null | head -1)
+            [ -n "$zip" ] || { echo "No release zip: $source (build it in its project: vendor/bin/build-tools build zip)" >&2; exit 1; }
+            rm -rf "$sources/zip" && mkdir -p "$sources/zip" "$grav/$path" && unzip -q "$zip" -d "$sources/zip"
+            cp -R "$sources/zip"/*/. "$grav/$path/"
+            # What it bundles, for the version of the build and to tell it (packaging/zip.sh: bundled_version)
+            echo "$path $(basename "$zip") $(tree_digest "$grav/$path")" >>"$grav/.bundled"
+            continue
+        fi
+        # Some files of a release only, each at its place (from=to)
+        if [ -n "${picked:-}" ]; then
+            # shellcheck disable=SC2086
+            pick "$source" "$ref" "$grav/$path" $picked
+            continue
+        fi
+        extract "$source" "$ref" "$grav/$path"
+        # The PHP dependencies of what has some and does not ship them
+        if [ -f "$grav/$path/composer.json" ] && [ ! -d "$grav/$path/vendor" ] && grep -q '"require"' "$grav/$path/composer.json"; then
+            composer install -q --no-dev --no-interaction --optimize-autoloader -d "$grav/$path"
+        fi
+    done <"$list"
+}
+
+bundle dependencies.txt "$grav"
 
 # What the package does not need of Grav
 rm -rf "$grav"/{tests,.github,.phan,.oss-scanner,codeception.yml,now.json,.dependencies,CONTRIBUTING.md,CODE_OF_CONDUCT.md}
@@ -60,6 +67,12 @@ cp -R "$head/theme/w4os/." "$grav/user/themes/w4os/"
 # writes in its own tree
 rm -rf "${grav:?}"/user/{config,pages,accounts,data}
 standard_tree "$grav" "$head/defaults"
+
+# The units for PHP older than 8.3 (Grav 2 needs 8.3): Grav 1.7 and its Quark 2, nothing of the site's own (user/) besides
+rm -rf "$out/grav17" && mkdir -p "$out/grav17"
+bundle dependencies-grav17.txt "$out/grav17"
+rm -rf "$out/grav17"/{tests,.github,.phan,.oss-scanner,codeception.yml,now.json,.dependencies,CONTRIBUTING.md,CODE_OF_CONDUCT.md}
+find "$out/grav17/user" -mindepth 1 -maxdepth 1 -not -name themes -exec rm -rf {} +
 
 # The defaults of a new site, the installer, the web server template
 cp -R "$head/defaults" "$out/defaults"

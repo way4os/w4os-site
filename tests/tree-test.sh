@@ -7,6 +7,7 @@ set_up() {
     export W4OS_SITE_SEED="$TMP/share/site" W4OS_SITE_ROOT="$TMP/lib/w4os/www" W4OS_SITE_OLD="$TMP/lib/w4os-site"
     export W4OS_SITE_PREVIOUS="$TMP/lib/opensim/www"
     export W4OS_SITE_OLD_TREE="$TMP/share/grav" W4OS_SITE_APACHE="$TMP/apache/w4os-site.conf"
+    export W4OS_SITE_LEGACY="$TMP/share/site-grav17"
     TREE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/bin/w4os-site-tree"
     seed 1
 }
@@ -29,6 +30,24 @@ seed() {
     [ "$1" = 1 ] && echo "old" >"$s/user/plugins/w4os/gone.php"
     echo "title: 'My grid'" >"$s/user/config/site.yaml"
     echo "# Home" >"$s/user/pages/01.home/default.md"
+}
+
+# legacy: the units the package ships for PHP older than 8.3: Grav 1.7, a Quark 2 for it (a file of its own the other has not)
+legacy() {
+    local l=$W4OS_SITE_LEGACY
+    mkdir -p "$l/system" "$l/user/themes/quark2" "$W4OS_SITE_SEED/user/themes/quark2"
+    echo "<?php // grav 1.7" >"$l/index.php"
+    echo "grav 1.7" >"$l/system/defines.php"
+    echo "grav 1.7 alone" >"$l/system/only17.php"
+    echo "quark2 1.1.12" >"$l/user/themes/quark2/quark2.php"
+    echo "quark2 1.1.22" >"$W4OS_SITE_SEED/user/themes/quark2/quark2.php"
+}
+
+# php VERSION_ID VERSION: the PHP of the site, at a version
+php_at() {
+    printf '#!/bin/sh\ncase "$2" in *VERSION_ID*) echo %s ;; *) echo %s ;; esac\n' "$1" "$2" >"$TMP/php"
+    chmod +x "$TMP/php"
+    export W4OS_SITE_PHP="$TMP/php"
 }
 
 test_a_new_site_is_the_seed_where_it_is_served_with_what_the_package_put() {
@@ -133,4 +152,36 @@ test_the_web_user_writes_only_its_own_tree_never_what_opensim_owns() {
     assert_not_contains "g+w" "$(cat "$root/bin/w4os-site-tree" "$root/packaging/w4os-site.postinst")"
     "$TREE" configure >/dev/null
     assert_equals 755 "$(stat -c %a "$(dirname "$W4OS_SITE_ROOT")" 2>/dev/null || stat -f %Lp "$(dirname "$W4OS_SITE_ROOT")")"
+}
+
+test_php_older_than_8_3_gets_grav_1_7_and_its_quark_2_then_grav_2_once_php_is_newer() {
+    legacy
+    php_at 80236 8.2.36
+    local out
+    out=$("$TREE" configure)
+    assert_contains "PHP 8.2.36: Grav 1.7 (Grav 2 needs PHP 8.3)" "$out"
+    assert_equals "grav 1.7" "$(cat "$W4OS_SITE_ROOT/system/defines.php")"
+    assert_equals "quark2 1.1.12" "$(cat "$W4OS_SITE_ROOT/user/themes/quark2/quark2.php")"
+    # The rest of the seed as on any PHP
+    assert_equals "w4os 1" "$(cat "$W4OS_SITE_ROOT/user/plugins/w4os/w4os.php")"
+    assert_equals "title: 'My grid'" "$(cat "$W4OS_SITE_ROOT/user/config/site.yaml")"
+    # Upgraded on the same PHP: still Grav 1.7, as put
+    seed 2
+    legacy
+    "$TREE" configure >/dev/null
+    assert_equals "grav 1.7" "$(cat "$W4OS_SITE_ROOT/system/defines.php")"
+    assert_equals "w4os 2" "$(cat "$W4OS_SITE_ROOT/user/plugins/w4os/w4os.php")"
+    # PHP 8.4 (Debian 13): Grav 2 and its Quark 2, what Grav 1.7 had alone gone
+    php_at 80428 8.4.28
+    out=$("$TREE" configure)
+    assert_not_contains "Grav 1.7" "$out"
+    assert_equals "grav 2" "$(cat "$W4OS_SITE_ROOT/system/defines.php")"
+    assert_equals "quark2 1.1.22" "$(cat "$W4OS_SITE_ROOT/user/themes/quark2/quark2.php")"
+    assert_file_not_exists "$W4OS_SITE_ROOT/system/only17.php"
+}
+
+test_a_package_without_the_units_for_old_php_keeps_the_seed_whatever_the_php() {
+    php_at 80236 8.2.36
+    "$TREE" configure >/dev/null
+    assert_equals "grav 1" "$(cat "$W4OS_SITE_ROOT/system/defines.php")"
 }

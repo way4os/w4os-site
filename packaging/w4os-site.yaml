@@ -1,7 +1,8 @@
 # The light website of an OpenSimulator grid, built by apt-package from build/w4os-site, prepared by packaging/build.
 # The site, a standard Grav site the web user owns and Grav's own tools update, in /var/lib/w4os/www (made from the seed the
 # package keeps in /usr/share/w4os-site/site; its upgrades replace only what the site has as the package put it). Nothing is
-# enabled in a web server by installing it: w4os-site setup, then w4os-site web.
+# enabled in a web server by installing it: w4os-site setup, then w4os-site web. Where PHP is older than 8.3 (Debian 12), the site
+# gets Grav 1.7 and its Quark 2 from /usr/share/w4os-site/site-grav17 instead, until PHP is newer.
 name: w4os-site
 arch: all
 platform: linux
@@ -23,17 +24,18 @@ license: AGPL-3.0-or-later
 depends:
   - bash-tools
   - curl
-  - php-cli (>= 2:8.3) | php8.3-cli | php8.4-cli
-  - php-curl | php8.3-curl | php8.4-curl
-  - php-gd | php8.3-gd | php8.4-gd
-  - php-mbstring | php8.3-mbstring | php8.4-mbstring
-  - php-xml | php8.3-xml | php8.4-xml
-  - php-zip | php8.3-zip | php8.4-zip
-  - php-intl | php8.3-intl | php8.4-intl
+  # PHP 8.2 runs Grav 1.7 (Debian 12), 8.3 and newer Grav 2
+  - php-cli (>= 2:8.2) | php8.2-cli | php8.3-cli | php8.4-cli
+  - php-curl | php8.2-curl | php8.3-curl | php8.4-curl
+  - php-gd | php8.2-gd | php8.3-gd | php8.4-gd
+  - php-mbstring | php8.2-mbstring | php8.3-mbstring | php8.4-mbstring
+  - php-xml | php8.2-xml | php8.3-xml | php8.4-xml
+  - php-zip | php8.2-zip | php8.3-zip | php8.4-zip
+  - php-intl | php8.2-intl | php8.3-intl | php8.4-intl
   # The web assets (the pictures of the grid, JPEG 2000) are decoded by Imagick and nothing else
-  - php-imagick | php8.3-imagick | php8.4-imagick
+  - php-imagick | php8.2-imagick | php8.3-imagick | php8.4-imagick
 recommends:
-  - php-fpm | php8.3-fpm | php8.4-fpm
+  - php-fpm | php8.2-fpm | php8.3-fpm | php8.4-fpm
 suggests:
   - apache2 | caddy | nginx
 
@@ -44,6 +46,9 @@ contents:
       mode: 0644
   - src: build/w4os-site/grav
     dst: /usr/share/w4os-site/site
+    type: tree
+  - src: build/w4os-site/grav17
+    dst: /usr/share/w4os-site/site-grav17
     type: tree
   - src: build/w4os-site/bin
     dst: /usr/share/w4os-site/bin

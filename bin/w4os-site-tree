@@ -7,12 +7,14 @@
 #       into it (the content of the site, the plugins and themes added to it, the web server configuration it wrote); a site in
 #       the folder of before (/var/lib/opensim/www) moved to its folder, a link left where it was; an existing
 #       site: what the package ships of it replaced where the site still has it as the package put it (Grav, each plugin, each
-#       theme), the rest left as it is and said
+#       theme), the rest left as it is and said. Where the PHP of the site is older than 8.3 (Debian 12), Grav is Grav 1.7 and Quark 2
+#       the last one for it (the package's site-grav17), until a configure finds a PHP that runs Grav 2
 #
 # The places, for the tests: W4OS_SITE_SEED (/usr/share/w4os-site/site), W4OS_SITE_ROOT (/var/lib/w4os/www), W4OS_SITE_PREVIOUS
 # (/var/lib/opensim/www, the folder of the site before), W4OS_SITE_OLD (/var/lib/w4os-site, the content of the site of before),
 # W4OS_SITE_OLD_TREE (/usr/share/w4os-site/grav, its Grav of before), W4OS_SITE_APACHE (/etc/apache2/sites-available/w4os-site.conf),
-# W4OS_SITE_OWNER (www-data).
+# W4OS_SITE_OWNER (www-data), W4OS_SITE_LEGACY (/usr/share/w4os-site/site-grav17, the units for PHP older than 8.3), W4OS_SITE_PHP
+# (php, the PHP whose version chooses).
 set -eo pipefail
 
 SEED=${W4OS_SITE_SEED:-/usr/share/w4os-site/site}
@@ -22,6 +24,9 @@ OLD=${W4OS_SITE_OLD:-/var/lib/w4os-site}
 OLD_TREE=${W4OS_SITE_OLD_TREE:-/usr/share/w4os-site/grav}
 APACHE=${W4OS_SITE_APACHE:-/etc/apache2/sites-available/w4os-site.conf}
 OWNER=${W4OS_SITE_OWNER:-www-data}
+LEGACY=${W4OS_SITE_LEGACY:-/usr/share/w4os-site/site-grav17}
+# Set by configure where the units of LEGACY replace the seed's: PHP older than 8.3, which Grav 2 needs
+ON_LEGACY=
 # What the package put, and how (the checksum of each file), to know what the site changed since
 MANIFEST=user/data/w4os-site/manifest
 
@@ -53,16 +58,6 @@ unit_files() {
     fi
 }
 
-# manifest TREE: unit, checksum, path of each file of the units of TREE (tab separated)
-manifest() {
-    local unit file
-    units "$1" | while read -r unit; do
-        unit_files "$1" "$unit" | while read -r file; do
-            printf '%s\t%s\t%s\n' "$unit" "$(file_sum "$1/$file")" "$file"
-        done
-    done
-}
-
 # as_put UNIT OLDMANIFEST: whether the site still has the files of UNIT as the package put them (none changed or removed);
 # the files the site added (a logo copied into a theme) do not count
 as_put() {
@@ -75,22 +70,34 @@ as_put() {
     [ -n "$found" ]
 }
 
-# put UNIT: the files of UNIT copied from the seed into the site, the ones of before that the seed no longer has removed
+# source_of UNIT: the tree the package takes UNIT from: LEGACY for its units where the PHP of the site is older than 8.3, the seed else
+source_of() {
+    if [ -n "$ON_LEGACY" ] && { [ "$1" = core ] || [ -d "$LEGACY/user/$1" ]; }; then echo "$LEGACY"; else echo "$SEED"; fi
+}
+
+# put UNIT [OLDMANIFEST]: the files of UNIT copied from its source into the site, the ones of before that it no longer has removed
 put() {
-    local unit=$1 old=${2:-} sum file
+    local unit=$1 old=${2:-} from sum file
+    from=$(source_of "$unit")
     if [ -n "$old" ]; then
         local u
         while IFS=$'\t' read -r u sum file; do
-            [ "$u" = "$unit" ] && [ ! -f "$SEED/$file" ] && rm -f "${ROOT:?}/$file"
+            [ "$u" = "$unit" ] && [ ! -f "$from/$file" ] && rm -f "${ROOT:?}/$file"
         done <"$old"
     fi
-    (cd "$SEED" && unit_files . "$unit" | tar -cf - -T -) | (cd "$ROOT" && tar -xf -)
+    (cd "$from" && unit_files . "$unit" | tar -cf - -T -) | (cd "$ROOT" && tar -xf -)
 }
 
-# install: the seed where the site is served, a new site
+# install: the seed where the site is served, a new site; the units of LEGACY instead of its own where they are the ones to put
 install_site() {
+    local unit
     [ -d "$(dirname "$ROOT")" ] || install -d -m 755 "$(dirname "$ROOT")"
     cp -Rp "$SEED" "$ROOT"
+    [ -n "$ON_LEGACY" ] || return 0
+    while read -r unit; do
+        (cd "$ROOT" && unit_files "$SEED" "$unit" | while read -r file; do rm -f "$file"; done)
+        put "$unit"
+    done < <(units "$LEGACY")
 }
 
 # migrate: the content of the site of before (its config, pages, accounts, data, sessions; the plugins and themes added to its
@@ -173,21 +180,28 @@ upgrade() {
     rm -f "$new" "$kept"
 }
 
-# manifest_unit UNIT: the lines of the manifest of the seed for UNIT
+# manifest_unit UNIT: the lines of the manifest for UNIT as the package puts it (from its source)
 manifest_unit() {
-    local file
-    unit_files "$SEED" "$1" | while read -r file; do
-        printf '%s\t%s\t%s\n' "$1" "$(file_sum "$SEED/$file")" "$file"
+    local file from
+    from=$(source_of "$1")
+    unit_files "$from" "$1" | while read -r file; do
+        printf '%s\t%s\t%s\n' "$1" "$(file_sum "$from/$file")" "$file"
     done
 }
 
 configure() {
+    local php
+    php=$(${W4OS_SITE_PHP:-php} -r 'echo PHP_VERSION_ID;' 2>/dev/null || echo 0)
+    if [ -d "$LEGACY" ] && [ "$php" -lt 80300 ]; then
+        ON_LEGACY=1
+        say "PHP $(${W4OS_SITE_PHP:-php} -r 'echo PHP_VERSION;' 2>/dev/null): Grav 1.7 (Grav 2 needs PHP 8.3), until PHP is 8.3 or newer"
+    fi
     [ -d "$ROOT" ] || [ -L "$PREVIOUS" ] || [ ! -d "$PREVIOUS" ] || move
     if [ ! -d "$ROOT" ]; then
         install_site
         [ ! -d "$OLD" ] || [ -d "$OLD.migrated" ] || migrate
         mkdir -p "$(dirname "$ROOT/$MANIFEST")"
-        manifest "$SEED" >"$ROOT/$MANIFEST"
+        units "$SEED" | while read -r unit; do manifest_unit "$unit"; done >"$ROOT/$MANIFEST"
     else
         upgrade
     fi

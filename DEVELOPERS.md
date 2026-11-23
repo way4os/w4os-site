@@ -5,6 +5,7 @@ The site is Grav, its official plugins and the w4os plugin, assembled at fixed v
 ## Layout
 
 - `dependencies.txt`: Grav, its plugins and the theme Quark2 at their tags; `grav-plugin-w4os` from its release zip (the newest of `../grav-plugin-w4os/dist/`, built there with `vendor/bin/build-tools build zip`), which carries the OpenSim engine and helpers: the package of the site depends on no OpenSim package.
+- `dependencies-grav17.txt`: what the package ships instead for PHP older than 8.3 (Debian 12), in `/usr/share/w4os-site/site-grav17`: Grav 1.7 and Quark2 1.1.12, its last version for Grav 1.7. `bin/w4os-site-tree` puts these units where the PHP of the site is older than 8.3, and the seed's once it is newer; the plugins are the same on both. `tests/tree-test.sh` covers the choice; the whole site is checked on both lines in containers (debian:bookworm, debian:trixie).
 - `theme/w4os`: the light theme, a child of Quark2 (Grav theme inheritance: the `theme://` stream looks in w4os, then in quark2): the name of the grid as logo, the main menu centered and on the right only the tools (`partials/theme-toggle.html.twig`: the languages, the menu of the visitor of the w4os plugin, day and night), its footer.
 - `defaults/`: the settings (`config/`) and the pages (`pages/`, English and French) of a new site, in the tree of the site (`user/config`, `user/pages`) by `packaging/build` (an upgrade does not bring new defaults to an existing site).
 - `grav.env`: the `.env` of Grav in the package, which puts its caches, logs, tmp and backups out of the code.

@@ -6,7 +6,9 @@ It is [Grav](https://getgrav.org) with the [w4os plugin](https://github.com/magi
 
 ## Requirements
 
-- A Debian or Ubuntu server with PHP 8.3 or newer and a web server (Apache, Caddy or nginx; PHP-FPM recommended).
+- A Debian or Ubuntu server with PHP 8.2 or newer and a web server (Apache, Caddy or nginx; PHP-FPM recommended): Debian 12, Debian 13,
+  Ubuntu 24.04, Ubuntu 26.04. With PHP 8.2 (Debian 12) the package gives the site Grav 1.7, with 8.3 or newer Grav 2; the zip needs
+  PHP 8.3 or newer. Grav 1.7 is kept until PHP 8.3's end of life at the latest (31 December 2027), see the plugin's ROADMAP.
 - An OpenSimulator grid, on this machine or another one: with its engine API (w4os-engine) and an API key for the site, or with its Robust database reachable from the site (the w4os plugin carries the engine and the helpers: no OpenSim package is needed on the server of the site).
 
 ## Install
@@ -16,7 +18,7 @@ It is [Grav](https://getgrav.org) with the [w4os plugin](https://github.com/magi
 The site as a zip (`w4os-site-<version>.zip`, on the release): Grav, its plugins, the theme, Font Awesome and the defaults of a new site, nothing to build or download.
 
 1. Unzip it where the web server serves it (`unzip w4os-site-<version>.zip -d /var/www/`), and give the web server the folders it writes: `user/config`, `user/pages`, `user/accounts`, `user/data` (with `user/data/sessions`, the sessions), `assets`, `images`, `cache`, `tmp`, `logs` and `backup` of `w4os-site/`.
-2. Point the web server at `w4os-site/` (the configurations Grav gives are in `webserver-configs/`), with PHP 8.3 or later and its extensions curl, gd, mbstring, xml, zip, intl and imagick (with ImageMagick's OpenJPEG delegate, `libopenjp2-7` on Debian, for the JPEG 2000 pictures of the grid; pdo_mysql too, for the engine bundled with the plugin).
+2. Point the web server at `w4os-site/` (the configurations Grav gives are in `webserver-configs/`), with PHP 8.3 or later (Grav 2) and its extensions curl, gd, mbstring, xml, zip, intl and imagick (with ImageMagick's OpenJPEG delegate, `libopenjp2-7` on Debian, for the JPEG 2000 pictures of the grid; pdo_mysql too, for the engine bundled with the plugin).
 3. Connect it to the grid in `user/config/plugins/w4os.yaml`: `engine: remote`, `api_url` (the engine API, `https://grid.example.org/api`), `url` (the helpers, for the blocks) and `grid`; the API key of the site (`opensim api-key create w4os-site`, on the machine of the grid) in `user/data/w4os/api.json`, `{"api_key": "osk_..."}`, readable by the web server only. With Grav's admin, the settings page of the plugin does both.
 
 To try it on a computer: `php -S localhost:8000 system/router.php` in `w4os-site/`.
@@ -65,8 +67,13 @@ The sessions are kept in a folder of the site, not the system's: Debian and Ubun
 | The site: Grav, its plugins and themes, its pages, settings, accounts, API key, sessions, caches and logs (a standard Grav site, the web server's user's) | `/var/lib/w4os/www`, the document root |
 | The site the package ships, for a new site and its upgrades (never served) | `/usr/share/w4os-site/site` |
 | What the package put in the site, file by file | `/var/lib/w4os/www/user/data/w4os-site/manifest` |
+| Grav 1.7 and its Quark 2, for PHP older than 8.3 (never served) | `/usr/share/w4os-site/site-grav17` |
 
 An upgrade of the package replaces Grav, a plugin or a theme of the site only where the site still has it as the package put it; one the site changed or updated (GPM, the admin) is left as it is, and the upgrade says so, as is a plugin the site removed. The pages, the settings and the accounts are never touched; neither is the site by the removal of the package, even purged.
+
+Where PHP is older than 8.3 (Debian 12), Grav 2 cannot run: the site gets Grav 1.7 and the last Quark 2 made for it, and the same
+plugins. Once PHP is 8.3 or newer (an upgrade to Debian 13), the next upgrade of the package, or `sudo dpkg-reconfigure w4os-site`,
+gives it Grav 2 and its Quark 2, where it still has them as the package put them.
 
 A site installed by a version before this one (Grav in `/usr/share/w4os-site/grav`, the content in `/var/lib/w4os-site`) moves to `/var/lib/w4os/www` at the upgrade, with its content, the plugins and themes added to it, and the root of the Apache configuration `w4os-site web` wrote; the folders of before are kept in `/var/lib/w4os-site.migrated`.
 

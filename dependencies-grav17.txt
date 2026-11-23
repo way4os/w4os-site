@@ -1,0 +1,5 @@
+# What the site ships instead of dependencies.txt where PHP is older than 8.3 (Debian 12), which Grav 2 needs: Grav 1.7, and the
+# last Quark 2 for it (1.1.13 and later need Grav 2.1); bin/w4os-site-tree puts them until the site's PHP is 8.3 or newer. The
+# plugins of dependencies.txt run on both.
+. https://github.com/getgrav/grav.git 1.7.53.11
+user/themes/quark2 https://github.com/getgrav/grav-theme-quark2.git 1.1.12
