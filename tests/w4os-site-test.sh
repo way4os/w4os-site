@@ -199,6 +199,22 @@ test_web_caddy_is_a_site_block_of_its_own_to_import_next_to_other_sites() {
     fi
 }
 
+test_web_apache_hands_php_to_the_socket_its_fpm_pool_names_even_before_php_fpm_runs() {
+    local etc version
+    etc=$(mktemp -d)
+    version=$(php -r 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;')
+    mkdir -p "$etc/$version/fpm/pool.d" "$etc/7.4/fpm/pool.d"
+    printf '%s\n' '[www]' 'user = www-data' "; listen = /run/php/commented.sock" "listen = /run/php/php$version-fpm.sock" >"$etc/$version/fpm/pool.d/www.conf"
+    printf '%s\n' '[www]' 'listen = /run/php/php7.4-fpm.sock' >"$etc/7.4/fpm/pool.d/www.conf"
+    assert_contains "SetHandler \"proxy:unix:/run/php/php$version-fpm.sock|fcgi://localhost\"" "$(W4OS_SITE_PHP_ETC=$etc site web apache)"
+    # Another version only: its pool; a pool on a TCP port: no socket
+    rm -r "${etc:?}/$version"
+    assert_contains "proxy:unix:/run/php/php7.4-fpm.sock" "$(W4OS_SITE_PHP_ETC=$etc site web apache)"
+    printf '%s\n' '[www]' 'listen = 127.0.0.1:9000' >"$etc/7.4/fpm/pool.d/www.conf"
+    assert_not_contains "proxy:unix:/run/php/php7.4" "$(W4OS_SITE_PHP_ETC=$etc site web apache)"
+    rm -rf "$etc"
+}
+
 test_web_apache_on_port_80_adds_no_listen() {
     assert_not_contains "Listen" "$(site web apache --host grid.example.org)"
 }

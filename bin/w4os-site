@@ -137,9 +137,17 @@ status() {
     curl -fsS --max-time 15 -o /dev/null "$url/blocks/grid-info" && echo "blocks:  answer" || warning "blocks:  do not answer"
 }
 
-# The socket of PHP-FPM, when there is one
+# The socket of PHP-FPM, as its pool says it (listen, in /etc/php/<version>/fpm/pool.d, the version of the site's PHP first), whether
+# PHP-FPM runs yet or not; else a socket that is there; nothing without PHP-FPM, or with a pool on a TCP port
 php_socket() {
-    local socket
+    local etc=${W4OS_SITE_PHP_ETC:-/etc/php} version conf listen socket
+    version=$(php -r 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;' 2>/dev/null || true)
+    # shellcheck disable=SC2012 # the newest version first; their names have no space
+    for conf in ${version:+"$etc/$version"/fpm/pool.d/*.conf} $(ls -r "$etc"/*/fpm/pool.d/*.conf 2>/dev/null); do
+        [ -f "$conf" ] || continue
+        listen=$(sed -n 's/^[[:space:]]*listen[[:space:]]*=[[:space:]]*\(\/[^[:space:];]*\).*/\1/p' "$conf" | head -1)
+        [ -n "$listen" ] && echo "$listen" && return
+    done
     for socket in /run/php/php-fpm.sock /run/php/php*-fpm.sock /run/php/php*-fpm-*default.sock; do
         [ -S "$socket" ] && echo "$socket" && return
     done
