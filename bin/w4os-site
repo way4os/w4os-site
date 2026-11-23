@@ -2,9 +2,9 @@
 # w4os-site: set up the light website of an OpenSimulator grid.
 #
 #   w4os-site setup [--api <engine API>] [--url <helpers>] [--key <key>] [--grid <nick>] [--title <title>] [--no-mail | --mail]
-#       connect the site to the engine API of a grid, at its own address (http://127.0.0.1:8780/api on the machine of the grid),
-#       and to its helpers for the blocks (asked when not given); --no-mail on a test site: the engine mails nothing, the
-#       confirmation links are shown on the page
+#       connect the site to the engine API of a grid, at its own address (on the machine of the grid, the one opensim web GRID
+#       api serves, proposed), and to its helpers for the blocks (asked when not given); --no-mail on a test site: the engine mails
+#       nothing, the confirmation links are shown on the page
 #   w4os-site status
 #       what the site is connected to, and whether the API answers
 #   w4os-site web apache|caddy|nginx [--host <name>] [--port <port>] [--install]
@@ -42,6 +42,26 @@ web_account() {
 # owner: OWNER and GROUP set from the engine's settings, unless the environment gives them
 owner() {
     [ -n "$OWNER" ] || read -r OWNER GROUP < <(web_account) || true
+}
+
+# engine_api_urls [GRID]: "nick address" of the engine API of each grid of this machine (of GRID alone when given), as opensim web
+# GRID api serves it (its port is the grid's): read with the engine installed here, else with the one the site's w4os plugin
+# carries; nothing without a grid here, nor for a grid whose API has no port yet
+engine_api_urls() {
+    local code engine=${W4OS_SITE_ENGINE:-/usr/share/w4os-engine}
+    # shellcheck disable=SC2016 # PHP's own variables
+    code='foreach (array_slice($argv, 2) as $autoload) { require $autoload; }
+        $environment = W4OS\Engine\Runtime\Environment::system(W4OS\Engine\Config\Layout::load());
+        $grids = $argv[1] !== "" ? array_filter([W4OS\Engine\Models\Grid::find($environment, $argv[1])]) : W4OS\Engine\Models\Grid::all($environment);
+        foreach ($grids as $grid) {
+            $port = method_exists($grid, "knownApiPort") ? $grid->knownApiPort() : null;
+            $port === null || print($grid->nick() . " http://127.0.0.1:$port/api" . PHP_EOL);
+        }'
+    if [ -f "$engine/vendor/autoload.php" ]; then
+        ${W4OS_SITE_PHP:-php} -r "$code" "${1:-}" "$engine/vendor/autoload.php" 2>/dev/null && return
+    fi
+    [ ! -f "$ROOT/user/plugins/w4os/vendor/autoload.php" ] ||
+        ${W4OS_SITE_PHP:-php} -r "$code" "${1:-}" "$ROOT/vendor/autoload.php" "$ROOT/user/plugins/w4os/vendor/autoload.php" 2>/dev/null || true
 }
 
 # The value of a top-level key of a YAML file, quotes removed
@@ -102,10 +122,16 @@ setup() {
     done
     [ -d "$CONFIG" ] || die "$CONFIG is missing: is the package installed?"
     # The engine API at its own address, never under the helpers: on the machine of the grid, its local listener
-    local suggested
+    # proposed: the one the site has, else the one of the grid of this machine (of --grid, or the only one), as the engine gives it
+    local suggested known=
     suggested=$(yaml_get "$CONFIG/plugins/w4os.yaml" api_url)
-    [ -n "$suggested" ] || ! command -v opensim >/dev/null || suggested=http://127.0.0.1:8780/api
-    api=${api:-$(ask 'Address of the engine API (https://grid.example.org/api, or http://127.0.0.1:8780/api: opensim web GRID api)' "$suggested")}
+    if [ -z "$suggested" ] && [ -z "$api" ]; then
+        known=$(engine_api_urls "$grid")
+        [ "$(grep -c . <<<"$known")" != 1 ] || suggested=${known#* }
+    fi
+    local mine='on the machine of the grid, the one opensim web GRID api serves'
+    [ -z "$known" ] || mine="on this machine: $(tr '\n' ',' <<<"$known" | sed 's/,$//; s/,/, /g')"
+    api=${api:-$(ask "Address of the engine API (https://grid.example.org/api, or $mine)" "$suggested")}
     [ -n "$api" ] || die "the address of the engine API is needed (--api)"
     api=${api%/}
     url=${url:-$(ask 'Address of the helpers of the grid (https://grid.example.org/helpers)' "$(yaml_get "$CONFIG/plugins/w4os.yaml" url)")}

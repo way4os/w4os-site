@@ -19,6 +19,8 @@ set_up() {
     mkdir -p "$SITE/user/data" "$SITE/cache"
     cp -R "$ROOT/defaults/config" "$SITE/user/config"
     export W4OS_SITE_ROOT="$SITE" W4OS_SITE_SHARE="$ROOT" W4OS_SITE_OWNER="$(id -un)"
+    # No engine of this machine, no w4os.conf of the user: nothing proposed from them, but where a test gives them
+    export W4OS_SITE_ENGINE="$SITE/no-engine" HOME="$SITE/home"
 }
 
 tear_down() {
@@ -58,15 +60,29 @@ test_setup_connects_the_site_and_keeps_the_key_out_of_the_config() {
 
 test_setup_needs_the_address_of_the_engine_api_never_the_helpers_api() {
     local output
-    # A machine with the engine installed has its local listener, which answers
-    [ ! -e /usr/share/w4os-engine ] || { bashunit::skip "the engine is installed here: its local listener answers"; return 0; }
-    # Only the helpers' address: refused (no address of the engine API, or the one of the local listener when the machine has
-    # opensim, which does not answer here), never their /api
+    # Only the helpers' address, on a machine without a grid: refused (no address of the engine API), never their /api
     output=$(site setup --url "http://127.0.0.1:$PORT" --key osk_test)
     assert_exit_code 1
     assert_contains "engine API" "$output"
     assert_not_contains "127.0.0.1:$PORT/api" "$output"
     assert_file_contains "$SITE/user/config/plugins/w4os.yaml" "api_url: ''"
+}
+
+test_setup_proposes_the_engine_api_of_the_grid_of_this_machine_at_the_port_the_engine_keeps_for_it() {
+    local built="$ROOT/build/w4os-site/grav" output
+    grep -qs knownApiPort "$built/user/plugins/w4os/vendor/w4os/w4os-engine/src/Models/Grid.php" ||
+        { bashunit::skip "no Grav tree built with an engine that keeps the port of a grid's API (dev/build.sh)"; return 0; }
+    # A grid of this machine, the port of its engine API kept with it; the engine of this machine, the one of the tree built
+    mkdir -p "$HOME/.config/w4os" "$SITE/etc/grids/fowl" "$SITE/engine/vendor"
+    printf '[Defaults]\nEtcRoot = %s\n' "$SITE/etc" >"$HOME/.config/w4os/w4os.conf"
+    printf '[Grid]\nApiPort = 8005\n' >"$SITE/etc/grids/fowl/fowl.conf"
+    : >"$SITE/etc/grids/fowl/Robust.HG.ini"
+    printf '<?php require %s; require %s;\n' "'$built/vendor/autoload.php'" "'$built/user/plugins/w4os/vendor/autoload.php'" \
+        >"$SITE/engine/vendor/autoload.php"
+    # Proposed and taken (nothing typed), then asked there, where nothing answers in this test
+    output=$(W4OS_SITE_ENGINE="$SITE/engine" site setup --url "http://127.0.0.1:$PORT/helpers" --key osk_test)
+    assert_contains "does not answer at http://127.0.0.1:8005/api" "$output"
+    assert_not_contains "8780" "$output"
 }
 
 test_setup_refuses_a_key_the_api_refuses() {
