@@ -154,6 +154,31 @@ php_socket() {
     return 0
 }
 
+# check_site BASE PORT HOST SOCKET: whether the site answers through PHP on this machine (its page with its title, never PHP's
+# source), said either way: what is missing when it does not
+check_site() {
+    local base=$1 port=$2 host=$3 socket=$4 page title
+    title=$(yaml_get "$CONFIG/site.yaml" title)
+    title=${title//&/&amp;}
+    title=${title//\'/&#039;}
+    page=$(curl -s --max-time 15 -H "Host: $host" "http://127.0.0.1:$port/" 2>/dev/null || true)
+    if grep -q '<title>' <<<"$page" && ! grep -q '<?php' <<<"$page" && { [ -z "$title" ] || grep -qF -- "$title" <<<"$page"; }; then
+        success "the site answers at $base/"
+    elif [ -n "$socket" ] && [ ! -S "$socket" ]; then
+        # Its service by the name of its socket (php8.2-fpm), as Debian names both
+        local service
+        service=$(basename "$socket" .sock)
+        [[ $service == php*-fpm ]] || service=php-fpm
+        warning "PHP does not run: PHP-FPM is not running ($socket is missing): systemctl start $service, the site is at $base/"
+    elif [ -z "$page" ]; then
+        warning "Apache does not answer on port $port yet: start it (systemctl start apache2), the site is at $base/"
+    elif grep -q '<?php' <<<"$page"; then
+        warning "Apache shows the PHP source of the site, it runs no PHP for it: install php-fpm, then w4os-site web apache --install again"
+    else
+        warning "the site does not answer as it should at $base/: see /var/log/apache2/w4os-site-error.log"
+    fi
+}
+
 web() {
     local server=${1:-} host= port= install=
     shift || true
@@ -197,6 +222,9 @@ web() {
             return
         fi
         require a2ensite apache2ctl
+        # Never a site whose PHP Apache would show as text: PHP-FPM (its pool) or Apache's own PHP module
+        [ -n "$socket" ] || apache2ctl -M 2>/dev/null | grep -q php ||
+            die "no PHP for Apache: no pool of PHP-FPM (/etc/php/<version>/fpm/pool.d) and no PHP module of Apache: apt install php-fpm, then this command again"
         printf '%s\n' "$conf" >/etc/apache2/sites-available/w4os-site.conf
         a2enmod -q rewrite proxy_fcgi >/dev/null
         a2ensite -q w4os-site >/dev/null
@@ -211,7 +239,7 @@ web() {
         yaml_set "$CONFIG/system.yaml" custom_base_url "$base"
         chown "$OWNER:$OWNER" "$CONFIG/system.yaml" 2>/dev/null || true
         rm -rf "${W4OS_SITE_CACHE:-$ROOT/cache}"/* 2>/dev/null || true
-        success "the site answers at $base/"
+        check_site "$base" "$port" "$host" "$socket"
         ;;
     caddy)
         [ -n "$socket" ] || die "Caddy needs PHP-FPM"
