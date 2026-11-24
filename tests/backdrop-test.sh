@@ -47,6 +47,20 @@ test_the_pages_show_a_picture_of_each_mode_behind_them_as_grav_serves_it() {
     done
 }
 
+test_a_page_a_viewer_shows_has_none_whatever_the_page() {
+    built || return 0
+    local agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) SecondLife/7.1.11.15094 (Firestorm) Safari/537.36'
+    local base path page
+    for base in "$URL" "$PREFIXED"; do
+        for path in / /about; do
+            page=$(curl -sL -A "$agent" "$base$path")
+            assert_contains '</html>' "$page"
+            assert_not_contains 'w4os-backdrop' "$page"
+            assert_not_contains '/images/backdrop/' "$page"
+        done
+    done
+}
+
 test_the_welcome_page_of_the_viewer_has_none() {
     built || return 0
     assert_not_contains 'w4os-backdrop' "$(curl -s "$URL/welcome")"
