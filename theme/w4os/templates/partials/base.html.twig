@@ -52,3 +52,6 @@
     })();
     </script>
 {% endblock head %}
+
+{# A backdrop behind the pages (the w4os plugin's): the page dressed for it (css/custom.css) #}
+{% block body_classes %}{{ parent() }}{{ w4os_backdrop|default(false) ? ' w4os-backdrop' }}{% endblock %}
