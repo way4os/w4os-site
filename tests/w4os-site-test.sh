@@ -405,5 +405,7 @@ test_the_cards_of_a_page_stand_on_the_solid_surface_of_the_theme() {
     local css
     css=$(cat "$ROOT/theme/w4os/css/custom.css")
     assert_contains '.tool-cards li, .install-cards li { background-color: var(--q2-bg-elev); }' "$css"
+    # The surface of the boxes of the w4os plugin (what the grid is, the steps of the Connect block, the box of the search), the same
+    assert_contains ':root { --w4os-surface: var(--q2-bg-elev); }' "$css"
     assert_not_contains 'backdrop-filter' "$css"
 }

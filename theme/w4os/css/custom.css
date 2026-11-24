@@ -111,6 +111,8 @@ h2::before { display: none; }
 /* The cards on the solid surface of the theme, light or dark as the page, over a picture behind the page too; the steps of an install
    tinted with the accent over it */
 .tool-cards li, .install-cards li { background-color: var(--q2-bg-elev); }
+/* The boxes of the w4os plugin (what the grid is, the steps of the Connect block, the box of the search) on the same surface */
+:root { --w4os-surface: var(--q2-bg-elev); }
 .install-cards li { border-top: 3px solid var(--q2-accent); background-image: linear-gradient(color-mix(in srgb, var(--q2-accent) 5%, transparent), color-mix(in srgb, var(--q2-accent) 5%, transparent)); }
 .install-cards li a:last-child { display: inline-block; margin-top: .5rem; font-weight: 600; }
 
