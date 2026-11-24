@@ -406,7 +406,9 @@ test_the_cards_of_a_page_stand_on_the_solid_surface_of_the_theme() {
     css=$(cat "$ROOT/theme/w4os/css/custom.css")
     assert_contains '.tool-cards li, .install-cards li { background-color: var(--q2-bg-elev); }' "$css"
     # The surface of the boxes of the w4os plugin (what the grid is, the steps of the Connect block, the box of the search), the same
-    assert_contains ':root { --w4os-surface: var(--q2-bg-elev); }' "$css"
+    assert_contains ':root { --w4os-surface: var(--q2-bg-elev); --w4os-accent: var(--q2-accent); }' "$css"
+    # The accent of the w4os plugin (the step to do now, the row of a list chosen) the primary colour of the theme, on every page
+    assert_not_contains '.w4os-start { --w4os-accent' "$css"
     assert_not_contains 'backdrop-filter' "$css"
     # The install cards in a tint of the accent, solid too
     assert_contains '.install-cards li { border-top: 3px solid var(--q2-accent); background-color: color-mix(in srgb, var(--q2-accent) 10%, var(--q2-bg-elev)); }' "$css"

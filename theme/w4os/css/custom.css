@@ -40,8 +40,7 @@ h5 { font-size: 1rem; }
     --q2-focus-ring: color-mix(in oklab, var(--w4os-secondary) 60%, transparent);
 }
 a:hover { color: var(--q2-link-hover); }
-/* The Connect block of the w4os plugin: the step to do now framed and its number filled with the accent */
-.w4os-start { --w4os-accent: var(--q2-accent); }
+/* The Connect block of the w4os plugin: the number of the step to do now readable on the accent it is filled with */
 .w4os-start-step.is-next::before { color: var(--q2-accent-contrast); }
 .navbar-brand { display: inline-flex; align-items: center; gap: .5rem; }
 .w4os-credits { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .25rem .6rem; }
@@ -111,8 +110,9 @@ h2::before { display: none; }
 /* The cards on the solid surface of the theme, light or dark as the page, over a picture behind the page too, never see-through; the
    steps of an install in a solid tint of the accent */
 .tool-cards li, .install-cards li { background-color: var(--q2-bg-elev); }
-/* The boxes of the w4os plugin (what the grid is, the steps of the Connect block, the box of the search) on the same surface */
-:root { --w4os-surface: var(--q2-bg-elev); }
+/* The boxes of the w4os plugin (what the grid is, the steps of the Connect block, the box of the search) on the same surface; its accent
+   (the step to do now, the row of a list chosen) the primary colour of the theme */
+:root { --w4os-surface: var(--q2-bg-elev); --w4os-accent: var(--q2-accent); }
 .install-cards li { border-top: 3px solid var(--q2-accent); background-color: color-mix(in srgb, var(--q2-accent) 10%, var(--q2-bg-elev)); }
 .install-cards li a:last-child { display: inline-block; margin-top: .5rem; font-weight: 600; }
 
