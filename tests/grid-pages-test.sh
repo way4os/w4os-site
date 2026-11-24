@@ -55,3 +55,17 @@ test_password_is_the_page_of_a_lost_password_of_the_site() {
     # Its own address still the site's (its links, its mails)
     assert_equals 200 "$(tail -1 <<<"$(page "$PREFIXED" /forgot_password)")"
 }
+
+test_the_help_links_to_the_pages_of_the_site_under_its_prefix() {
+    built || return 0
+    local help
+    help=$(page "$PREFIXED" /help)
+    assert_equals 200 "$(tail -1 <<<"$help")"
+    assert_contains 'href="/opensim/register"' "$help"
+    assert_contains 'href="/opensim/forgot_password"' "$help"
+    # Every language of the site has it
+    local lang
+    for lang in fr de it nl pt-BR cy; do
+        assert_equals 200 "$(curl -s -o /dev/null -w '%{http_code}' -L "$PREFIXED/$lang/help")"
+    done
+}

@@ -59,7 +59,9 @@ test_the_help_page_has_the_connect_block_the_buttons_that_add_the_grid_and_log_i
     assert_contains '>Add the grid</a>' "$help"
     assert_contains 'href="secondlife:///app/login?grid=grid.example.org%3A8002"' "$help"
     assert_contains '>Connect</h2>' "$help"
-    # The advice on the viewer is text of the help page, under the block
-    assert_contains 'No viewer yet? Get <a href="https://www.firestormviewer.org/downloads/">Firestorm</a>' "$help"
-    assert_contains 'Pas encore de viewer ? Prenez <a href="https://www.firestormviewer.org/downloads/">Firestorm</a>' "$(curl -s "$URL/fr/help")"
+    # The help of w4os.org, whole, under the block: its steps, the viewer, the login URI of the grid
+    assert_contains '<h2>1. Create your avatar</h2>' "$help"
+    assert_contains '<h2>3. Connect</h2>' "$help"
+    assert_contains '<a href="https://www.firestormviewer.org/downloads/">Firestorm</a>, the most used' "$help"
+    assert_contains '<h2>1. Crée ton avatar</h2>' "$(curl -s "$URL/fr/help")"
 }
