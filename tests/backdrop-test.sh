@@ -32,7 +32,7 @@ test_the_pages_show_a_picture_of_each_mode_behind_them_as_grav_serves_it() {
     for base in "$URL" "$PREFIXED"; do
         page=$(curl -s "$base/help")
         origin=$(sed -E 's#^(https?://[^/]+).*#\1#' <<<"$base")
-        assert_matches '<body [^>]*class="[^"]* w4os-backdrop"' "$page"
+        assert_matches '<body [^>]*class="([^"]* )?w4os-backdrop[ "]' "$page"
         for mode in light dark; do
             for format in webp jpg; do
                 address=$(backdrop "$page" $mode $format)
