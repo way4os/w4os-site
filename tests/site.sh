@@ -4,6 +4,11 @@
 # resident, and God Test, a god, sign in with "secret"). Skipped when the tree is not built or older than the code (built()).
 
 set_up_before_script() {
+    site_set_up
+}
+
+# site_set_up: the site set up and served (set_up_before_script; a test file that sets up more calls it first)
+site_set_up() {
     ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
     GRAV_TREE=${W4OS_SITE_BUILD:-$ROOT/build/w4os-site/grav}
     [ -f "$GRAV_TREE/index.php" ] || return 0
@@ -34,6 +39,11 @@ EOF
 }
 
 tear_down_after_script() {
+    site_tear_down
+}
+
+# site_tear_down: the servers stopped, the site removed (tear_down_after_script)
+site_tear_down() {
     # The server's workers are its children
     pkill -P "${SITE_PID:-0}" 2>/dev/null || true
     kill "${SITE_PID:-}" "${API_PID:-}" 2>/dev/null || true
