@@ -42,8 +42,24 @@ tear_down_after_script() {
     site_tear_down
 }
 
+# serve_prefixed: the same site under /opensim, as Grav's own router serves a site in a folder (GRAV_BASEDIR), at PREFIXED
+serve_prefixed() {
+    [ -n "${SITE:-}" ] || return 0
+    mkdir -p "$TMP/www"
+    ln -s "$SITE" "$TMP/www/opensim"
+    local port=$((PORT + 1))
+    (cd "$TMP/www" && GRAV_BASEDIR=/opensim PHP_CLI_SERVER_WORKERS=2 exec php -S "127.0.0.1:$port" opensim/system/router.php \
+        >/dev/null 2>&1) &
+    PREFIX_PID=$!
+    PREFIXED="http://127.0.0.1:$port/opensim"
+    local tries=100
+    until curl -s -o /dev/null "$PREFIXED/" || [ $((tries -= 1)) -eq 0 ]; do sleep 0.2; done
+}
+
 # site_tear_down: the servers stopped, the site removed (tear_down_after_script)
 site_tear_down() {
+    pkill -P "${PREFIX_PID:-0}" 2>/dev/null || true
+    kill "${PREFIX_PID:-}" 2>/dev/null || true
     # The server's workers are its children
     pkill -P "${SITE_PID:-0}" 2>/dev/null || true
     kill "${SITE_PID:-}" "${API_PID:-}" 2>/dev/null || true

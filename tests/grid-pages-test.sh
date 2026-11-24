@@ -5,25 +5,9 @@
 # shellcheck source=site.sh
 source "$(dirname "${BASH_SOURCE[0]}")/site.sh"
 
-# The same site under /opensim, as Grav's own router serves a site in a folder (GRAV_BASEDIR)
 set_up_before_script() {
     site_set_up
-    [ -n "${SITE:-}" ] || return 0
-    mkdir -p "$TMP/www"
-    ln -s "$SITE" "$TMP/www/opensim"
-    PREFIX_PORT=$((PORT + 1))
-    (cd "$TMP/www" && GRAV_BASEDIR=/opensim PHP_CLI_SERVER_WORKERS=2 exec php -S "127.0.0.1:$PREFIX_PORT" opensim/system/router.php \
-        >/dev/null 2>&1) &
-    PREFIX_PID=$!
-    PREFIXED="http://127.0.0.1:$PREFIX_PORT/opensim"
-    local tries=100
-    until curl -s -o /dev/null "$PREFIXED/" || [ $((tries -= 1)) -eq 0 ]; do sleep 0.2; done
-}
-
-tear_down_after_script() {
-    pkill -P "${PREFIX_PID:-0}" 2>/dev/null || true
-    kill "${PREFIX_PID:-}" 2>/dev/null || true
-    site_tear_down
+    serve_prefixed
 }
 
 # page BASE PATH: the page, its code on its last line
