@@ -39,6 +39,9 @@ test_about_is_a_page_of_the_site() {
         assert_equals 200 "$(tail -1 <<<"$about")"
         assert_contains '<title>About | My grid' "$about"
     done
+    # In the languages of the site
+    assert_contains '<title>À propos | My grid' "$(page "$URL" /fr/about)"
+    assert_contains '<title>Über uns | My grid' "$(page "$PREFIXED" /de/about)"
 }
 
 test_password_is_the_page_of_a_lost_password_of_the_site() {
