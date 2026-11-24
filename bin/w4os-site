@@ -7,9 +7,11 @@
 #       nothing, the confirmation links are shown on the page
 #   w4os-site status
 #       what the site is connected to, and whether the API answers
-#   w4os-site web apache|caddy|nginx [--host <name>] [--port <port>] [--install]
-#       the configuration of a web server for the site (printed; installed and enabled with --install, Apache only), at the
-#       host and the port of the address of the site when not given (localhost on a new site)
+#   w4os-site web apache|caddy|nginx [--host <name>[,<name>...]] [--port <port>] [--prefix /<path>] [--install]
+#       the configuration of a web server for the site (printed; installed and enabled with --install, Apache and Caddy), at the
+#       host and the port of the address of the site when not given (localhost on a new site); with --prefix (Caddy), the site
+#       under that path, in a block of its own beside the one of the host, which it never changes (sites/<host>.w4os.caddyfile),
+#       with the helpers of the grid of this machine under it
 #   w4os-site --version
 #       the version of the site
 
@@ -189,13 +191,20 @@ status() {
 # The socket of PHP-FPM, as its pool says it (listen, in /etc/php/<version>/fpm/pool.d, the version of the site's PHP first), whether
 # PHP-FPM runs yet or not; else a socket that is there; nothing without PHP-FPM, or with a pool on a TCP port
 php_socket() {
-    local etc=${W4OS_SITE_PHP_ETC:-/etc/php} version conf listen socket
+    local etc=${W4OS_SITE_PHP_ETC:-/etc/php} version conf listen user socket pass
     version=$(php -r 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;' 2>/dev/null || true)
-    # shellcheck disable=SC2012 # the newest version first; their names have no space
-    for conf in ${version:+"$etc/$version"/fpm/pool.d/*.conf} $(ls -r "$etc"/*/fpm/pool.d/*.conf 2>/dev/null); do
-        [ -f "$conf" ] || continue
-        listen=$(sed -n 's/^[[:space:]]*listen[[:space:]]*=[[:space:]]*\(\/[^[:space:];]*\).*/\1/p' "$conf" | head -1)
-        [ -n "$listen" ] && echo "$listen" && return
+    owner
+    # The pool of the web user first, else another one, never the engine API's: it runs as the user of the grid, with its rights
+    for pass in web other; do
+        # shellcheck disable=SC2012 # the newest version first; their names have no space
+        for conf in ${version:+"$etc/$version"/fpm/pool.d/*.conf} $(ls -r "$etc"/*/fpm/pool.d/*.conf 2>/dev/null); do
+            [ -f "$conf" ] || continue
+            listen=$(sed -n 's/^[[:space:]]*listen[[:space:]]*=[[:space:]]*\(\/[^[:space:];]*\).*/\1/p' "$conf" | head -1)
+            [ -n "$listen" ] && [[ $listen != */w4os-api.sock ]] || continue
+            user=$(sed -n 's/^[[:space:]]*user[[:space:]]*=[[:space:]]*\([^[:space:];]*\).*/\1/p' "$conf" | head -1)
+            [ "$pass" = other ] || [ "$user" = "$OWNER" ] || continue
+            echo "$listen" && return
+        done
     done
     for socket in /run/php/php-fpm.sock /run/php/php*-fpm.sock /run/php/php*-fpm-*default.sock; do
         [ -S "$socket" ] && echo "$socket" && return
@@ -230,13 +239,77 @@ check_site() {
     return 1
 }
 
+# caddy_prefixed ADDRESSES PREFIX SOCKET: the site under PREFIX, in blocks of their own whose addresses have the path (Caddy prefers
+# them to the block of the host, whatever runs at its root, which they never change): the prefix alone sent to its folder, then
+# the helpers of the grid of this machine under it (opensim web GRID snippet caddy --prefix), then the site, the prefix stripped
+caddy_prefixed() {
+    local addresses=$1 prefix=$2 socket=$3 tab=$'\t' list= under= subtree= address grid helpers= matcher
+    IFS=, read -ra list <<<"${addresses//, /,}"
+    for address in "${list[@]}"; do
+        under+=${under:+, }$address$prefix
+        subtree+=${subtree:+, }$address$prefix/*
+    done
+    grid=$(yaml_get "$CONFIG/plugins/w4os.yaml" grid)
+    if [ -n "$grid" ] && command -v "${W4OS_SITE_OPENSIM:-opensim}" >/dev/null 2>&1; then
+        helpers=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" snippet caddy --prefix "$prefix" 2>/dev/null | sed -e '/^[[:space:]]*#/d' | sed -e '/./,$!d' || true)
+        # Paths under the prefix, or none: an empty matcher would take every path
+        matcher=$(sed -n 's/^@opensim_helpers path[[:space:]]*//p' <<<"$helpers")
+        [ -n "$matcher" ] || helpers=
+    fi
+    printf '# The w4os site under %s, made by w4os-site web caddy --prefix %s: blocks of their own beside the one of the host,\n' "$prefix" "$prefix"
+    printf '# which they never change; import this file in the Caddyfile of the machine\n'
+    printf '%s {\n%sredir * %s/ 308\n}\n' "$under" "$tab" "$prefix"
+    printf '%s {\n%sencode gzip\n' "$subtree" "$tab"
+    if [ -n "$helpers" ]; then
+        sed -e "s/^\(.\)/$tab\1/" <<<"$helpers"
+    else
+        printf '%s# The helpers of the grid: no helpers of a grid of this machine under %s (opensim web GRID snippet caddy --prefix %s\n' "$tab" "$prefix" "$prefix"
+        printf '%s# on the machine of the grid)\n' "$tab"
+    fi
+    printf '\n%shandle_path %s/* {\n' "$tab" "$prefix"
+    # Grav's Caddyfile, made for a site alone: its rules, its folder, and the address it is under for its own links (SCRIPT_NAME)
+    awk -v root="$ROOT" -v socket="$socket" -v prefix="$prefix" -v tab="$tab" '
+        !started { started = ($0 == "localhost"); next }
+        $0 == "encode gzip" { next }
+        $0 == "root * ." { $0 = "root * " root }
+        /^[[:space:]]*php_fastcgi / {
+            indent = $0; sub(/php_fastcgi.*/, "", indent)
+            print tab tab indent "php_fastcgi unix/" socket " {"
+            print tab tab indent tab "env SCRIPT_NAME " prefix "/index.php"
+            print tab tab indent "}"
+            next
+        }
+        { print (length($0) ? tab tab $0 : "") }
+    ' "$ROOT/webserver-configs/Caddyfile"
+    printf '%s}\n}\n' "$tab"
+}
+
+# caddy_install HOST TEXT: the file of the site in the sites of Caddy (sites/<host>.w4os.caddyfile), checked with the rest, then
+# Caddy reloaded; never the file of the host, nor the Caddyfile: a Caddyfile that does not import sites/ is said
+caddy_install() {
+    local etc=${W4OS_SITE_CADDY_ETC:-/etc/caddy} file said
+    file="$etc/sites/$1.w4os.caddyfile"
+    require caddy
+    grep -qE '^[[:space:]]*import[[:space:]]+(\./)?sites/' "$etc/Caddyfile" 2>/dev/null ||
+        die "the Caddyfile does not import its sites: add the line import sites/* to $etc/Caddyfile, then this command again"
+    mkdir -p "$etc/sites"
+    printf '%s\n' "$2" >"$file"
+    said=$(caddy validate --config "$etc/Caddyfile" --adapter caddyfile 2>&1) || {
+        rm -f "$file"
+        die "Caddy refuses the configuration, the site is not installed: $said"
+    }
+    said=$(systemctl reload caddy 2>&1) || die "the site is in $file, but Caddy did not reload ($said): reload it, then this command again"
+    success "the site is in $file, Caddy reloaded"
+}
+
 web() {
-    local server=${1:-} host= port= install=
+    local server=${1:-} host= port= install= prefix=
     shift || true
     while [ $# -gt 0 ]; do
         case $1 in
         --host) host=$2; shift 2 ;;
         --port) port=$2; shift 2 ;;
+        --prefix) prefix=$2; shift 2 ;;
         --install) install=1; shift ;;
         *) die "unknown option $1" ;;
         esac
@@ -302,15 +375,32 @@ web() {
         ;;
     caddy)
         [ -n "$socket" ] || die "Caddy needs PHP-FPM"
-        # A site block of its own (Grav's Caddyfile, made for a site alone, in braces), for the Caddyfile of the machine to import
-        # next to its other sites; http:// when the address of the site says so, else Caddy's https
-        local address=${host}${port:+:$port}
-        [ "$scheme" != http ] || address="http://$address"
-        printf '# The w4os site, made by w4os-site web caddy: import this file in the Caddyfile of the machine\n%s {\n' "$address"
-        local tab=$'\t'
-        sed -e '1,/^localhost$/d' -e "s|^root \* \.|root * $ROOT|" -e "s|php_fastcgi .*|php_fastcgi unix/$socket|" -e "s/^\(.\)/$tab\1/" \
-            "$ROOT/webserver-configs/Caddyfile"
-        echo '}'
+        # Its addresses (the hosts given, separated by commas), http:// when the address of the site says so, else Caddy's https
+        local tab=$'\t' addresses= address name names
+        IFS=, read -ra names <<<"$host"
+        for name in "${names[@]}"; do
+            address=$name${port:+:$port}
+            [ "$scheme" != http ] || address="http://$address"
+            addresses+=${addresses:+, }$address
+        done
+        prefix=/${prefix#/}
+        prefix=${prefix%/}
+        local text
+        if [ -z "$prefix" ]; then
+            # A site block of its own (Grav's Caddyfile, made for a site alone, in braces), for the Caddyfile of the machine to
+            # import next to its other sites
+            text=$(printf '# The w4os site, made by w4os-site web caddy: import this file in the Caddyfile of the machine\n%s {\n' "$addresses"
+                sed -e '1,/^localhost$/d' -e "s|^root \* \.|root * $ROOT|" -e "s|php_fastcgi .*|php_fastcgi unix/$socket|" -e "s/^\(.\)/$tab\1/" \
+                    "$ROOT/webserver-configs/Caddyfile"
+                echo '}')
+        else
+            text=$(caddy_prefixed "$addresses" "$prefix" "$socket")
+        fi
+        if [ -z "$install" ]; then
+            printf '%s\n' "$text"
+            return
+        fi
+        caddy_install "${names[0]}" "$text"
         ;;
     nginx)
         sed "s|root /home/USER/www/html;|root $ROOT;|; s|server_name localhost;|server_name $host;|; s|listen 80;|listen ${port:-80};|; s|unix:/var/run/php/php-fpm.sock|unix:${socket:-/run/php/php-fpm.sock}|" "$ROOT/webserver-configs/nginx.conf"

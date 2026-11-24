@@ -221,6 +221,77 @@ test_web_caddy_is_a_site_block_of_its_own_to_import_next_to_other_sites() {
     fi
 }
 
+test_web_caddy_under_a_prefix_is_a_block_of_its_own_beside_the_host_never_its_lines() {
+    mkdir -p "$SITE/webserver-configs" "$SITE/bin"
+    printf '# Grav\n\nlocalhost\nencode gzip\nroot * .\n@denied path_regexp ^/cache/\nroute {\n\trespond @denied 403\n\tphp_fastcgi 127.0.0.1:9000\n\tfile_server\n}\n' \
+        >"$SITE/webserver-configs/Caddyfile"
+    printf "custom_base_url: 'https://kimbe.example'\n" >>"$SITE/user/config/system.yaml"
+    local output
+    output=$(W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim --host kimbe.example,www.kimbe.example)
+    # Its own addresses, with the path: Caddy prefers them to the block of the host, which keeps whatever runs at the root
+    assert_contains $'kimbe.example/opensim, www.kimbe.example/opensim {\n\tredir * /opensim/ 308\n}' "$output"
+    assert_contains $'kimbe.example/opensim/*, www.kimbe.example/opensim/* {\n\tencode gzip' "$output"
+    assert_contains $'\thandle_path /opensim/* {\n\t\troot * '"$SITE" "$output"
+    assert_contains $'php_fastcgi unix//run/php/test.sock {\n\t\t\t\tenv SCRIPT_NAME /opensim/index.php\n\t\t\t}' "$output"
+    assert_not_contains $'kimbe.example {' "$output"
+    assert_not_contains 'localhost' "$output"
+    # The helpers of the grid under the prefix, as opensim web gives them, before the site (no grid here: said, not invented)
+    assert_contains 'no helpers of a grid of this machine under /opensim' "$output"
+    printf "grid: kimbe\n" >>"$SITE/user/config/plugins/w4os.yaml"
+    printf '#!/usr/bin/env bash\n[ "$*" = "web kimbe snippet caddy --prefix /opensim" ] || exit 2\nprintf "# Helpers of the grid kimbe.\\n@opensim_helpers path /opensim/economy /opensim/economy/*\\n\\nhandle @opensim_helpers {\\n\\troot * /usr/share/w4os-helpers/public\\n}\\n"\n' >"$SITE/bin/opensim"
+    chmod +x "$SITE/bin/opensim"
+    output=$(W4OS_SITE_OPENSIM="$SITE/bin/opensim" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim)
+    assert_contains $'kimbe.example/opensim/* {\n\tencode gzip\n\t@opensim_helpers path /opensim/economy /opensim/economy/*' "$output"
+    assert_contains $'\thandle @opensim_helpers {\n\t\troot * /usr/share/w4os-helpers/public\n\t}' "$output"
+    assert_not_contains '# Helpers of the grid' "$output"
+    # Caddy takes it next to the block of the host, which it leaves as it is
+    if command -v caddy >/dev/null; then
+        { echo "$output"; printf 'kimbe.example {\n\trespond "root" 418\n}\n'; } >"$SITE/Caddyfile.test"
+        assert_equals 0 "$(caddy adapt --config "$SITE/Caddyfile.test" --adapter caddyfile >/dev/null 2>&1; echo $?)"
+    fi
+}
+
+test_web_caddy_install_writes_the_file_of_the_site_in_its_sites_never_the_file_of_the_host() {
+    mkdir -p "$SITE/webserver-configs" "$SITE/caddy/sites" "$SITE/stubs"
+    printf 'localhost\nencode gzip\nroot * .\nroute {\n\tphp_fastcgi 127.0.0.1:9000\n}\n' >"$SITE/webserver-configs/Caddyfile"
+    printf "custom_base_url: 'https://kimbe.example'\n" >>"$SITE/user/config/system.yaml"
+    printf 'kimbe.example {\n\troot * /var/www/html\n}\n' >"$SITE/caddy/sites/kimbe.example.caddyfile"
+    printf '#!/usr/bin/env bash\n[ "${CADDY_REFUSES:-}" = "" ] || { echo refused; exit 1; }\n' >"$SITE/stubs/caddy"
+    printf '#!/usr/bin/env bash\necho "$*" >>"%s/reloads"\n' "$SITE" >"$SITE/stubs/systemctl"
+    chmod +x "$SITE/stubs/caddy" "$SITE/stubs/systemctl"
+    local host_file
+    host_file=$(cat "$SITE/caddy/sites/kimbe.example.caddyfile")
+    # A Caddyfile that does not import its sites: said, nothing written
+    printf '{\n}\n' >"$SITE/caddy/Caddyfile"
+    assert_contains 'add the line import sites/*' "$(PATH="$SITE/stubs:$PATH" W4OS_SITE_CADDY_ETC="$SITE/caddy" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim --install)"
+    assert_file_not_exists "$SITE/caddy/sites/kimbe.example.w4os.caddyfile"
+    printf 'import sites/*\n' >"$SITE/caddy/Caddyfile"
+    PATH="$SITE/stubs:$PATH" W4OS_SITE_CADDY_ETC="$SITE/caddy" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim --install >/dev/null
+    assert_contains 'kimbe.example/opensim/* {' "$(cat "$SITE/caddy/sites/kimbe.example.w4os.caddyfile")"
+    assert_equals "$host_file" "$(cat "$SITE/caddy/sites/kimbe.example.caddyfile")"
+    assert_equals 'reload caddy' "$(cat "$SITE/reloads")"
+    # What Caddy refuses is taken back
+    rm "$SITE/caddy/sites/kimbe.example.w4os.caddyfile"
+    assert_contains 'refused' "$(CADDY_REFUSES=1 PATH="$SITE/stubs:$PATH" W4OS_SITE_CADDY_ETC="$SITE/caddy" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim --install)"
+    assert_file_not_exists "$SITE/caddy/sites/kimbe.example.w4os.caddyfile"
+}
+
+test_web_runs_the_site_in_the_pool_of_the_web_user_never_in_the_one_of_the_engine_api() {
+    local etc version
+    etc=$(mktemp -d)
+    version=$(php -r 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;')
+    mkdir -p "$etc/$version/fpm/pool.d"
+    # The engine API runs as the user of the grid: before www.conf by its name
+    printf '%s\n' '[w4os-api]' 'user = opensim' 'listen = /run/php/w4os-api.sock' >"$etc/$version/fpm/pool.d/w4os-api.conf"
+    printf '%s\n' '[www]' "user = $(id -un)" "listen = /run/php/php$version-fpm.sock" >"$etc/$version/fpm/pool.d/www.conf"
+    assert_contains "proxy:unix:/run/php/php$version-fpm.sock" "$(W4OS_SITE_PHP_ETC=$etc site web apache)"
+    assert_not_contains 'w4os-api.sock' "$(W4OS_SITE_PHP_ETC=$etc site web apache)"
+    # The engine's alone: never the site's
+    rm "$etc/$version/fpm/pool.d/www.conf"
+    assert_not_contains 'w4os-api.sock' "$(W4OS_SITE_PHP_ETC=$etc site web apache)"
+    rm -rf "$etc"
+}
+
 test_web_apache_hands_php_to_the_socket_its_fpm_pool_names_even_before_php_fpm_runs() {
     local etc version
     etc=$(mktemp -d)
