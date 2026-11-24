@@ -108,7 +108,10 @@ h2::before { display: none; }
 .tool-cards li::before, .tool-cards li::marker, .install-cards li::before, .install-cards li::marker { content: none; }
 .tool-cards li:hover, .install-cards li:hover { border-color: var(--q2-accent); transform: translateY(-2px); }
 .tool-cards li > i, .install-cards li > i { display: block; margin-bottom: .6rem; font-size: 1.5rem; color: var(--q2-accent); }
-.install-cards li { border-top: 3px solid var(--q2-accent); background: color-mix(in srgb, var(--q2-accent) 5%, transparent); }
+/* The cards on the solid surface of the theme, light or dark as the page, over a picture behind the page too; the steps of an install
+   tinted with the accent over it */
+.tool-cards li, .install-cards li { background-color: var(--q2-bg-elev); }
+.install-cards li { border-top: 3px solid var(--q2-accent); background-image: linear-gradient(color-mix(in srgb, var(--q2-accent) 5%, transparent), color-mix(in srgb, var(--q2-accent) 5%, transparent)); }
 .install-cards li a:last-child { display: inline-block; margin-top: .5rem; font-weight: 600; }
 
 /* A backdrop behind the pages (the w4os plugin's, body.w4os-backdrop): Quark2's canvas and footer see-through, the picture behind the

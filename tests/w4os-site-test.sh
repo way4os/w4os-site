@@ -399,3 +399,11 @@ test_the_theme_has_its_picture_in_the_gallery_of_the_themes() {
 test_no_theme_fix_in_the_defaults_of_a_site_the_plugin_s_code_makes_them_for_every_site() {
     assert_directory_not_exists "$ROOT/defaults/config/themes"
 }
+
+test_the_cards_of_a_page_stand_on_the_solid_surface_of_the_theme() {
+    # A box of the page on the theme's card colour, light or dark, over a picture behind the page too: no translucency, no blur
+    local css
+    css=$(cat "$ROOT/theme/w4os/css/custom.css")
+    assert_contains '.tool-cards li, .install-cards li { background-color: var(--q2-bg-elev); }' "$css"
+    assert_not_contains 'backdrop-filter' "$css"
+}
