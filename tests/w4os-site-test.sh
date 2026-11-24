@@ -145,10 +145,18 @@ test_the_default_pages_that_show_the_visitor_are_never_cached() {
 test_the_theme_has_the_components_of_a_page_as_w4os_org_has_them() {
     local css
     css=$(cat "$ROOT/theme/w4os/css/custom.css")
-    assert_contains '.w4os-home-main > h2 {' "$css"
+    assert_contains '.w4os-home-main > h2, .w4os-home-main > .block {' "$css"
     assert_contains '.home-intro {' "$css"
     assert_contains '.tool-cards ul, .install-cards ul {' "$css"
     assert_contains '.content-item { container-type: inline-size; }' "$css"
+}
+
+test_the_sections_are_apart_by_their_margins_never_by_a_line_above_their_titles() {
+    local css
+    css=$(cat "$ROOT/theme/w4os/css/custom.css")
+    # Quark2's short line above each h2, and the line above the sections of the home page: none
+    assert_contains 'h2::before { display: none; }' "$css"
+    assert_not_contains 'border-top' "$(grep '.w4os-home-main' <<<"$css")"
 }
 
 test_the_texts_of_quark2_are_in_every_language_of_the_site() {

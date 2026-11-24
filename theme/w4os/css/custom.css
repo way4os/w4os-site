@@ -78,10 +78,14 @@ body.layout-fluid #header > .container, body.layout-fluid #footer > .container {
 /* A card with no header (the blocks of the dashboard) spaced at its top as one with a header */
 .card > .card-body:first-child { padding-top: 1.25rem; }
 
-/* The components of a page, for its text (as w4os.org has them): sections of the home page apart (a line above each h2 of its
-   main column); .home-intro, a text with its picture beside it where there is room; .tool-cards and .install-cards, a list made
+/* The sections of a page apart by their margins, never by a line: none of Quark2's short line above each h2 */
+h2::before { display: none; }
+.content-item h2:not(:first-child) { margin-top: 2.75rem; }
+
+/* The components of a page, for its text (as w4os.org has them): sections of the home page apart (generous margins above each h2
+   of its main column, and above each block in it); .home-intro, a text with its picture beside it where there is room; .tool-cards and .install-cards, a list made
    cards (<div class="tool-cards" markdown="1"> around a Markdown list, an icon of the theme first in each item) */
-.w4os-home-main > h2 { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent); }
+.w4os-home-main > h2, .w4os-home-main > .block { margin-top: 3.5rem; }
 .content-item { container-type: inline-size; }
 .home-intro { display: grid; gap: 1.75rem; align-items: center; margin-bottom: 2rem; }
 .home-intro img { width: 100%; height: auto; display: block; border-radius: .6rem; }
