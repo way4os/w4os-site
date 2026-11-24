@@ -1,0 +1,25 @@
+# The form of a page in the admin: Quark2's, with the width of the page (templates/partials/base.html.twig gives it its classes)
+extends@:
+  type: default
+  context: theme://quark2/blueprints
+
+form:
+  fields:
+    tabs:
+      fields:
+        advanced:
+          fields:
+            columns:
+              fields:
+                column1:
+                  fields:
+                    header.width:
+                      type: select
+                      label: THEME_W4OS.PAGE_WIDTH.LABEL
+                      help: THEME_W4OS.PAGE_WIDTH.HELP
+                      placeholder: THEME_W4OS.PAGE_WIDTH.DEFAULT
+                      options:
+                        full: THEME_W4OS.PAGE_WIDTH.FULL
+                        sidebars: THEME_W4OS.PAGE_WIDTH.SIDEBARS
+                        wide: THEME_W4OS.PAGE_WIDTH.WIDE
+                        standard: THEME_W4OS.PAGE_WIDTH.STANDARD

@@ -1,4 +1,15 @@
-# Quark2's texts in the languages of the site Quark2 has none of (it has English and Spanish), merged with its own by Grav
+# Quark2's texts in the languages of the site Quark2 has none of (it has English and Spanish), merged with its own by Grav; the theme's
+# own (THEME_W4OS)
+en:
+  THEME_W4OS:
+    PAGE_WIDTH:
+      LABEL: 'Page width'
+      HELP: 'How wide the content of the page is; without a choice, the width the theme gives pages of its template'
+      DEFAULT: 'As the theme gives it'
+      FULL: 'Full width'
+      SIDEBARS: 'Full width, with sidebars'
+      WIDE: 'Wide, as the menu bar'
+      STANDARD: 'Standard, a column to read'
 fr:
   THEME_QUARK2:
     ERROR:

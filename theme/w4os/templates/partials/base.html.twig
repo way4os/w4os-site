@@ -53,5 +53,10 @@
     </script>
 {% endblock head %}
 
-{# A backdrop behind the pages (the w4os plugin's): the page dressed for it (css/custom.css) #}
-{% block body_classes %}{{ parent() }}{{ w4os_backdrop|default(false) ? ' w4os-backdrop' }}{% endblock %}
+{# A backdrop behind the pages (the w4os plugin's): the page dressed for it (css/custom.css). The width of the page: its own (its header
+   width, blueprints/default.yaml), else the theme's for its template (widths); full and sidebars as Quark2's layout-fluid #}
+{% block body_classes %}
+    {%- set widths = config.theme.widths|default({}) -%}
+    {%- set width = page.header.width|default(widths[page.template]|default(widths.default|default('standard'))) -%}
+    {{- parent() }}{{ w4os_backdrop|default(false) ? ' w4os-backdrop' }}{{ width in ['full', 'sidebars'] ? ' layout-fluid' }} w4os-width-{{ width -}}
+{% endblock %}

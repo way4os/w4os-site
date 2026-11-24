@@ -71,6 +71,10 @@ a:hover { color: var(--q2-link-hover); }
 /* The links of the w4os plugin under the button, inside the panel of the Login plugin */
 #grav-login .w4os-login-links { margin: 1rem 0 0; text-align: center; }
 
+/* The width of a page (its header width, templates/partials/base.html.twig): full and sidebars as Quark2's layout-fluid, wide as wide
+   as the menu bar, standard Quark2's column */
+body.w4os-width-wide #body-wrapper > .container > .content-item { max-width: none; }
+
 /* A full-width page (layout-fluid, the home page) as Quark2 1.1.22 has it, for the versions of Quark2 without it (1.1.12, Grav 1.7's) */
 body.layout-fluid .container,
 body.layout-fluid #body-wrapper > .container > .content-item { max-width: none; }

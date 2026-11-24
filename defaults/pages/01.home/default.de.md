@@ -2,9 +2,9 @@
 title: 'Startseite'
 cache_enable: false
 template: default
-# The full width, like the splash page of the helpers; the blocks of the grid around the text ([w4os-home], the w4os plugin), beside it
-# where there is room
-body_classes: layout-fluid
+# The full width with sidebars, like the splash page of the helpers: the blocks of the grid around the text ([w4os-home], the w4os
+# plugin), beside it where there is room
+width: sidebars
 ---
 [w4os-home]
 # Willkommen auf [site-title]

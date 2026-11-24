@@ -9,6 +9,10 @@ header-dark: false
 header-light: false
 sticky-footer: true
 layout-fluid: false
+# The width of a page without its own (its header width: full, sidebars, wide, standard), by template
+widths:
+  default: standard
+  blog: wide
 theme-mode: auto
 accent-color: '#61c909'
 # The logo of the site, Quark2's own setting (the settings page of the site changes it): the OpenSimulator logo until the site sets
