@@ -66,10 +66,12 @@ test_the_welcome_page_of_the_viewer_has_none() {
     assert_not_contains 'w4os-backdrop' "$(curl -s "$URL/welcome")"
 }
 
-test_the_theme_dresses_the_page_on_glass_only_with_a_backdrop() {
+test_the_picture_shows_behind_the_page_with_no_card_around_its_content() {
     local css
     css=$(cat "$ROOT/theme/w4os/css/custom.css")
-    assert_contains 'body.w4os-backdrop #body-wrapper { background: transparent; }' "$css"
-    assert_contains '--w4os-glass: color-mix(in srgb, var(--q2-bg-elev) 92%, transparent);' "$css"
+    # Quark2's canvas and footer see-through; no card, no veil: the boxes of the page alone stand out
+    assert_contains 'body.w4os-backdrop #body-wrapper, body.w4os-backdrop #footer { background: transparent; }' "$css"
+    assert_not_contains 'w4os-glass' "$css"
+    assert_not_contains 'backdrop-filter' "$css"
     assert_contains "{{ w4os_backdrop|default(false) ? ' w4os-backdrop' }}" "$(cat "$ROOT/theme/w4os/templates/partials/base.html.twig")"
 }

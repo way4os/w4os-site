@@ -111,27 +111,6 @@ h2::before { display: none; }
 .install-cards li { border-top: 3px solid var(--q2-accent); background: color-mix(in srgb, var(--q2-accent) 5%, transparent); }
 .install-cards li a:last-child { display: inline-block; margin-top: .5rem; font-weight: 600; }
 
-/* A backdrop behind the pages (the w4os plugin's, body.w4os-backdrop): Quark2's canvas see-through, the page and the footer on glass
-   of the page's own color, light or dark as the mode, so that the text reads on any picture: its links keep a contrast of 4.5 at
-   least (WCAG AA) on the brightest and on the darkest pictures */
-body.w4os-backdrop {
-    --w4os-glass: color-mix(in srgb, var(--q2-bg-elev) 92%, transparent);
-    --w4os-glass-blur: blur(18px) saturate(140%);
-}
-:root[data-theme="dark"] body.w4os-backdrop { --w4os-glass: color-mix(in srgb, var(--q2-bg-elev) 86%, transparent); }
-body.w4os-backdrop #body-wrapper { background: transparent; }
-body.w4os-backdrop #body-wrapper > .container > .content-item,
-:root[data-theme="dark"] body.w4os-backdrop #body-wrapper > .container > .content-item {
-    background: var(--w4os-glass);
-    -webkit-backdrop-filter: var(--w4os-glass-blur);
-    backdrop-filter: var(--w4os-glass-blur);
-    border-radius: 1rem;
-    box-shadow: 0 .75rem 2.5rem rgb(0 0 0 / .18);
-    padding: clamp(1.25rem, 3vw, 2.5rem);
-    margin-block: clamp(1rem, 3vw, 2.5rem);
-}
-body.w4os-backdrop #footer {
-    background: var(--w4os-glass);
-    -webkit-backdrop-filter: var(--w4os-glass-blur);
-    backdrop-filter: var(--w4os-glass-blur);
-}
+/* A backdrop behind the pages (the w4os plugin's, body.w4os-backdrop): Quark2's canvas and footer see-through, the picture behind the
+   page as it is; no card around the content, the boxes of the page alone stand out */
+body.w4os-backdrop #body-wrapper, body.w4os-backdrop #footer { background: transparent; }
