@@ -93,6 +93,12 @@ test_setup_refuses_a_key_the_api_refuses() {
     assert_file_contains "$SITE/user/config/plugins/w4os.yaml" "api_url: ''"
 }
 
+test_setup_keeps_the_title_the_site_has_over_the_ascii_name_of_its_grid() {
+    printf "title: 'Kimb\xc3\xa9 R\xc3\xa8d'\n" >"$SITE/user/config/site.yaml"
+    site setup --api "http://127.0.0.1:$PORT/api" --url "http://127.0.0.1:$PORT/helpers" --key osk_test >/dev/null
+    assert_file_contains "$SITE/user/config/site.yaml" "title: 'Kimbé Rèd'"
+}
+
 test_setup_keeps_a_title_with_a_quote() {
     site setup --api "http://127.0.0.1:$PORT/api" --url "http://127.0.0.1:$PORT/helpers" --key osk_test --title "Ada's grid" >/dev/null
     assert_file_contains "$SITE/user/config/site.yaml" "title: 'Ada''s grid'"

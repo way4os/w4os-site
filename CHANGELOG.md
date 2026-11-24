@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix (setup): the title the site has is kept, the name of its grid (ASCII in its grid info) only proposed for a new site
 - fix (packaging): the releases go to charm (stable, unstable), the builds between to charm-tests, as the other packages of the family
 - new: `w4os-site --version`
 - change (packaging): php-imagick is required, it decodes the web assets of the grid (JPEG 2000)

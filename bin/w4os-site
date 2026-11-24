@@ -156,7 +156,11 @@ setup() {
     yaml_set "$CONFIG/plugins/w4os.yaml" url "$url"
     [ -z "$grid" ] || yaml_set "$CONFIG/plugins/w4os.yaml" grid "$grid"
     [ -z "$mail" ] || yaml_set --raw "$CONFIG/plugins/w4os.yaml" send_mail "$mail"
-    title=${title:-$(ask 'Title of the site' "${name:-$(yaml_get "$CONFIG/site.yaml" title)}")}
+    # The title the site has, else the name of its grid (the placeholder shipped is no title): the grid info sends ASCII only
+    local current
+    current=$(yaml_get "$CONFIG/site.yaml" title)
+    [ "$current" != 'My grid' ] || current=
+    title=${title:-$(ask 'Title of the site' "${current:-$name}")}
     [ -z "$title" ] || yaml_set "$CONFIG/site.yaml" title "$title"
     mkdir -p "$(dirname "$KEY_FILE")"
     printf '{"api_key":"%s"}\n' "$key" >"$KEY_FILE"
