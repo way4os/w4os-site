@@ -127,6 +127,12 @@ test_the_default_pages_link_to_registration_only_while_it_is_open() {
     assert_empty "$unguarded"
 }
 
+test_the_default_pages_say_tu_never_vous() {
+    # Tutoiement everywhere: French tu, Welsh ti (never vous, chi)
+    assert_empty "$(grep -lwE 'vous|votre|vos' "$ROOT"/defaults/pages/*/*.fr.md "$ROOT"/defaults/pages/*/*/*/*/*.fr.md 2>/dev/null || true)"
+    assert_empty "$(grep -lwE 'chi|eich' "$ROOT"/defaults/pages/*/*.cy.md "$ROOT"/defaults/pages/*/*/*/*/*.cy.md 2>/dev/null || true)"
+}
+
 test_the_default_pages_that_show_the_visitor_are_never_cached() {
     # A page with [getting-started] or [w4os-guest] shows the visitor's own: Grav would serve every visitor the first one's
     local page uncached=

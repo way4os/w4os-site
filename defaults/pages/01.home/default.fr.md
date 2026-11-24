@@ -11,5 +11,5 @@ body_classes: layout-fluid
 
 <p class="lead">[site-slogan]</p>
 
-[w4os-guest][w4os-register][Créez votre avatar](/register), puis connectez-vous avec n'importe quel viewer OpenSimulator.[/w4os-register][/w4os-guest]
+[w4os-guest][w4os-register][Crée ton avatar](/register), puis connecte-toi avec n'importe quel viewer OpenSimulator.[/w4os-register][/w4os-guest]
 [/w4os-home]
