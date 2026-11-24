@@ -89,4 +89,8 @@ mkdir -p "$out/bin" "$out/web"
 cp "$head/bin/w4os-site" "$head/bin/w4os-site-tree" "$out/bin/"
 cp "$head"/web/* "$out/web/"
 
-echo "VERSION_GRAV=$(sed -n 's/^\. .* //p' dependencies.txt)" > "$root/build/packaging.env"
+# The version of Grav, and what the version of the project (from apt-package) adds to tell the plugin it bundles
+{
+    echo "VERSION_GRAV=$(sed -n 's/^\. .* //p' dependencies.txt)"
+    echo "BUNDLED=$(bundled_suffix "${VERSION:-}" "$grav/.bundled")"
+} >"$root/build/packaging.env"

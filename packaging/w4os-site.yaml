@@ -6,7 +6,8 @@
 name: w4os-site
 arch: all
 platform: linux
-version: ${VERSION}
+# The version of the project, and the plugin it bundles in a development build (packaging/build)
+version: ${VERSION}${BUNDLED}
 version_schema: semver
 section: web
 priority: optional

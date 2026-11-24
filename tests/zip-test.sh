@@ -65,21 +65,23 @@ test_the_zip_built_serves_its_pages_with_php_alone() {
     kill "$server" 2>/dev/null || true
 }
 
-test_a_development_build_that_bundles_another_plugin_engine_or_helpers_gets_another_version() {
-    mkdir -p "$TMP/a/w4os" "$TMP/b/w4os"
-    echo 'engine 1' >"$TMP/a/w4os/engine.php"
-    echo 'engine 2' >"$TMP/b/w4os/engine.php"
-    echo "user/plugins/w4os grav-plugin-w4os-1.zip $(tree_digest "$TMP/a")" >"$TMP/a.bundled"
-    echo "user/plugins/w4os grav-plugin-w4os-1.zip $(tree_digest "$TMP/b")" >"$TMP/b.bundled"
-    cp "$TMP/a.bundled" "$TMP/a2.bundled"
-    local a b
-    a=$(bundled_version 0.1.0-dev+157.g41e480c "$TMP/a.bundled")
-    b=$(bundled_version 0.1.0-dev+157.g41e480c "$TMP/b.bundled")
-    assert_matches '^0\.1\.0-dev\+157\.g41e480c\.b[0-9a-f]{7}$' "$a"
-    assert_not_equals "$a" "$b"
-    assert_equals "$a" "$(bundled_version 0.1.0-dev+157.g41e480c "$TMP/a2.bundled")"
+test_a_development_build_tells_the_plugin_it_bundles_in_a_version_that_sorts_after_the_last() {
+    local digest
+    digest=$(tree_digest "$TMP/grav")
+    echo "user/plugins/w4os grav-plugin-w4os-0.1.0-dev+535.g0da88a6.zip $digest" >"$TMP/535.bundled"
+    echo "user/plugins/w4os grav-plugin-w4os-0.1.0-dev+540.g1234abc.zip $digest" >"$TMP/540.bundled"
+    # The plugin's distance and commit (the engine and the helpers in it): the same plugin, the same version
+    assert_equals 0.1.0-dev+187.gba0a592.w535.g0da88a6 "$(bundled_version 0.1.0-dev+187.gba0a592 "$TMP/535.bundled")"
+    assert_equals .w540.g1234abc "$(bundled_suffix 0.1.0-dev+187.gba0a592 "$TMP/540.bundled")"
     # A release as it is, the releases it bundles named by its dependencies.txt
-    assert_equals 1.0.0 "$(bundled_version 1.0.0 "$TMP/a.bundled")"
+    assert_equals 1.0.0 "$(bundled_version 1.0.0 "$TMP/535.bundled")"
+    assert_empty "$(bundled_suffix 1.0.0 "$TMP/535.bundled")"
     assert_contains 'bundled_version "$VERSION" build/w4os-site/grav/.bundled' "$(cat "$ROOT/packaging/build-zip")"
     assert_contains '>>"$grav/.bundled"' "$(cat "$ROOT/packaging/build")"
+}
+
+test_the_package_has_the_version_of_the_zip() {
+    # apt-package gives VERSION to packaging/build, and the variables of build/packaging.env to the definition
+    assert_contains 'BUNDLED=$(bundled_suffix "${VERSION:-}" "$grav/.bundled")' "$(cat "$ROOT/packaging/build")"
+    assert_contains 'version: ${VERSION}${BUNDLED}' "$(cat "$ROOT/packaging/w4os-site.yaml")"
 }

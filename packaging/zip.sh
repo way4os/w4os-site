@@ -38,12 +38,20 @@ tree_digest() {
     (cd "$1" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 shasum -a 256) | shasum -a 256 | cut -c1-7
 }
 
-# bundled_version VERSION MANIFEST: the version of a build that bundles release zips of other projects (the plugin, with the engine
-# and the helpers in it; MANIFEST: a line by zip, its path, its file, the digest of its content). A development version tells what
-# it bundles (+157.g41e480c.b1a2b3c4: b, the digest of the manifest): another plugin, engine or helpers, another version, as a
-# change of the project is. A release (no +) bundles the releases its dependencies.txt names, its version as it is.
+# bundled_suffix VERSION MANIFEST: what a development VERSION adds to tell the release zips of other projects it bundles (the
+# plugin, with the engine and the helpers in it; MANIFEST: a line by zip, its path, its file, the digest of its content): .w and
+# the distance and commit of each (.w535.g0da88a6), which sort after those of an earlier one, as the commits of the project do. A
+# release (no +) bundles the releases its dependencies.txt names: nothing.
+bundled_suffix() {
+    local version=$1 manifest=$2 path file digest
+    [[ $version == *+* && -s $manifest ]] || return 0
+    while read -r path file digest; do
+        file=${file%.zip}
+        [[ $file != *+* ]] || printf '.w%s' "${file#*+}"
+    done <"$manifest"
+}
+
+# bundled_version VERSION MANIFEST: VERSION with what it bundles (bundled_suffix)
 bundled_version() {
-    local version=$1 manifest=$2
-    [[ $version == *+* && -s $manifest ]] || { echo "$version"; return; }
-    echo "$version.b$(shasum -a 256 "$manifest" | cut -c1-7)"
+    echo "$1$(bundled_suffix "$1" "$2")"
 }
