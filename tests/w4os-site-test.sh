@@ -151,6 +151,14 @@ test_the_theme_has_the_components_of_a_page_as_w4os_org_has_them() {
     assert_contains '.content-item { container-type: inline-size; }' "$css"
 }
 
+test_a_full_width_page_is_full_width_whatever_the_version_of_quark2() {
+    # Quark2 1.1.12 (Grav 1.7's) has no layout-fluid rule: the theme gives it, as Quark2 1.1.22 has it
+    local css
+    css=$(cat "$ROOT/theme/w4os/css/custom.css")
+    assert_contains 'body.layout-fluid .container,' "$css"
+    assert_contains 'body.layout-fluid #body-wrapper > .container > .content-item { max-width: none; }' "$css"
+}
+
 test_the_sections_are_apart_by_their_margins_never_by_a_line_above_their_titles() {
     local css
     css=$(cat "$ROOT/theme/w4os/css/custom.css")

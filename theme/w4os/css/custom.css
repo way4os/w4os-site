@@ -71,6 +71,10 @@ a:hover { color: var(--q2-link-hover); }
 /* The links of the w4os plugin under the button, inside the panel of the Login plugin */
 #grav-login .w4os-login-links { margin: 1rem 0 0; text-align: center; }
 
+/* A full-width page (layout-fluid, the home page) as Quark2 1.1.22 has it, for the versions of Quark2 without it (1.1.12, Grav 1.7's) */
+body.layout-fluid .container,
+body.layout-fluid #body-wrapper > .container > .content-item { max-width: none; }
+
 /* The top bar and the footer as wide on a full-width page (layout-fluid, the home page) as on the others: Quark2's container
    width, whatever the width of the content below */
 body.layout-fluid #header > .container, body.layout-fluid #footer > .container { max-width: 1200px; }
