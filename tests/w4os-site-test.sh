@@ -244,6 +244,11 @@ test_web_caddy_under_a_prefix_is_a_block_of_its_own_beside_the_host_never_its_li
     assert_contains $'kimbe.example/opensim/* {\n\tencode gzip\n\t@opensim_helpers path /opensim/economy /opensim/economy/*' "$output"
     assert_contains $'\thandle @opensim_helpers {\n\t\troot * /usr/share/w4os-helpers/public\n\t}' "$output"
     assert_not_contains '# Helpers of the grid' "$output"
+    # A command line too old for --prefix gives the paths of the root (the whole prefix): said, never written
+    printf '#!/usr/bin/env bash\nprintf "@opensim_helpers path /opensim* /health*\\n\\nhandle @opensim_helpers {\\n\\troot * /usr/share/w4os-helpers/public\\n}\\n"\n' >"$SITE/bin/opensim"
+    output=$(W4OS_SITE_OPENSIM="$SITE/bin/opensim" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim)
+    assert_not_contains '@opensim_helpers' "$output"
+    assert_contains 'w4os-cli 3.0.0~beta.4+125 or later' "$output"
     # Caddy takes it next to the block of the host, which it leaves as it is
     if command -v caddy >/dev/null; then
         { echo "$output"; printf 'kimbe.example {\n\trespond "root" 418\n}\n'; } >"$SITE/Caddyfile.test"

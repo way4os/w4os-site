@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix (web): under a prefix, the helpers of a command line too old for it (the paths of the root) are left out, with what to upgrade
 - new (web): web caddy --prefix /opensim: the site under that path, in blocks of their own beside the one of the host, which they never change; --install for Caddy
 - fix (web): the site runs in the PHP pool of the web user, never in the one of the engine API (w4os-api), taken by its name before
 - fix (home): its welcome says the title of the site ([site-title]), not the ASCII name of the grid

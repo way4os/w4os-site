@@ -243,7 +243,7 @@ check_site() {
 # them to the block of the host, whatever runs at its root, which they never change): the prefix alone sent to its folder, then
 # the helpers of the grid of this machine under it (opensim web GRID snippet caddy --prefix), then the site, the prefix stripped
 caddy_prefixed() {
-    local addresses=$1 prefix=$2 socket=$3 tab=$'\t' list= under= subtree= address grid helpers= matcher
+    local addresses=$1 prefix=$2 socket=$3 tab=$'\t' list= under= subtree= address grid helpers= matcher old_cli=
     IFS=, read -ra list <<<"${addresses//, /,}"
     for address in "${list[@]}"; do
         under+=${under:+, }$address$prefix
@@ -255,6 +255,13 @@ caddy_prefixed() {
         # Paths under the prefix, or none: an empty matcher would take every path
         matcher=$(sed -n 's/^@opensim_helpers path[[:space:]]*//p' <<<"$helpers")
         [ -n "$matcher" ] || helpers=
+        # A command line before --prefix gives the paths of the root (the prefix itself): never written, said
+        local path
+        for path in $matcher; do
+            [[ $path == "$prefix"/* ]] && continue
+            helpers=
+            old_cli=1
+        done
     fi
     printf '# The w4os site under %s, made by w4os-site web caddy --prefix %s: blocks of their own beside the one of the host,\n' "$prefix" "$prefix"
     printf '# which they never change; import this file in the Caddyfile of the machine\n'
@@ -262,6 +269,9 @@ caddy_prefixed() {
     printf '%s {\n%sencode gzip\n' "$subtree" "$tab"
     if [ -n "$helpers" ]; then
         sed -e "s/^\(.\)/$tab\1/" <<<"$helpers"
+    elif [ -n "$old_cli" ]; then
+        printf '%s# The helpers of the grid: its command line gives the paths of the root, not the ones under %s:\n' "$tab" "$prefix"
+        printf '%s# w4os-cli 3.0.0~beta.4+125 or later is needed (apt install --only-upgrade w4os-cli), then this command again\n' "$tab"
     else
         printf '%s# The helpers of the grid: no helpers of a grid of this machine under %s (opensim web GRID snippet caddy --prefix %s\n' "$tab" "$prefix" "$prefix"
         printf '%s# on the machine of the grid)\n' "$tab"
