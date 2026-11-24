@@ -47,6 +47,10 @@ contents:
   - src: build/w4os-site/grav
     dst: /usr/share/w4os-site/site
     type: tree
+  - src: build/w4os-site/pages-history
+    dst: /usr/share/w4os-site/pages-history
+    file_info:
+      mode: 0644
   - src: build/w4os-site/grav17
     dst: /usr/share/w4os-site/site-grav17
     type: tree

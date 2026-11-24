@@ -74,6 +74,15 @@ bundle dependencies-grav17.txt "$out/grav17"
 rm -rf "$out/grav17"/{tests,.github,.phan,.oss-scanner,codeception.yml,now.json,.dependencies,CONTRIBUTING.md,CODE_OF_CONDUCT.md}
 find "$out/grav17/user" -mindepth 1 -maxdepth 1 -not -name themes -exec rm -rf {} +
 
+# The texts each version of the package gave its default pages (git), for an upgrade to know a page the site still has as one of
+# them gave it, on a site of before the pages were units of the manifest (bin/w4os-site-tree: given)
+sum() { if command -v md5sum >/dev/null; then md5sum | cut -d' ' -f1; else md5 -q; fi; }
+for commit in $(git log --format=%H -- defaults/pages); do
+    git ls-tree -r --name-only "$commit" -- defaults/pages | while read -r file; do
+        printf 'user/%s\t%s\n' "${file#defaults/}" "$(git show "$commit:$file" | sum)"
+    done
+done | LC_ALL=C sort -u >"$out/pages-history"
+
 # The defaults of a new site, the installer, the web server template
 cp -R "$head/defaults" "$out/defaults"
 mkdir -p "$out/bin" "$out/web"

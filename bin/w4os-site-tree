@@ -7,14 +7,15 @@
 #       into it (the content of the site, the plugins and themes added to it, the web server configuration it wrote); a site in
 #       the folder of before (/var/lib/opensim/www) moved to its folder, a link left where it was; an existing
 #       site: what the package ships of it replaced where the site still has it as the package put it (Grav, each plugin, each
-#       theme), the rest left as it is and said. Where the PHP of the site is older than 8.3 (Debian 12), Grav is Grav 1.7 and Quark 2
+#       theme, each default page), the rest left as it is and said; a new default page added, unless the site has one at its route. Where the PHP of the site is older than 8.3 (Debian 12), Grav is Grav 1.7 and Quark 2
 #       the last one for it (the package's site-grav17), until a configure finds a PHP that runs Grav 2
 #
 # The places, for the tests: W4OS_SITE_SEED (/usr/share/w4os-site/site), W4OS_SITE_ROOT (/var/lib/w4os/www), W4OS_SITE_PREVIOUS
 # (/var/lib/opensim/www, the folder of the site before), W4OS_SITE_OLD (/var/lib/w4os-site, the content of the site of before),
 # W4OS_SITE_OLD_TREE (/usr/share/w4os-site/grav, its Grav of before), W4OS_SITE_APACHE (/etc/apache2/sites-available/w4os-site.conf),
 # W4OS_SITE_OWNER and W4OS_SITE_GROUP (WebUser and WebGroup of the engine's w4os.conf, www-data without them), W4OS_SITE_LEGACY
-# (/usr/share/w4os-site/site-grav17, the units for PHP older than 8.3), W4OS_SITE_PHP (php, the PHP whose version chooses).
+# (/usr/share/w4os-site/site-grav17, the units for PHP older than 8.3), W4OS_SITE_PHP (php, the PHP whose version chooses),
+# W4OS_SITE_PAGES_HISTORY (/usr/share/w4os-site/pages-history, the texts each version of the package gave the default pages).
 set -eo pipefail
 
 SEED=${W4OS_SITE_SEED:-/usr/share/w4os-site/site}
@@ -26,6 +27,7 @@ APACHE=${W4OS_SITE_APACHE:-/etc/apache2/sites-available/w4os-site.conf}
 OWNER=${W4OS_SITE_OWNER:-}
 GROUP=${W4OS_SITE_GROUP:-$OWNER}
 LEGACY=${W4OS_SITE_LEGACY:-/usr/share/w4os-site/site-grav17}
+PAGES_HISTORY=${W4OS_SITE_PAGES_HISTORY:-/usr/share/w4os-site/pages-history}
 # Set by configure where the units of LEGACY replace the seed's: PHP older than 8.3, which Grav 2 needs
 ON_LEGACY=
 # What the package put, and how (the checksum of each file), to know what the site changed since
@@ -50,11 +52,11 @@ file_sum() {
     if command -v md5sum >/dev/null; then md5sum <"$1" | cut -d' ' -f1; else md5 -q "$1"; fi
 }
 
-# units TREE: what the package ships and replaces as a whole: Grav (core), each plugin, each theme
+# units TREE: what the package ships and replaces as a whole: Grav (core), each plugin, each theme, each default page
 units() {
     local dir
     echo core
-    for dir in "$1"/user/plugins/*/ "$1"/user/themes/*/; do
+    for dir in "$1"/user/plugins/*/ "$1"/user/themes/*/ "$1"/user/pages/*/; do
         [ -d "$dir" ] || continue
         dir=${dir%/}
         echo "${dir#"$1"/user/}"
@@ -165,6 +167,32 @@ move() {
     say "the site is now in $ROOT ($PREVIOUS links to it)"
 }
 
+# given UNIT: whether a default page the manifest does not know yet (a site of before the pages were units) is as a version of the
+# package gave it: each of its texts the seed's or one of the history of the package (the site's own files, its pictures, aside)
+given() {
+    local file sum found=
+    [[ $1 == pages/* ]] || return 1
+    while read -r file; do
+        found=1
+        sum=$(file_sum "$ROOT/$file")
+        [ -f "$SEED/$file" ] && [ "$(file_sum "$SEED/$file")" = "$sum" ] && continue
+        [ -f "$PAGES_HISTORY" ] && grep -qx "$file	$sum" "$PAGES_HISTORY" && continue
+        return 1
+    done < <(cd "$ROOT" && find "user/$1" -type f -name '*.md' | LC_ALL=C sort)
+    [ -n "$found" ]
+}
+
+# taken UNIT: the route of a default page (its folder without its number), when the site has another page there
+taken() {
+    local name=${1#pages/} dir slug
+    slug=${name#[0-9]*.}
+    for dir in "$ROOT"/user/pages/*/; do
+        dir=$(basename "$dir")
+        [ "$dir" != "$name" ] && { [ "$dir" = "$slug" ] || [ "${dir#[0-9]*.}" = "$slug" ]; } && echo "/$slug" && return 0
+    done
+    return 1
+}
+
 # upgrade: each unit the site has as the package put it replaced by the seed's, the others left and said; the new ones added
 upgrade() {
     local old="$ROOT/$MANIFEST" new kept unit
@@ -178,9 +206,14 @@ upgrade() {
                 say "$unit removed from this site, left out"
                 continue
             fi
+            local route
+            if [[ $unit == pages/* ]] && route=$(taken "$unit"); then
+                say "$unit: the site has its own page at $route, left out"
+                continue
+            fi
             put "$unit"
             say "$unit added"
-        elif as_put "$unit" "$old"; then
+        elif as_put "$unit" "$old" || { ! grep -q "^$unit	" "$old" && given "$unit"; }; then
             put "$unit" "$old"
         else
             grep "^$unit	" "$old" >>"$kept" || true
@@ -214,7 +247,11 @@ configure() {
         install_site
         [ ! -d "$OLD" ] || [ -d "$OLD.migrated" ] || migrate
         mkdir -p "$(dirname "$ROOT/$MANIFEST")"
-        units "$SEED" | while read -r unit; do manifest_unit "$unit"; done >"$ROOT/$MANIFEST"
+        # What the site has of the seed: the pages of a site of before stay its own, the default ones it lacks are new to it
+        units "$SEED" | while read -r unit; do
+            [ "$unit" = core ] || [ -e "$ROOT/user/$unit" ] || continue
+            manifest_unit "$unit"
+        done >"$ROOT/$MANIFEST"
     else
         upgrade
     fi

@@ -69,7 +69,7 @@ The sessions are kept in a folder of the site, not the system's: Debian and Ubun
 | What the package put in the site, file by file | `/var/lib/w4os/www/user/data/w4os-site/manifest` |
 | Grav 1.7 and its Quark 2, for PHP older than 8.3 (never served) | `/usr/share/w4os-site/site-grav17` |
 
-An upgrade of the package replaces Grav, a plugin or a theme of the site only where the site still has it as the package put it; one the site changed or updated (GPM, the admin) is left as it is, and the upgrade says so, as is a plugin the site removed. The pages, the settings and the accounts are never touched; neither is the site by the removal of the package, even purged.
+An upgrade of the package replaces Grav, a plugin, a theme or a default page of the site (home, help, news, about) only where the site still has it as the package put it; one the site changed or updated (GPM, the admin) is left as it is, and the upgrade says so, as is one the site removed. A new default page is added, unless the site has a page of its own at its address. The site's own pages, the settings and the accounts are never touched; neither is the site by the removal of the package, even purged.
 
 Where PHP is older than 8.3 (Debian 12), Grav 2 cannot run: the site gets Grav 1.7 and the last Quark 2 made for it, and the same
 plugins. Once PHP is 8.3 or newer (an upgrade to Debian 13), the next upgrade of the package, or `sudo dpkg-reconfigure w4os-site`,

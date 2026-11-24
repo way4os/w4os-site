@@ -203,3 +203,68 @@ test_the_site_belongs_to_the_web_account_the_engine_resolves_www_data_without_on
     assert_equals "siteweb webgrp" "$(HOME=$home W4OS_SITE_ROOT=$built bash -c 'source "$1"; web_account' _ "$TREE")"
     rm -rf "$home"
 }
+
+# page FOLDER TEXT: a default page of the seed
+page() {
+    mkdir -p "$W4OS_SITE_SEED/user/pages/$1"
+    echo "$2" >"$W4OS_SITE_SEED/user/pages/$1/default.md"
+}
+
+test_the_default_pages_are_units_added_updated_while_untouched_never_changed_back_never_brought_back() {
+    page 02.help "help 1"
+    page 03.news "news 1"
+    page 05.contact "contact 1"
+    "$TREE" configure >/dev/null
+    assert_contains "user/pages/02.help/default.md" "$(cat "$W4OS_SITE_ROOT/user/data/w4os-site/manifest")"
+    # The site's own: news changed, contact removed, a picture added to help
+    echo "my news" >"$W4OS_SITE_ROOT/user/pages/03.news/default.md"
+    rm -rf "$W4OS_SITE_ROOT/user/pages/05.contact"
+    echo "png" >"$W4OS_SITE_ROOT/user/pages/02.help/picture.png"
+    page 02.help "help 2"
+    page 03.news "news 2"
+    page 05.contact "contact 2"
+    page 04.about "about 1"
+    local out
+    out=$("$TREE" configure)
+    # Untouched: the new text, the site's picture kept; new: added; changed: as it is, said; removed: left out
+    assert_equals "help 2" "$(cat "$W4OS_SITE_ROOT/user/pages/02.help/default.md")"
+    assert_file_exists "$W4OS_SITE_ROOT/user/pages/02.help/picture.png"
+    assert_equals "about 1" "$(cat "$W4OS_SITE_ROOT/user/pages/04.about/default.md")"
+    assert_contains "pages/04.about added" "$out"
+    assert_equals "my news" "$(cat "$W4OS_SITE_ROOT/user/pages/03.news/default.md")"
+    assert_contains "pages/03.news changed on this site, left as it is" "$out"
+    assert_directory_not_exists "$W4OS_SITE_ROOT/user/pages/05.contact"
+    assert_contains "pages/05.contact removed from this site, left out" "$out"
+}
+
+test_a_new_default_page_never_doubles_a_page_the_site_has_at_its_route() {
+    "$TREE" configure >/dev/null
+    mkdir -p "$W4OS_SITE_ROOT/user/pages/07.about"
+    echo "ours" >"$W4OS_SITE_ROOT/user/pages/07.about/default.md"
+    page 04.about "about 1"
+    local out
+    out=$("$TREE" configure)
+    assert_directory_not_exists "$W4OS_SITE_ROOT/user/pages/04.about"
+    assert_equals "ours" "$(cat "$W4OS_SITE_ROOT/user/pages/07.about/default.md")"
+    assert_contains "pages/04.about: the site has its own page at /about, left out" "$out"
+}
+
+test_a_site_of_before_the_pages_were_units_gets_the_new_text_of_a_page_it_has_as_a_version_of_the_package_gave_it() {
+    page 02.help "help 1"
+    page 03.news "news 1"
+    "$TREE" configure >/dev/null
+    # A manifest of before: no page in it
+    sed -i.bak '/user\/pages\//d' "$W4OS_SITE_ROOT/user/data/w4os-site/manifest" && rm -f "$W4OS_SITE_ROOT/user/data/w4os-site/manifest.bak"
+    echo "my news" >"$W4OS_SITE_ROOT/user/pages/03.news/default.md"
+    # The texts the package gave each page in its versions (the build reads them in git)
+    export W4OS_SITE_PAGES_HISTORY="$TMP/share/pages-history"
+    printf 'user/pages/02.help/default.md\t%s\nuser/pages/03.news/default.md\t%s\n' "$(php -r 'echo md5("help 1\n");')" \
+        "$(php -r 'echo md5("news 1\n");')" >"$W4OS_SITE_PAGES_HISTORY"
+    page 02.help "help 2"
+    page 03.news "news 2"
+    local out
+    out=$("$TREE" configure)
+    assert_equals "help 2" "$(cat "$W4OS_SITE_ROOT/user/pages/02.help/default.md")"
+    assert_equals "my news" "$(cat "$W4OS_SITE_ROOT/user/pages/03.news/default.md")"
+    assert_contains "pages/03.news changed on this site, left as it is" "$out"
+}
