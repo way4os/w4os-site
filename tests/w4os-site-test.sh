@@ -69,7 +69,8 @@ test_setup_needs_the_address_of_the_engine_api_never_the_helpers_api() {
 }
 
 test_setup_proposes_the_engine_api_of_the_grid_of_this_machine_at_the_port_the_engine_keeps_for_it() {
-    local built="$ROOT/build/w4os-site/grav" output
+    # The tree the suite runs on (W4OS_SITE_BUILD, as site.sh: the one of the PHP of this machine), else the one built here
+    local built=${W4OS_SITE_BUILD:-$ROOT/build/w4os-site/grav} output
     grep -qs knownApiPort "$built/user/plugins/w4os/vendor/w4os/w4os-engine/src/Models/Grid.php" ||
         { bashunit::skip "no Grav tree built with an engine that keeps the port of a grid's API (dev/build.sh)"; return 0; }
     # A grid of this machine, the port of its engine API kept with it; the engine of this machine, the one of the tree built
