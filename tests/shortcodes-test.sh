@@ -43,8 +43,9 @@ test_the_shortcodes_of_the_site_need_no_closing_slash() {
     help=$(curl -s "$URL/help")
     assert_not_contains '[getting-started]' "$help"
     home=$(curl -s "$URL/")
-    assert_contains 'Welcome to Demo Grid' "$home"
-    assert_not_contains '[grid-name]' "$home"
+    # The title of the site, its own name (the one of its grid is ASCII, as its grid info sends it)
+    assert_contains 'Welcome to My grid' "$home"
+    assert_not_contains '[site-title]' "$home"
     assert_not_contains '[site-slogan]' "$home"
 }
 

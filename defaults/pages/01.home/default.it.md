@@ -7,7 +7,7 @@ template: default
 body_classes: layout-fluid
 ---
 [w4os-home]
-# Benvenuto su [grid-name]
+# Benvenuto su [site-title]
 
 <p class="lead">[site-slogan]</p>
 

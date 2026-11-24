@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix (home): its welcome says the title of the site ([site-title]), not the ASCII name of the grid
 - fix (setup): the title the site has is kept, the name of its grid (ASCII in its grid info) only proposed for a new site
 - fix (packaging): the releases go to charm (stable, unstable), the builds between to charm-tests, as the other packages of the family
 - new: `w4os-site --version`
