@@ -64,4 +64,6 @@ test_the_help_page_has_the_connect_block_the_buttons_that_add_the_grid_and_log_i
     assert_contains '<h2>3. Connect</h2>' "$help"
     assert_contains '<a href="https://www.firestormviewer.org/downloads/">Firestorm</a>, the most used' "$help"
     assert_contains '<h2>1. Crée ton avatar</h2>' "$(curl -s "$URL/fr/help")"
+    assert_contains '<h2>1. Erstelle deinen Avatar</h2>' "$(curl -s -L "$URL/de/help")"
+    assert_contains '<h2>1. Crea dy afatar</h2>' "$(curl -s -L "$URL/cy/help")"
 }
