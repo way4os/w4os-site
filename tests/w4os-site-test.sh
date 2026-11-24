@@ -238,12 +238,22 @@ test_web_caddy_under_a_prefix_is_a_block_of_its_own_beside_the_host_never_its_li
     # The helpers of the grid under the prefix, as opensim web gives them, before the site (no grid here: said, not invented)
     assert_contains 'no helpers of a grid of this machine under /opensim' "$output"
     printf "grid: kimbe\n" >>"$SITE/user/config/plugins/w4os.yaml"
-    printf '#!/usr/bin/env bash\n[ "$*" = "web kimbe snippet caddy --prefix /opensim" ] || exit 2\nprintf "# Helpers of the grid kimbe.\\n@opensim_helpers path /opensim/economy /opensim/economy/*\\n\\nhandle @opensim_helpers {\\n\\troot * /usr/share/w4os-helpers/public\\n}\\n"\n' >"$SITE/bin/opensim"
+    cat >"$SITE/bin/opensim" <<'STUB'
+#!/usr/bin/env bash
+case "$*" in
+"web kimbe snippet caddy --prefix /opensim") printf '# Helpers of the grid kimbe.\n@opensim_helpers path /opensim/economy /opensim/economy/*\n\nhandle @opensim_helpers {\n\troot * /usr/share/w4os-helpers/public\n}\n' ;;
+"web kimbe snippet caddy") printf '# Helpers of the grid kimbe.\n@opensim_helpers path /opensim/economy /opensim/economy/* /helper/query.php /helper/query.php/*\n\nhandle @opensim_helpers {\n\troot * /usr/share/w4os-helpers/public\n\tphp_fastcgi unix//run/php/php-fpm.sock\n}\n' ;;
+"web kimbe paths --outside /opensim") printf '/helper/query.php\n/helper/query.php/*\n/helpers/helper/offline.php\n/helpers/helper/offline.php/*\n' ;;
+*) exit 2 ;;
+esac
+STUB
     chmod +x "$SITE/bin/opensim"
     output=$(W4OS_SITE_OPENSIM="$SITE/bin/opensim" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim)
     assert_contains $'kimbe.example/opensim/* {\n\tencode gzip\n\t@opensim_helpers path /opensim/economy /opensim/economy/*' "$output"
     assert_contains $'\thandle @opensim_helpers {\n\t\troot * /usr/share/w4os-helpers/public\n\t}' "$output"
     assert_not_contains '# Helpers of the grid' "$output"
+    # The addresses of its helpers outside the prefix, each exactly, in a block of their own with the helpers' handler
+    assert_contains $'kimbe.example/helper/query.php, kimbe.example/helper/query.php/*, kimbe.example/helpers/helper/offline.php, kimbe.example/helpers/helper/offline.php/* {\n\tencode gzip\n\troot * /usr/share/w4os-helpers/public\n\tphp_fastcgi unix//run/php/php-fpm.sock\n}' "$output"
     # A command line too old for --prefix gives the paths of the root (the whole prefix): said, never written
     printf '#!/usr/bin/env bash\nprintf "@opensim_helpers path /opensim* /health*\\n\\nhandle @opensim_helpers {\\n\\troot * /usr/share/w4os-helpers/public\\n}\\n"\n' >"$SITE/bin/opensim"
     output=$(W4OS_SITE_OPENSIM="$SITE/bin/opensim" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim)
@@ -275,6 +285,12 @@ test_web_caddy_install_writes_the_file_of_the_site_in_its_sites_never_the_file_o
     assert_contains 'kimbe.example/opensim/* {' "$(cat "$SITE/caddy/sites/kimbe.example.w4os.caddyfile")"
     assert_equals "$host_file" "$(cat "$SITE/caddy/sites/kimbe.example.caddyfile")"
     assert_equals 'reload caddy' "$(cat "$SITE/reloads")"
+    # An absolute import of the Caddyfile: the file goes where it imports
+    mkdir -p "$SITE/caddy/sites-enabled"
+    printf 'import %s/caddy/sites-enabled/*.caddyfile\n' "$SITE" >"$SITE/caddy/Caddyfile"
+    PATH="$SITE/stubs:$PATH" W4OS_SITE_CADDY_ETC="$SITE/caddy" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim --host http://kimbe.example --install >/dev/null
+    assert_file_exists "$SITE/caddy/sites-enabled/kimbe.example.w4os.caddyfile"
+    printf 'import sites/*\n' >"$SITE/caddy/Caddyfile"
     # What Caddy refuses is taken back
     rm "$SITE/caddy/sites/kimbe.example.w4os.caddyfile"
     assert_contains 'refused' "$(CADDY_REFUSES=1 PATH="$SITE/stubs:$PATH" W4OS_SITE_CADDY_ETC="$SITE/caddy" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim --install)"

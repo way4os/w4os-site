@@ -292,17 +292,43 @@ caddy_prefixed() {
         { print (length($0) ? tab tab $0 : "") }
     ' "$ROOT/webserver-configs/Caddyfile"
     printf '%s}\n}\n' "$tab"
+    # The addresses of the helpers of the grid elsewhere on the host, each exactly, in a block of their own with their handler (the
+    # one of opensim web GRID snippet caddy): the block of the host keeps the rest
+    local outside= body= path joined=
+    if [ -n "$grid" ] && command -v "${W4OS_SITE_OPENSIM:-opensim}" >/dev/null 2>&1; then
+        outside=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" paths --outside "$prefix" 2>/dev/null || true)
+        body=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" snippet caddy 2>/dev/null |
+            awk '/^handle @opensim_helpers \{/ { inside = 1; next } inside && /^\}/ { inside = 0; next } inside { print }' || true)
+    fi
+    if [ -n "$outside" ] && [ -n "$body" ] && [ -z "$old_cli" ]; then
+        # Paths alone, one per line, as they are (never a glob of this folder)
+        for address in "${list[@]}"; do
+            while IFS= read -r path; do
+                [[ $path == /* && $path != *[[:space:]]* ]] && joined+=${joined:+, }$address$path
+            done <<<"$outside"
+        done
+    fi
+    if [ -n "$joined" ]; then
+        printf '\n# The addresses of the helpers of the grid outside %s, as its config names them, each exactly\n' "$prefix"
+        printf '%s {\n%sencode gzip\n%s\n}\n' "$joined" "$tab" "$body"
+    fi
 }
 
 # caddy_install HOST TEXT: the file of the site in the sites of Caddy (sites/<host>.w4os.caddyfile), checked with the rest, then
 # Caddy reloaded; never the file of the host, nor the Caddyfile: a Caddyfile that does not import sites/ is said
 caddy_install() {
-    local etc=${W4OS_SITE_CADDY_ETC:-/etc/caddy} file said
-    file="$etc/sites/$1.w4os.caddyfile"
+    local etc=${W4OS_SITE_CADDY_ETC:-/etc/caddy} file said import dir suffix
     require caddy
-    grep -qE '^[[:space:]]*import[[:space:]]+(\./)?sites/' "$etc/Caddyfile" 2>/dev/null ||
+    # The folder of sites the Caddyfile imports (relative to it, or absolute), the file named as it imports them
+    import=$(sed -n 's/^[[:space:]]*import[[:space:]]\{1,\}\([^[:space:]]*\*[^[:space:]]*\).*/\1/p' "$etc/Caddyfile" 2>/dev/null | head -1)
+    [ -n "$import" ] ||
         die "the Caddyfile does not import its sites: add the line import sites/* to $etc/Caddyfile, then this command again"
-    mkdir -p "$etc/sites"
+    dir=$(dirname "$import")
+    [[ $dir == /* ]] || dir="$etc/${dir#./}"
+    suffix=$(basename "$import")
+    suffix=${suffix#*\*}
+    file="$dir/$1.w4os${suffix:-.caddyfile}"
+    mkdir -p "$dir"
     printf '%s\n' "$2" >"$file"
     said=$(caddy validate --config "$etc/Caddyfile" --adapter caddyfile 2>&1) || {
         rm -f "$file"
@@ -388,6 +414,11 @@ web() {
         # Its addresses (the hosts given, separated by commas), http:// when the address of the site says so, else Caddy's https
         local tab=$'\t' addresses= address name names
         IFS=, read -ra names <<<"$host"
+        for name in "${!names[@]}"; do
+            # A host given with its scheme: the scheme is the address's, the name is the host alone (the name of the file)
+            [[ ${names[$name]} != http://* ]] || scheme=http
+            names[$name]=${names[$name]#*://}
+        done
         for name in "${names[@]}"; do
             address=$name${port:+:$port}
             [ "$scheme" != http ] || address="http://$address"
