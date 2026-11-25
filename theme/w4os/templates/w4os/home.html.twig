@@ -1,14 +1,14 @@
-{# The home page of the grid, the w4os plugin's, over the width of the site: its message of the day (a welcome) and what the grid
-   is (its info, its status) on the left, the Connect block on the right above the news, the text in the middle; one column on a
-   narrow screen. The plugin's blocks moved, as a theme extends its home (w4os.org's too). #}
+{# The home page of the grid, the w4os plugin's, over the width of the site: what the grid is (its info, its status) on the left,
+   its message of the day and the Connect block on the right above the news, the text in the middle; one column on a narrow
+   screen. The plugin's blocks moved, as a theme extends its home (w4os.org's too). #}
 {% extends '@w4os/w4os/home.html.twig' %}
 
 {% block w4os_home_grid %}
-    {{ block('w4os_home_motd') }}
     {{ block('w4os_home_grid_info') }}
     {{ block('w4os_home_grid_extra') }}
 {% endblock %}
 
 {% block w4os_home_news_before %}
+    {{ block('w4os_home_motd') }}
     {{ block('w4os_home_connect') }}
 {% endblock %}
