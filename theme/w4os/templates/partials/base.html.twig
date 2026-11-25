@@ -53,11 +53,22 @@
     </script>
 {% endblock head %}
 
-{# A backdrop behind the pages (the w4os plugin's): the page dressed for it (css/custom.css). The width of the page: the theme's for its
-   template (widths), a page of the w4os plugin by its type (w4os-search...); full and sidebars as Quark2's layout-fluid #}
+{# The width of the page: the theme's for its template (widths), a page of the w4os plugin by its type (w4os-search...) #}
+{%- set w4os_widths = config.theme.widths|default({}) -%}
+{%- set w4os_key = page.header.w4os|default(false) ? 'w4os-' ~ page.header.w4os : page.template -%}
+{%- set w4os_width = w4os_widths[w4os_key]|default(w4os_widths.default|default('standard')) -%}
+
+{# A backdrop behind the pages (the w4os plugin's): the page dressed for it (css/custom.css). Its width: full, sidebars and bleed as
+   Quark2's layout-fluid #}
 {% block body_classes %}
-    {%- set widths = config.theme.widths|default({}) -%}
-    {%- set key = page.header.w4os|default(false) ? 'w4os-' ~ page.header.w4os : page.template -%}
-    {%- set width = widths[key]|default(widths.default|default('standard')) -%}
-    {{- parent() }}{{ w4os_backdrop|default(false) ? ' w4os-backdrop' }}{{ width in ['full', 'sidebars'] ? ' layout-fluid' }} w4os-width-{{ width -}}
+    {{- parent() }}{{ w4os_backdrop|default(false) ? ' w4os-backdrop' }}{{ w4os_width in ['full', 'sidebars', 'bleed'] ? ' layout-fluid' }} w4os-width-{{ w4os_width -}}
+{% endblock %}
+
+{# A page edge to edge (bleed: the map), from under the top bar: Quark2's section of the content without its container #}
+{% block body %}
+    {%- if w4os_width == 'bleed' -%}
+        <section id="body-wrapper" class="section">{{ block('content_surround') }}</section>
+    {%- else -%}
+        {{- parent() -}}
+    {%- endif -%}
 {% endblock %}

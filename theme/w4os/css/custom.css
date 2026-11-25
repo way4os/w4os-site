@@ -118,4 +118,11 @@ h2::before { display: none; }
 
 /* A backdrop behind the pages (the w4os plugin's, body.w4os-backdrop): Quark2's canvas and footer see-through, the picture behind the
    page as it is; no card around the content, the boxes of the page alone stand out */
-body.w4os-backdrop #body-wrapper, body.w4os-backdrop #footer { background: transparent; }
+body.w4os-backdrop #body-wrapper { background: transparent; }
+
+/* A page edge to edge (bleed, the map: templates/partials/base.html.twig), from under the top bar: no space of Quark2's section, of its
+   content or of the blocks in it */
+body.w4os-width-bleed #body-wrapper { margin: 0; padding: 0; }
+body.w4os-width-bleed #body-wrapper .content-item, body.w4os-width-bleed #body-wrapper .w4os-page, body.w4os-width-bleed #body-wrapper .block { margin: 0; padding: 0; max-width: none; }
+/* The footer on the surface of the theme, light and dark, over a backdrop too */
+#footer { background: var(--q2-bg-elev); }

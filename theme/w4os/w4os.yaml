@@ -9,14 +9,15 @@ header-dark: false
 header-light: false
 sticky-footer: true
 layout-fluid: false
-# The width of a page (full, sidebars, wide, standard) by its template, a page of the w4os plugin by its type (w4os-<type>): the home of
-# the grid with its blocks in sidebars, the search and the map the whole width, the guide and the news as wide as the menu bar
+# The width of a page (bleed, full, sidebars, wide, standard) by its template, a page of the w4os plugin by its type (w4os-<type>): the
+# home of the grid with its blocks in sidebars, the search the whole width, the map edge to edge, the guide and the news as wide as the
+# menu bar
 widths:
   default: standard
   home: sidebars
   blog: wide
   w4os-search: full
-  w4os-map: full
+  w4os-map: bleed
   w4os-guide: wide
 theme-mode: auto
 accent-color: '#61c909'

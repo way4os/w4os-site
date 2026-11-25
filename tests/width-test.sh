@@ -18,7 +18,7 @@ body() {
 test_a_page_has_the_width_of_its_template_or_of_its_type_never_a_setting_of_its_own() {
     local config="$ROOT/theme/w4os/w4os.yaml"
     # The theme's map: the home with its sidebars, the plugin's search and map the whole width, its guide and the news wide
-    assert_equals "default:standard home:sidebars blog:wide w4os-search:full w4os-map:full w4os-guide:wide" \
+    assert_equals "default:standard home:sidebars blog:wide w4os-search:full w4os-map:bleed w4os-guide:wide" \
         "$(sed -n '/^widths:/,/^[a-z]/p' "$config" | grep -E '^  [a-z0-9-]+:' | sed -E 's/^  ([a-z0-9-]+): *([a-z]+).*/\1:\2/' | xargs)"
     assert_contains "{% extends 'default.html.twig' %}" "$(cat "$ROOT/theme/w4os/templates/home.html.twig")"
     # No field of its own in the admin, no width in a page
@@ -26,6 +26,15 @@ test_a_page_has_the_width_of_its_template_or_of_its_type_never_a_setting_of_its_
     assert_not_contains 'PAGE_WIDTH' "$(cat "$ROOT/theme/w4os/languages.yaml")"
     assert_empty "$(grep -rl '^width:' "$ROOT/defaults/pages" 2>/dev/null)"
     assert_not_contains 'page.header.width' "$(cat "$ROOT/theme/w4os/templates/partials/base.html.twig")"
+}
+
+test_a_page_edge_to_edge_has_quark2_s_section_without_its_container_nor_any_space() {
+    local base css
+    base=$(cat "$ROOT/theme/w4os/templates/partials/base.html.twig")
+    css=$(cat "$ROOT/theme/w4os/css/custom.css")
+    assert_contains "{%- if w4os_width == 'bleed' -%}" "$base"
+    assert_contains '<section id="body-wrapper" class="section">{{ block('"'"'content_surround'"'"') }}</section>' "$base"
+    assert_contains 'body.w4os-width-bleed #body-wrapper { margin: 0; padding: 0; }' "$css"
 }
 
 test_the_home_has_the_template_home_in_every_language() {
