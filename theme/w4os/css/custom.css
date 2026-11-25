@@ -57,6 +57,10 @@ a:hover { color: var(--q2-link-hover); }
 }
 .login-status-wrapper { display: none; }
 .w4os-toggle-label { margin-left: .5rem; }
+/* The search of the grid as an icon among the tools of the top bar (search_link: icon), with its name in the menu of a phone */
+.w4os-search-icon { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-width: 36px; height: 36px; border-radius: var(--q2-radius-pill); color: var(--q2-text-strong); text-decoration: none; }
+.w4os-search-icon:hover, .w4os-search-icon.active { background: var(--q2-bg-muted); color: var(--q2-text-strong); }
+.w4os-search-icon.is-labeled { display: flex; justify-content: flex-start; width: max-content; height: auto; margin-bottom: 1rem; }
 .w4os-visitor-menus { display: inline-flex; align-items: center; gap: 1rem; }
 .w4os-visitor-menus.w4os-menus-open { display: block; margin-bottom: 1rem; }
 .overlay .oli-langswitcher { margin-bottom: 1rem; }

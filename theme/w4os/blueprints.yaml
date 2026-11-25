@@ -15,6 +15,13 @@ form:
     accent-color:
       type: colorpicker
       label: Accent color
+    search_link:
+      type: select
+      label: Search
+      help: The search of the grid, at the end of the main menu or as an icon in the top bar.
+      options:
+        menu: In the main menu
+        icon: Icon in the top bar
     slogan:
       type: array
       label: Slogan

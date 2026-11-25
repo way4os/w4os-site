@@ -1,7 +1,13 @@
-{# The tools of the top bar, right of the centered menu: the menus of the visitor (the w4os plugin's: the admin for the managers, then
-   the avatar, always after it so that it never moves), Quark2's day and night switch, then the languages (Grav's standard
-   switcher), last. In the menu of a phone (labeled), the menus of the visitor shown as they are. #}
+{# The tools of the top bar, right of the centered menu: the search of the grid as an icon when the theme says so (search_link:
+   icon), the menus of the visitor (the w4os plugin's: the admin for the managers, then the avatar, always after it so that it never
+   moves), Quark2's day and night switch, then the languages (Grav's standard switcher), last. In the menu of a phone (labeled), the
+   search with its name, the menus of the visitor shown as they are. #}
 {% set labeled = labeled|default(false) %}
+{% if w4os_route('search') and theme_var('search_link')|default('menu') == 'icon' %}
+    <a class="w4os-search-icon{{ labeled ? ' is-labeled' }}{{ uri.path == base_url_relative ~ w4os_route('search') ? ' active' }}" href="{{ base_url_relative ~ w4os_route('search') }}"{% if not labeled %} aria-label="{{ 'w4os.search'|t|e('html_attr') }}" title="{{ 'w4os.search'|t|e('html_attr') }}"{% endif %}>
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>{% if labeled %} <span>{{ 'w4os.search'|t }}</span>{% endif %}
+    </a>
+{% endif %}
 <div class="w4os-visitor-menus{{ labeled ? ' w4os-menus-open' }}">
     {% include 'w4os/admin-menu.html.twig' ignore missing %}
     {% include 'w4os/user-menu.html.twig' ignore missing %}

@@ -41,6 +41,8 @@ custom_favicon:
     name: opensimulator-logo-square.png
     type: image/png
     path: user/themes/w4os/images/favicon/opensimulator-logo-square.png
+# The search of the grid (the w4os plugin's page): at the end of the main menu (menu), or as an icon in the top bar (icon)
+search_link: menu
 # The slogan of the site, by language: the title of the home page is "<site> | <slogan>" (the site title alone without one)
 slogan:
   en: 'A place to meet, build and explore'
