@@ -1,10 +1,8 @@
 ---
 title: 'Hafan'
 cache_enable: false
-template: default
-# The full width with sidebars, like the splash page of the helpers: the blocks of the grid around the text ([w4os-home], the w4os
-# plugin), beside it where there is room
-width: sidebars
+# The home of the grid: its blocks in sidebars around the text ([w4os-home], the w4os plugin), the width of the template home
+template: home
 ---
 [w4os-home]
 # Croeso i [site-title]

@@ -1,25 +1,5 @@
-# Quark2's texts in the languages of the site Quark2 has none of (it has English and Spanish), merged with its own by Grav; the theme's
-# own (THEME_W4OS)
-en:
-  THEME_W4OS:
-    PAGE_WIDTH:
-      LABEL: 'Page width'
-      HELP: 'How wide the content of the page is; without a choice, the width the theme gives pages of its template'
-      DEFAULT: 'As the theme gives it'
-      FULL: 'Full width'
-      SIDEBARS: 'Full width, with sidebars'
-      WIDE: 'Wide'
-      STANDARD: 'Standard, a column to read'
+# Quark2's texts in the languages of the site Quark2 has none of (it has English and Spanish), merged with its own by Grav
 fr:
-  THEME_W4OS:
-    PAGE_WIDTH:
-      LABEL: 'Largeur de la page'
-      HELP: 'La largeur du contenu de la page ; sans choix, celle que le thème donne aux pages de son modèle'
-      DEFAULT: 'Celle du thème'
-      FULL: 'Pleine largeur'
-      SIDEBARS: 'Pleine largeur, avec barres latérales'
-      WIDE: 'Large'
-      STANDARD: 'Standard, une colonne de lecture'
   THEME_QUARK2:
     ERROR:
       BACK_HOME: 'Retour à l’accueil'
@@ -58,15 +38,6 @@ fr:
       POST_COUNT: 'Nombre d’articles'
       OPEN_POST: 'Ouvrir l’article'
 de:
-  THEME_W4OS:
-    PAGE_WIDTH:
-      LABEL: 'Seitenbreite'
-      HELP: 'Wie breit der Inhalt der Seite ist; ohne Auswahl die Breite, die das Theme den Seiten seiner Vorlage gibt'
-      DEFAULT: 'Wie vom Theme vorgegeben'
-      FULL: 'Volle Breite'
-      SIDEBARS: 'Volle Breite, mit Seitenleisten'
-      WIDE: 'Breit'
-      STANDARD: 'Standard, eine Spalte zum Lesen'
   THEME_QUARK2:
     ERROR:
       BACK_HOME: 'Zur Startseite'
@@ -105,15 +76,6 @@ de:
       POST_COUNT: 'Anzahl der Beiträge'
       OPEN_POST: 'Beitrag öffnen'
 it:
-  THEME_W4OS:
-    PAGE_WIDTH:
-      LABEL: 'Larghezza della pagina'
-      HELP: 'Quanto è largo il contenuto della pagina; senza una scelta, la larghezza che il tema dà alle pagine del suo modello'
-      DEFAULT: 'Come la dà il tema'
-      FULL: 'Larghezza piena'
-      SIDEBARS: 'Larghezza piena, con barre laterali'
-      WIDE: 'Larga'
-      STANDARD: 'Standard, una colonna da leggere'
   THEME_QUARK2:
     ERROR:
       BACK_HOME: 'Torna alla home'
@@ -152,15 +114,6 @@ it:
       POST_COUNT: 'Numero di articoli'
       OPEN_POST: 'Apri l’articolo'
 nl:
-  THEME_W4OS:
-    PAGE_WIDTH:
-      LABEL: 'Paginabreedte'
-      HELP: 'Hoe breed de inhoud van de pagina is; zonder keuze de breedte die het thema de pagina’s van zijn sjabloon geeft'
-      DEFAULT: 'Zoals het thema die geeft'
-      FULL: 'Volle breedte'
-      SIDEBARS: 'Volle breedte, met zijbalken'
-      WIDE: 'Breed'
-      STANDARD: 'Standaard, een kolom om te lezen'
   THEME_QUARK2:
     ERROR:
       BACK_HOME: 'Terug naar de startpagina'
@@ -199,15 +152,6 @@ nl:
       POST_COUNT: 'Aantal berichten'
       OPEN_POST: 'Bericht openen'
 pt-BR:
-  THEME_W4OS:
-    PAGE_WIDTH:
-      LABEL: 'Largura da página'
-      HELP: 'A largura do conteúdo da página; sem escolha, a largura que o tema dá às páginas do seu modelo'
-      DEFAULT: 'Como o tema define'
-      FULL: 'Largura total'
-      SIDEBARS: 'Largura total, com barras laterais'
-      WIDE: 'Larga'
-      STANDARD: 'Padrão, uma coluna para ler'
   THEME_QUARK2:
     ERROR:
       BACK_HOME: 'Voltar ao início'
@@ -246,15 +190,6 @@ pt-BR:
       POST_COUNT: 'Número de posts'
       OPEN_POST: 'Abrir o post'
 cy:
-  THEME_W4OS:
-    PAGE_WIDTH:
-      LABEL: 'Lled y dudalen'
-      HELP: 'Pa mor llydan yw cynnwys y dudalen; heb ddewis, y lled y mae’r thema yn ei roi i dudalennau ei dempled'
-      DEFAULT: 'Fel y mae’r thema yn ei roi'
-      FULL: 'Lled llawn'
-      SIDEBARS: 'Lled llawn, gyda bariau ochr'
-      WIDE: 'Llydan'
-      STANDARD: 'Safonol, colofn i’w darllen'
   THEME_QUARK2:
     ERROR:
       BACK_HOME: 'Yn ôl i’r hafan'

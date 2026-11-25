@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# The width of a page, an option of its own (its header "width", a select of the admin): full, sidebars (full width, with the
-# sidebars of the home), wide (the width of the menu bar), standard (a column to read); the theme's default by template otherwise.
-# End to end at the root and under a prefix: the classes of the theme each page gets.
+# The width of a page: the theme's for its template (widths of w4os.yaml: full, sidebars, wide, standard), a page of the w4os plugin by
+# its type (w4os-search...); no setting of its own. End to end at the root and under a prefix: the classes of the theme each page gets.
 
 # shellcheck source=site.sh
 source "$(dirname "${BASH_SOURCE[0]}")/site.sh"
@@ -16,58 +15,24 @@ body() {
     curl -sL "$1$2" | grep -o '<body [^>]*class="[^"]*"' | sed 's/.*class="//; s/"$//'
 }
 
-test_the_admin_gives_a_page_its_width_among_four() {
-    local blueprint="$ROOT/theme/w4os/blueprints/default.yaml"
-    assert_file_exists "$blueprint"
-    # Quark2's page form, then Grav's, with the field added to it: the next form of the same type, never a path of its own (a loop)
-    assert_contains 'extends@: default' "$(cat "$blueprint")"
-    assert_not_contains 'context:' "$(cat "$blueprint")"
-    assert_contains 'PAGE_WIDTH:' "$(cat "$ROOT/theme/w4os/languages.yaml")"
+test_a_page_has_the_width_of_its_template_or_of_its_type_never_a_setting_of_its_own() {
+    local config="$ROOT/theme/w4os/w4os.yaml"
+    # The theme's map: the home with its sidebars, the plugin's search and map the whole width, its guide and the news wide
+    assert_equals "default:standard home:sidebars blog:wide w4os-search:full w4os-map:full w4os-guide:wide" \
+        "$(sed -n '/^widths:/,/^[a-z]/p' "$config" | grep -E '^  [a-z0-9-]+:' | sed -E 's/^  ([a-z0-9-]+): *([a-z]+).*/\1:\2/' | xargs)"
+    assert_contains "{% extends 'default.html.twig' %}" "$(cat "$ROOT/theme/w4os/templates/home.html.twig")"
+    # No field of its own in the admin, no width in a page
+    assert_file_not_exists "$ROOT/theme/w4os/blueprints/default.yaml"
+    assert_not_contains 'PAGE_WIDTH' "$(cat "$ROOT/theme/w4os/languages.yaml")"
+    assert_empty "$(grep -rl '^width:' "$ROOT/defaults/pages" 2>/dev/null)"
+    assert_not_contains 'page.header.width' "$(cat "$ROOT/theme/w4os/templates/partials/base.html.twig")"
 }
 
-test_the_admin_loads_the_form_of_a_page_with_its_width() {
-    local tree=${W4OS_SITE_BUILD:-$ROOT/build/w4os-site/grav}
-    [ -f "$tree/index.php" ] || { bashunit::skip "the site is not built"; return; }
-    [ "$(LC_ALL=C diff -q "$ROOT/theme/w4os/blueprints/default.yaml" "$tree/user/themes/w4os/blueprints/default.yaml" 2>&1)" = "" ] ||
-        { bashunit::skip "the Grav tree is older than the theme: dev/build.sh"; return; }
-    # The form as Grav loads it for the admin (Pages::blueprints()), where it has the field: its Advanced tab, first column
-    assert_equals "/tabs/PLUGIN_ADMIN.ADVANCED/columns/column1/THEME_W4OS.PAGE_WIDTH.LABEL full sidebars wide standard" "$(php -r '
-        define("GRAV_CLI", true);
-        chdir($argv[1]);
-        $loader = require "vendor/autoload.php";
-        $grav = Grav\Common\Grav::instance(["loader" => $loader]);
-        $grav->setup();
-        $grav["config"]->init();
-        $grav["plugins"]->init();
-        $grav["themes"]->init();
-        $walk = function (array $fields, string $path) use (&$walk) {
-            foreach ($fields as $key => $field) {
-                if (!is_array($field)) { continue; }
-                $at = $path . "/" . ($field["title"] ?? $field["label"] ?? $key);
-                ($field["name"] ?? $key) === "header.width" && print($at . " " . implode(" ", array_keys($field["options"] ?? [])));
-                isset($field["fields"]) && $walk($field["fields"], $at);
-            }
-        };
-        $walk($grav["pages"]->blueprints("default")->fields(), "");
-    ' "$tree" 2>/dev/null)"
-}
-
-test_the_widths_are_named_in_every_language_of_the_site() {
-    local languages="$ROOT/theme/w4os/languages.yaml"
-    [ -f "$ROOT/build/w4os-site/grav/vendor/autoload.php" ] || { bashunit::skip "the site is not built"; return; }
-    # The texts of the theme's own (THEME_W4OS), the English ones in each language, never left in English
-    assert_empty "$(php -r 'require $argv[1]; $y = Symfony\Component\Yaml\Yaml::parseFile($argv[2]);
-        $en = $y["en"]["THEME_W4OS"]["PAGE_WIDTH"];
-        foreach (["fr", "de", "it", "nl", "pt-BR", "cy"] as $l) { foreach ($en as $k => $text) { $t = $y[$l]["THEME_W4OS"]["PAGE_WIDTH"][$k] ?? null; if ($t === null || ($t === $text && $k !== "STANDARD")) { echo "$l $k\n"; } } }' \
-        "$ROOT/build/w4os-site/grav/vendor/autoload.php" "$languages")"
-    assert_contains "WIDE: 'Wide'" "$(cat "$languages")"
-}
-
-test_the_home_says_its_width_in_every_language() {
+test_the_home_has_the_template_home_in_every_language() {
     local file
     for file in "$ROOT"/defaults/pages/01.home/*.md; do
-        assert_contains 'width: sidebars' "$(cat "$file")"
-        assert_not_contains 'body_classes: layout-fluid' "$(cat "$file")"
+        assert_contains 'template: home' "$(cat "$file")"
+        assert_not_contains 'width:' "$(cat "$file")"
     done
 }
 

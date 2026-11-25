@@ -70,7 +70,7 @@ a:hover { color: var(--q2-link-hover); }
 /* The links of the w4os plugin under the button, inside the panel of the Login plugin */
 #grav-login .w4os-login-links { margin: 1rem 0 0; text-align: center; }
 
-/* The width of a page (its header width, templates/partials/base.html.twig): full and sidebars as Quark2's layout-fluid, wide as wide
+/* The width of a page (by its template, widths of w4os.yaml; templates/partials/base.html.twig): full and sidebars as Quark2's layout-fluid, wide as wide
    as the menu bar, standard Quark2's column */
 body.w4os-width-wide #body-wrapper > .container > .content-item { max-width: none; }
 
