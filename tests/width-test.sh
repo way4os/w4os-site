@@ -19,15 +19,37 @@ body() {
 test_the_admin_gives_a_page_its_width_among_four() {
     local blueprint="$ROOT/theme/w4os/blueprints/default.yaml"
     assert_file_exists "$blueprint"
-    # Quark2's page form, with the field added to it
-    assert_contains 'context: theme://quark2/blueprints' "$(cat "$blueprint")"
-    assert_equals "full sidebars wide standard" "$(php -r '
-        require $argv[1];
-        $yaml = Symfony\Component\Yaml\Yaml::parseFile($argv[2]);
-        $field = $yaml["form"]["fields"]["tabs"]["fields"]["advanced"]["fields"]["columns"]["fields"]["column1"]["fields"]["header.width"];
-        echo $field["type"] === "select" ? implode(" ", array_keys($field["options"])) : "";
-    ' "$ROOT/build/w4os-site/grav/vendor/autoload.php" "$blueprint" 2>/dev/null)"
+    # Quark2's page form, then Grav's, with the field added to it: the next form of the same type, never a path of its own (a loop)
+    assert_contains 'extends@: default' "$(cat "$blueprint")"
+    assert_not_contains 'context:' "$(cat "$blueprint")"
     assert_contains 'PAGE_WIDTH:' "$(cat "$ROOT/theme/w4os/languages.yaml")"
+}
+
+test_the_admin_loads_the_form_of_a_page_with_its_width() {
+    local tree=${W4OS_SITE_BUILD:-$ROOT/build/w4os-site/grav}
+    [ -f "$tree/index.php" ] || { bashunit::skip "the site is not built"; return; }
+    [ "$(LC_ALL=C diff -q "$ROOT/theme/w4os/blueprints/default.yaml" "$tree/user/themes/w4os/blueprints/default.yaml" 2>&1)" = "" ] ||
+        { bashunit::skip "the Grav tree is older than the theme: dev/build.sh"; return; }
+    # The form as Grav loads it for the admin (Pages::blueprints()), where it has the field: its Advanced tab, first column
+    assert_equals "/tabs/PLUGIN_ADMIN.ADVANCED/columns/column1/THEME_W4OS.PAGE_WIDTH.LABEL full sidebars wide standard" "$(php -r '
+        define("GRAV_CLI", true);
+        chdir($argv[1]);
+        $loader = require "vendor/autoload.php";
+        $grav = Grav\Common\Grav::instance(["loader" => $loader]);
+        $grav->setup();
+        $grav["config"]->init();
+        $grav["plugins"]->init();
+        $grav["themes"]->init();
+        $walk = function (array $fields, string $path) use (&$walk) {
+            foreach ($fields as $key => $field) {
+                if (!is_array($field)) { continue; }
+                $at = $path . "/" . ($field["title"] ?? $field["label"] ?? $key);
+                ($field["name"] ?? $key) === "header.width" && print($at . " " . implode(" ", array_keys($field["options"] ?? [])));
+                isset($field["fields"]) && $walk($field["fields"], $at);
+            }
+        };
+        $walk($grav["pages"]->blueprints("default")->fields(), "");
+    ' "$tree" 2>/dev/null)"
 }
 
 test_the_widths_are_named_in_every_language_of_the_site() {

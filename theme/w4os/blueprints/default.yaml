@@ -1,7 +1,6 @@
-# The form of a page in the admin: Quark2's, with the width of the page (templates/partials/base.html.twig gives it its classes)
-extends@:
-  type: default
-  context: theme://quark2/blueprints
+# The form of a page in the admin: Quark2's, with the width of the page (templates/partials/base.html.twig gives it its classes). It
+# extends the next form of the same type (Quark2's, then Grav's), as Quark2 extends Grav's: never a path of its own, which loops
+extends@: default
 
 form:
   fields:
