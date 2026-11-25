@@ -47,13 +47,14 @@ test_the_pages_show_a_picture_of_each_mode_behind_them_as_grav_serves_it() {
     done
 }
 
-test_a_page_a_viewer_shows_has_none_whatever_the_page() {
+VIEWER='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) SecondLife/7.1.11.15094 (Firestorm) Safari/537.36'
+
+test_a_page_a_viewer_shows_has_none_but_the_splash_page() {
     built || return 0
-    local agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) SecondLife/7.1.11.15094 (Firestorm) Safari/537.36'
     local base path page
     for base in "$URL" "$PREFIXED"; do
         for path in / /about; do
-            page=$(curl -sL -A "$agent" "$base$path")
+            page=$(curl -sL -A "$VIEWER" "$base$path")
             assert_contains '</html>' "$page"
             assert_not_contains 'w4os-backdrop' "$page"
             assert_not_contains '/images/backdrop/' "$page"
@@ -61,9 +62,17 @@ test_a_page_a_viewer_shows_has_none_whatever_the_page() {
     done
 }
 
-test_the_welcome_page_of_the_viewer_has_none() {
+test_the_splash_page_of_the_viewer_has_one_in_the_viewer_and_in_a_browser() {
     built || return 0
-    assert_not_contains 'w4os-backdrop' "$(curl -s "$URL/welcome")"
+    local base page agent
+    for base in "$URL" "$PREFIXED"; do
+        for agent in "$VIEWER" "Mozilla/5.0"; do
+            page=$(curl -sL -A "$agent" "$base/welcome")
+            assert_contains 'w4os-welcome' "$page"
+            assert_matches '-(aube|crepuscule|minuit)\.webp' "$(backdrop "$page" dark webp)"
+            assert_matches '-(midi|midi-legacy|shared-13h17|shared-13h20)\.webp' "$(backdrop "$page" light webp)"
+        done
+    done
 }
 
 test_the_picture_shows_behind_the_page_with_no_card_around_its_content() {
