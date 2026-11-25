@@ -1,0 +1,17 @@
+{# Quark2's logo (1.1.22) with two changes: on a phone its own logo, else the site's one; without a logo of the site, its name as
+   text, never Grav's logo (css/custom.css: w4os-brand-name) #}
+{% set logo = theme_var(mobile ? 'custom_logo_mobile' : 'custom_logo') %}
+{% set logo = (logo is iterable and logo|length > 0) or not mobile ? logo : theme_var('custom_logo') %}
+{% set logo_first = (logo is iterable and logo|length > 0) ? logo|first : null %}
+{% set logo_file = logo_first.name|default(null) %}
+<a href="{{ home_url }}" class="navbar-brand" aria-label="{{ site.title }}" title="{{ site.title }}">
+{% if logo_file %}
+    {% if logo_file|lower ends with '.svg' %}
+        {{ svg_image('theme://images/logo/' ~ logo_file)|raw }}
+    {% else %}
+        <img src="{{ url('theme://images/logo/' ~ logo_file) }}" alt="{{ site.title }}" />
+    {% endif %}
+{% else %}
+    <span class="w4os-brand-name">{{ site.title }}</span>
+{% endif %}
+</a>

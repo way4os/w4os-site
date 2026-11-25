@@ -378,9 +378,23 @@ test_the_home_page_is_the_theme_s_home_page_the_blocks_of_the_grid_around_its_te
 test_nothing_writes_in_the_themes_of_the_package_the_logo_and_the_favicon_a_site_sets_are_its_data() {
     assert_not_contains "images/logo" "$(cat "$ROOT/packaging/w4os-site.postinst")"
     assert_not_contains "images/logo" "$(cat "$ROOT/dev/deploy.sh")"
-    assert_file_not_exists "$ROOT/theme/w4os/templates/partials/logo.html.twig"
     assert_contains "custom_logo:" "$(cat "$ROOT/theme/w4os/blueprints.yaml")"
     assert_file_exists "$ROOT/theme/w4os/images/logo/opensimulator-logo.png"
+}
+
+test_without_a_logo_of_its_own_the_site_shows_its_name_never_another_logo() {
+    local partial
+    partial=$(cat "$ROOT/theme/w4os/templates/partials/logo.html.twig")
+    # No logo given by the theme; Quark2's partial with its name in place of Grav's logo, the phone's logo the site's when it has none
+    assert_not_contains "custom_logo:" "$(cat "$ROOT/theme/w4os/w4os.yaml")"
+    assert_not_contains "custom_logo_mobile:" "$(cat "$ROOT/theme/w4os/w4os.yaml")"
+    assert_contains '<span class="w4os-brand-name">{{ site.title }}</span>' "$partial"
+    assert_not_contains "grav-logo" "$partial"
+    assert_contains "theme_var('custom_logo')" "$partial"
+    # The old default a site kept counts as none
+    assert_contains "public const OLD_DEFAULT_LOGO = 'user/themes/w4os/images/logo/opensimulator-logo.png';" "$(cat "$ROOT/theme/w4os/w4os.php")"
+    # Its name never squeezed: cut short, the site's icon below 6rem
+    assert_contains "body.w4os-logo-text #header .navbar-brand::before { content: \"\"; flex: none; width: clamp(0px, (6rem - 100%) * 999, 28px)" "$(cat "$ROOT/theme/w4os/css/custom.css")"
 }
 
 test_the_site_gives_its_own_favicon_the_square_opensimulator_logo_as_the_theme_s_setting() {

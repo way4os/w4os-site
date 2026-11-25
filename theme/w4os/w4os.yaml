@@ -21,19 +21,8 @@ widths:
   w4os-guide: wide
 theme-mode: auto
 accent-color: '#61c909'
-# The logo of the site, Quark2's own setting (the settings page of the site changes it): the OpenSimulator logo until the site sets
-# its own
-custom_logo:
-  user/themes/w4os/images/logo/opensimulator-logo.png:
-    name: opensimulator-logo.png
-    type: image/png
-    path: user/themes/w4os/images/logo/opensimulator-logo.png
-# The same logo in the menu on a phone (Quark2's own setting)
-custom_logo_mobile:
-  user/themes/w4os/images/logo/opensimulator-logo.png:
-    name: opensimulator-logo.png
-    type: image/png
-    path: user/themes/w4os/images/logo/opensimulator-logo.png
+# No logo of the site's own here: the top bar shows the name of the site until it sets one (Quark2's custom_logo, the settings page
+# of the site), never the logo of another (templates/partials/logo.html.twig)
 # The favicon of the site, Quark2's own setting (the settings page of the site changes it): the OpenSimulator logo on a square
 # until the site sets its own
 custom_favicon:

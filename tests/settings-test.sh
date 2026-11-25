@@ -127,7 +127,9 @@ test_the_brand_is_the_site_s_shown_by_every_theme_what_a_theme_kept_before_becom
     save_settings "$TMP/god4" "data[theme]=w4os" "data[_json][logo]=[]" "data[_json][favicon]=[]"
     assert_not_contains "brand:" "$(cat "$SITE/user/config/plugins/w4os.yaml")"
     sleep 3
-    assert_contains "opensimulator-logo.png" "$(curl -s -L "$URL/")"
+    # No logo of its own: its name, never another logo
+    assert_contains 'class="w4os-brand-name"' "$(curl -s -L "$URL/")"
+    assert_not_contains "images/logo/" "$(curl -s -L "$URL/" | sed -n '/navbar-section logo/,/<\/a>/p')"
     rm -f "$SITE/user/config/themes/w4os.yaml"
     sleep 3
 }

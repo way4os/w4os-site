@@ -48,6 +48,16 @@ a:hover { color: var(--q2-link-hover); }
 body.w4os-logo-fit #header .navbar-section.logo { width: calc(28px * var(--w4os-logo-ratio)); max-width: 100%; min-width: 28px; }
 body.w4os-logo-fit #header .navbar-brand { display: flex; width: 100%; height: 28px; gap: 0; }
 body.w4os-logo-fit #header .navbar-brand img { flex: none; min-width: 0; max-width: none; width: clamp(0px, (100% - 20px * var(--w4os-logo-ratio)) * 999, 100%); height: auto; }
+/* Without a logo of the site, its name as the logo (templates/partials/logo.html.twig), in the theme's title font: whole, cut short
+   when the menus need the room, the site's icon in its place below 6rem (the top bar in three columns); never wider than a phone's */
+.w4os-brand-name { font-family: var(--pico-font-family-display, inherit); font-size: 1.25rem; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--q2-text-strong, inherit); }
+body.w4os-logo-text #header .w4os-brand-name { max-width: calc(100vw - 7rem); }
+@media (min-width: 861px) {
+    body.w4os-logo-text #header .navbar-section.logo { min-width: 28px; }
+    body.w4os-logo-text #header .navbar-brand { display: flex; width: 100%; min-width: 0; gap: 0; }
+    body.w4os-logo-text #header .w4os-brand-name { max-width: clamp(0px, (100% - 6rem) * 999, 100%); }
+    body.w4os-logo-text #header .navbar-brand::before { content: ""; flex: none; width: clamp(0px, (6rem - 100%) * 999, 28px); height: 28px; background: var(--w4os-logo-icon, none) center / contain no-repeat; }
+}
 body.w4os-logo-fit #header .navbar-brand::before { content: ""; flex: none; width: clamp(0px, (20px * var(--w4os-logo-ratio) - 100%) * 999, 28px); height: 28px; background: var(--w4os-logo-icon) center / contain no-repeat; }
 .w4os-credits { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .25rem .6rem; }
 .w4os-credits > span:first-child { opacity: .75; }
