@@ -30,6 +30,17 @@ test_the_admin_gives_a_page_its_width_among_four() {
     assert_contains 'PAGE_WIDTH:' "$(cat "$ROOT/theme/w4os/languages.yaml")"
 }
 
+test_the_widths_are_named_in_every_language_of_the_site() {
+    local languages="$ROOT/theme/w4os/languages.yaml"
+    [ -f "$ROOT/build/w4os-site/grav/vendor/autoload.php" ] || { bashunit::skip "the site is not built"; return; }
+    # The texts of the theme's own (THEME_W4OS), the English ones in each language, never left in English
+    assert_empty "$(php -r 'require $argv[1]; $y = Symfony\Component\Yaml\Yaml::parseFile($argv[2]);
+        $en = $y["en"]["THEME_W4OS"]["PAGE_WIDTH"];
+        foreach (["fr", "de", "it", "nl", "pt-BR", "cy"] as $l) { foreach ($en as $k => $text) { $t = $y[$l]["THEME_W4OS"]["PAGE_WIDTH"][$k] ?? null; if ($t === null || ($t === $text && $k !== "STANDARD")) { echo "$l $k\n"; } } }' \
+        "$ROOT/build/w4os-site/grav/vendor/autoload.php" "$languages")"
+    assert_contains "WIDE: 'Wide'" "$(cat "$languages")"
+}
+
 test_the_home_says_its_width_in_every_language() {
     local file
     for file in "$ROOT"/defaults/pages/01.home/*.md; do
