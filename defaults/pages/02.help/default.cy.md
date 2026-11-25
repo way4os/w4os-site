@@ -8,9 +8,11 @@ cache_enable: false
 
 [hypergrid-visit]
 
-## 1. Crea dy afatar
+[w4os-register]
 
-[w4os-register]Mae'r [ffurflen gofrestru](/register) yn gofyn am:[/w4os-register]
+## Crea dy afatar
+
+Mae'r [ffurflen gofrestru](/register) yn gofyn am:
 
 - **Enw dy afatar** (enw cyntaf a chyfenw): dyma dy enw defnyddiwr i fewngofnodi, yr enw mae pobl eraill yn ei weld yn y byd, a chyfeiriad dy broffil (/profile/Enw.Cyfenw). Does dim modd ei newid ar ôl i'r afatar gael ei greu, felly dewisa fe'n ofalus.
 - **Dy gyfeiriad ebost**: mae'r grid yn anfon dolen gadarnhau ato, ac mae ei angen arnat i ddewis cyfrinair newydd os byddi di'n colli dy un di. Dydy e byth yn cael ei ddangos i neb.
@@ -19,7 +21,9 @@ cache_enable: false
 
 Wedyn agora'r ebost a chlicia ar ei ddolen: dyna'r adeg mae'r afatar yn cael ei greu, nid cynt. Dim ebost ar ôl ychydig funudau? Edrycha yn dy ffolder sbam.
 
-## 2. Ychwanega'r grid at dy viewer
+[/w4os-register]
+
+## Ychwanega'r grid at dy viewer
 
 **Y viewer** yw'r rhaglen rwyt ti'n mynd i mewn i'r byd gyda hi, fel porwr ar gyfer gwefannau. Mae unrhyw viewer a wnaed ar gyfer OpenSimulator yn gweithio:
 
@@ -39,7 +43,7 @@ Dydy e ddim yn gweithio?
 - Gwiria fod dy viewer yn fersiwn ar gyfer OpenSim.
 - Mae statws y grid ar y [dudalen gartref](/): os yw'n dweud ei fod all-lein, rho gynnig arall arni nes ymlaen.
 
-## 3. Cysyllta
+## Cysyllta
 
 Ar sgrin mewngofnodi'r viewer:
 

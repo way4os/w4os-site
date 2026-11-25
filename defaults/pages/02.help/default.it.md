@@ -8,9 +8,11 @@ cache_enable: false
 
 [hypergrid-visit]
 
-## 1. Crea il tuo avatar
+[w4os-register]
 
-[w4os-register]Il [modulo di registrazione](/register) ti chiede:[/w4os-register]
+## Crea il tuo avatar
+
+Il [modulo di registrazione](/register) ti chiede:
 
 - **Il nome del tuo avatar** (un nome e un cognome): è il tuo nome utente per accedere, il nome che gli altri vedono nel mondo e l'indirizzo del tuo profilo (/profile/Nome.Cognome). Non si può più cambiare una volta creato l'avatar: sceglilo con cura.
 - **Il tuo indirizzo email**: la griglia ci invia un link di conferma, e ti serve per scegliere una nuova password se perdi la tua. Non viene mai mostrato a nessuno.
@@ -19,7 +21,9 @@ cache_enable: false
 
 Poi apri l'email e clicca sul suo link: l'avatar viene creato in quel momento, non prima. Nessuna email dopo qualche minuto? Guarda nella cartella dello spam.
 
-## 2. Aggiungi la griglia al tuo viewer
+[/w4os-register]
+
+## Aggiungi la griglia al tuo viewer
 
 **Il viewer** è il programma con cui entri nel mondo, come un browser per i siti web. Va bene qualsiasi viewer fatto per OpenSimulator:
 
@@ -39,7 +43,7 @@ Non funziona?
 - Controlla che il tuo viewer sia una versione per OpenSim.
 - Lo stato della griglia è sulla [pagina iniziale](/): se dice che è offline, riprova più tardi.
 
-## 3. Connettiti
+## Connettiti
 
 Sulla schermata di accesso del viewer:
 

@@ -8,9 +8,11 @@ cache_enable: false
 
 [hypergrid-visit]
 
-## 1. Crée ton avatar
+[w4os-register]
 
-[w4os-register]Le [formulaire d'inscription](/register) te demande :[/w4os-register]
+## Crée ton avatar
+
+Le [formulaire d'inscription](/register) te demande :
 
 - **Le nom de ton avatar** (un prénom et un nom) : c'est ton identifiant pour te connecter, le nom que les autres voient dans le monde, et l'adresse de ton profil (/profile/Prénom.Nom). Il ne peut plus changer une fois l'avatar créé : choisis-le avec soin.
 - **Ton adresse e-mail** : la grille y envoie un lien de confirmation, et elle te servira à choisir un nouveau mot de passe si tu perds le tien. Elle n'est jamais montrée à personne.
@@ -19,7 +21,9 @@ cache_enable: false
 
 Ouvre ensuite le mail et clique sur son lien : c'est à ce moment-là que l'avatar est créé, pas avant. Pas de mail après quelques minutes ? Jette un œil dans tes indésirables.
 
-## 2. Ajoute la grille à ton viewer
+[/w4os-register]
+
+## Ajoute la grille à ton viewer
 
 **Le viewer** est le programme avec lequel on entre dans le monde, comme un navigateur pour les sites web. Tous les viewers faits pour OpenSimulator conviennent :
 
@@ -39,7 +43,7 @@ Installe-le comme n'importe quel programme.
 - Vérifie que ton viewer est bien une version pour OpenSim.
 - L'état de la grille est sur la [page d'accueil](/) : si elle est hors ligne, réessaie un peu plus tard.
 
-## 3. Connecte-toi
+## Connecte-toi
 
 Sur l'écran de connexion du viewer :
 

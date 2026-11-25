@@ -8,9 +8,11 @@ cache_enable: false
 
 [hypergrid-visit]
 
-## 1. Crie seu avatar
+[w4os-register]
 
-[w4os-register]O [formulário de cadastro](/register) pede:[/w4os-register]
+## Crie seu avatar
+
+O [formulário de cadastro](/register) pede:
 
 - **O nome do seu avatar** (um nome e um sobrenome): é o seu nome de usuário para entrar, o nome que os outros veem no mundo e o endereço do seu perfil (/profile/Nome.Sobrenome). Ele não pode mais ser mudado depois que o avatar existe, então escolha com cuidado.
 - **Seu endereço de email**: o grid envia um link de confirmação para ele, e você precisa dele para escolher uma nova senha se perder a sua. Ele nunca é mostrado a ninguém.
@@ -19,7 +21,9 @@ cache_enable: false
 
 Depois abra o email e clique no link dele: o avatar é criado nesse momento, não antes. Nenhum email depois de alguns minutos? Olhe na sua pasta de spam.
 
-## 2. Adicione o grid ao seu viewer
+[/w4os-register]
+
+## Adicione o grid ao seu viewer
 
 **O viewer** é o programa com que você entra no mundo, como um navegador para os sites. Qualquer viewer feito para OpenSimulator funciona:
 
@@ -39,7 +43,7 @@ Não funciona?
 - Confira se o seu viewer é uma versão para OpenSim.
 - O status do grid está na [página inicial](/): se ela disser que está offline, tente de novo mais tarde.
 
-## 3. Conecte-se
+## Conecte-se
 
 Na tela de login do viewer:
 
