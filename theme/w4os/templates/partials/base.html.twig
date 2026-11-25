@@ -37,6 +37,11 @@
     </style>
     {% endif %}
 
+    {% if w4os_logo_ratio %}
+    {# The ratio of the logo of the top bar (its file, as Grav's media read it) and the site's icon, for css/custom.css #}
+    <style>:root { --w4os-logo-ratio: {{ w4os_logo_ratio }}; --w4os-logo-icon: url("{{ w4os_logo_icon|e('css') }}"); }</style>
+    {% endif %}
+
     {# Pre-paint theme bootstrap — blocks FOUC by setting data-theme synchronously #}
     <script>
     (function () {
@@ -53,6 +58,18 @@
     </script>
 {% endblock head %}
 
+{# The logo of the top bar never distorted: its ratio (Grav's media of the theme's logo, the one Quark2's partial shows) and the
+   site's icon (Quark2's favicon) to take its place when the menus leave it too little room (css/custom.css: w4os-logo-fit) #}
+{%- set w4os_logo = theme_var('custom_logo') -%}
+{%- set w4os_logo_file = (w4os_logo is iterable and w4os_logo|length > 0) ? (w4os_logo|first).name|default(null) : null -%}
+{%- set w4os_logo_media = w4os_logo_file ? media_directory('theme://images/logo') : null -%}
+{%- set w4os_logo_medium = w4os_logo_media ? w4os_logo_media[w4os_logo_file]|default(null) : null -%}
+{%- set w4os_logo_ratio = w4os_logo_medium and w4os_logo_medium.width and w4os_logo_medium.height ? (w4os_logo_medium.width / w4os_logo_medium.height)|round(3) : null -%}
+{%- set w4os_favicon = theme_var('custom_favicon') -%}
+{%- set w4os_favicon_file = (w4os_favicon is iterable and w4os_favicon|length > 0) ? (w4os_favicon|first).name|default(null) : null -%}
+{%- set w4os_logo_icon = w4os_favicon_file ? url('theme://images/favicon/' ~ w4os_favicon_file) : null -%}
+{%- set w4os_logo_ratio = w4os_logo_icon ? w4os_logo_ratio : null -%}
+
 {# The width of the page: the theme's for its template (widths), a page of the w4os plugin by its type (w4os-search...) #}
 {%- set w4os_widths = config.theme.widths|default({}) -%}
 {%- set w4os_key = page.header.w4os|default(false) ? 'w4os-' ~ page.header.w4os : page.template -%}
@@ -61,7 +78,7 @@
 {# A backdrop behind the pages (the w4os plugin's): the page dressed for it (css/custom.css). Its width: full, sidebars and bleed as
    Quark2's layout-fluid #}
 {% block body_classes %}
-    {{- parent() }}{{ w4os_backdrop|default(false) ? ' w4os-backdrop' }}{{ w4os_width in ['full', 'sidebars', 'bleed'] ? ' layout-fluid' }} w4os-width-{{ w4os_width -}}
+    {{- parent() }}{{ w4os_logo_ratio ? ' w4os-logo-fit' }}{{ w4os_backdrop|default(false) ? ' w4os-backdrop' }}{{ w4os_width in ['full', 'sidebars', 'bleed'] ? ' layout-fluid' }} w4os-width-{{ w4os_width -}}
 {% endblock %}
 
 {# A page edge to edge (bleed: the map), from under the top bar: Quark2's section of the content without its container #}

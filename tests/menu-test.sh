@@ -147,3 +147,18 @@ test_the_leftovers_of_the_demos_of_hadron_and_learn2_are_out_on_any_site_without
     sleep 3
 }
 
+
+test_the_logo_of_the_top_bar_keeps_its_ratio_and_gives_way_to_the_icon_of_the_site() {
+    local css base
+    css=$(cat "$ROOT/theme/w4os/css/custom.css")
+    base=$(cat "$ROOT/theme/w4os/templates/partials/base.html.twig")
+    # Its ratio from its file (Grav's media), the site's icon beside it
+    assert_contains "media_directory('theme://images/logo')" "$base"
+    assert_contains '--w4os-logo-ratio: {{ w4os_logo_ratio }}' "$base"
+    assert_contains "url('theme://images/favicon/' ~ w4os_favicon_file)" "$base"
+    # Never wider than its height allows, its side of the top bar the first to give room, the icon below 20 px high
+    assert_contains 'width: calc(28px * var(--w4os-logo-ratio)); max-width: 100%;' "$css"
+    assert_contains 'grid-template-columns: minmax(28px, 1fr) auto minmax(max-content, 1fr);' "$css"
+    assert_contains 'width: clamp(0px, (100% - 20px * var(--w4os-logo-ratio)) * 999, 100%); height: auto;' "$css"
+    assert_contains 'width: clamp(0px, (20px * var(--w4os-logo-ratio) - 100%) * 999, 28px)' "$css"
+}
