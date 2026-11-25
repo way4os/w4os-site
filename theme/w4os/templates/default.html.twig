@@ -1,10 +1,10 @@
 {# Quark2's page, with the title of the pages of the w4os plugin, which leaves it to the theme (the site's own pages have theirs in
-   their text) #}
+   their text), unless the page says hide_title (the map, the whole page) #}
 {% extends 'partials/base.html.twig' %}
 
 {% block content %}
     <article class="content-item">
-        {% if page.header.w4os %}<h1>{{ page.title }}</h1>{% endif %}
+        {% if page.header.w4os and not page.header.hide_title %}<h1>{{ page.title }}</h1>{% endif %}
         {{ page.content|raw }}
     </article>
 {% endblock %}
