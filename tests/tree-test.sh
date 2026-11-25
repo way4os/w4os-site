@@ -237,6 +237,46 @@ test_the_default_pages_are_units_added_updated_while_untouched_never_changed_bac
     assert_contains "pages/05.contact removed from this site, left out" "$out"
 }
 
+test_a_default_page_the_package_no_longer_has_goes_where_untouched_stays_where_the_site_changed_it() {
+    page 04.about "about 1"
+    page 06.faq "faq 1"
+    page 07.terms "terms 1"
+    "$TREE" configure >/dev/null
+    # The site's own: terms changed, a picture added to faq
+    echo "our terms" >"$W4OS_SITE_ROOT/user/pages/07.terms/default.md"
+    echo "png" >"$W4OS_SITE_ROOT/user/pages/06.faq/picture.png"
+    rm -rf "$W4OS_SITE_SEED/user/pages/04.about" "$W4OS_SITE_SEED/user/pages/06.faq" "$W4OS_SITE_SEED/user/pages/07.terms"
+    local out
+    out=$("$TREE" configure)
+    assert_directory_not_exists "$W4OS_SITE_ROOT/user/pages/04.about"
+    assert_contains "pages/04.about no longer in the package, removed" "$out"
+    assert_equals "our terms" "$(cat "$W4OS_SITE_ROOT/user/pages/07.terms/default.md")"
+    assert_contains "pages/07.terms no longer in the package, changed on this site: left as it is" "$out"
+    assert_file_exists "$W4OS_SITE_ROOT/user/pages/06.faq/picture.png"
+    assert_contains "pages/06.faq no longer in the package, changed on this site: left as it is" "$out"
+    # Once gone, never said again
+    out=$("$TREE" configure)
+    assert_not_contains "04.about" "$out"
+}
+
+test_a_site_of_before_the_pages_were_units_loses_a_default_page_gone_from_the_package_only_as_a_version_gave_it() {
+    page 04.about "about 1"
+    page 05.contact "contact 1"
+    "$TREE" configure >/dev/null
+    sed -i.bak '/user\/pages\//d' "$W4OS_SITE_ROOT/user/data/w4os-site/manifest" && rm -f "$W4OS_SITE_ROOT/user/data/w4os-site/manifest.bak"
+    echo "our contact" >"$W4OS_SITE_ROOT/user/pages/05.contact/default.md"
+    export W4OS_SITE_PAGES_HISTORY="$TMP/share/pages-history"
+    mkdir -p "$TMP/share"
+    printf 'user/pages/04.about/default.md\t%s\nuser/pages/05.contact/default.md\t%s\n' \
+        "$(php -r 'echo md5("about 1\n");')" "$(php -r 'echo md5("contact 1\n");')" >"$W4OS_SITE_PAGES_HISTORY"
+    rm -rf "$W4OS_SITE_SEED/user/pages/04.about" "$W4OS_SITE_SEED/user/pages/05.contact"
+    local out
+    out=$("$TREE" configure)
+    assert_directory_not_exists "$W4OS_SITE_ROOT/user/pages/04.about"
+    assert_equals "our contact" "$(cat "$W4OS_SITE_ROOT/user/pages/05.contact/default.md")"
+    unset W4OS_SITE_PAGES_HISTORY
+}
+
 test_a_new_default_page_never_doubles_a_page_the_site_has_at_its_route() {
     "$TREE" configure >/dev/null
     mkdir -p "$W4OS_SITE_ROOT/user/pages/07.about"

@@ -182,6 +182,22 @@ given() {
     [ -n "$found" ]
 }
 
+# gone UNIT MANIFEST: whether a default page the package no longer has is as the package put it (its manifest, else, for a site of
+# before the pages were units, the texts of its versions) with nothing of the site's own in it (a picture): what an upgrade removes
+gone() {
+    local listed extra
+    [[ $1 == pages/* ]] && [ -d "$ROOT/user/$1" ] || return 1
+    if grep -q "^$1	" "$2"; then
+        as_put "$1" "$2" || return 1
+        listed=$(grep "^$1	" "$2" | cut -f3 | LC_ALL=C sort)
+    else
+        given "$1" || return 1
+        listed=$(cd "$ROOT" && find "user/$1" -type f -name '*.md' | LC_ALL=C sort)
+    fi
+    extra=$(cd "$ROOT" && find "user/$1" -type f | LC_ALL=C sort | comm -23 - <(echo "$listed"))
+    [ -z "$extra" ]
+}
+
 # taken UNIT: the route of a default page (its folder without its number), when the site has another page there
 taken() {
     local name=${1#pages/} dir slug
@@ -193,7 +209,8 @@ taken() {
     return 1
 }
 
-# upgrade: each unit the site has as the package put it replaced by the seed's, the others left and said; the new ones added
+# upgrade: each unit the site has as the package put it replaced by the seed's, the others left and said; the new ones added; a
+# default page the package no longer has removed where the site has it as the package put it, left (and said) where it changed it
 upgrade() {
     local old="$ROOT/$MANIFEST" new kept unit
     new=$(mktemp)
@@ -222,6 +239,17 @@ upgrade() {
         fi
         manifest_unit "$unit" >>"$new"
     done < <(units "$SEED")
+    while read -r unit; do
+        units "$SEED" | grep -qx "$unit" && continue
+        [ -d "$ROOT/user/$unit" ] || continue
+        if gone "$unit" "$old"; then
+            rm -rf "${ROOT:?}/user/$unit"
+            say "$unit no longer in the package, removed"
+        else
+            grep "^$unit	" "$old" >>"$kept" || true
+            say "$unit no longer in the package, changed on this site: left as it is"
+        fi
+    done < <({ cut -f1 "$old"; [ ! -f "$PAGES_HISTORY" ] || sed -n 's#^user/\(pages/[^/	]*\)/.*#\1#p' "$PAGES_HISTORY"; } | grep '^pages/' | LC_ALL=C sort -u)
     cat "$kept" "$new" >"$old"
     rm -f "$new" "$kept"
 }
