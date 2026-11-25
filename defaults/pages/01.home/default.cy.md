@@ -9,5 +9,7 @@ template: home
 
 <p class="lead">[site-slogan]</p>
 
-[w4os-guest][w4os-register][Crea dy afatar](/register), yna cysyllta ag unrhyw viewer OpenSimulator.[/w4os-register][/w4os-guest]
+Mae [site-title] yn fyd rhithwir a wnaed gydag OpenSimulator, lle mae ei drigolion yn cwrdd, yn adeiladu ac yn archwilio gyda'i gilydd.
+
+[w4os-guest][w4os-register]I ddod i mewn, [crea dy afatar](/register), yna cysyllta ag unrhyw viewer ar gyfer OpenSim.[/w4os-register][/w4os-guest] Mae'r [cymorth](/help) yn dangos sut i gysylltu.
 [/w4os-home]

@@ -9,5 +9,7 @@ template: home
 
 <p class="lead">[site-slogan]</p>
 
-[w4os-guest][w4os-register][Crea il tuo avatar](/register), poi connettiti con qualsiasi viewer OpenSimulator.[/w4os-register][/w4os-guest]
+[site-title] è un mondo virtuale fatto con OpenSimulator, dove i suoi residenti si incontrano, costruiscono ed esplorano insieme.
+
+[w4os-guest][w4os-register]Per entrare, [crea il tuo avatar](/register), poi connettiti con qualsiasi viewer per OpenSim.[/w4os-register][/w4os-guest] L'[aiuto](/help) spiega come connettersi.
 [/w4os-home]
