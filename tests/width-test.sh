@@ -57,7 +57,7 @@ test_each_page_has_the_width_of_its_kind_at_the_root_and_under_a_prefix() {
         # The news (a list) as wide as the menu bar, a text in its column
         assert_matches '(^| )w4os-width-wide( |$)' "$(body "$base" /news)"
         assert_not_contains 'layout-fluid' "$(body "$base" /news)"
-        assert_matches '(^| )w4os-width-standard( |$)' "$(body "$base" /about)"
-        assert_not_contains 'layout-fluid' "$(body "$base" /about)"
+        assert_matches '(^| )w4os-width-standard( |$)' "$(body "$base" /help)"
+        assert_not_contains 'layout-fluid' "$(body "$base" /help)"
     done
 }

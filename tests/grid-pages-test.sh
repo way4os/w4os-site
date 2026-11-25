@@ -31,17 +31,19 @@ test_welcome_is_the_page_a_viewer_shows_before_the_login_alone_without_the_theme
     done
 }
 
-test_about_is_a_page_of_the_site() {
+test_help_is_a_page_of_the_site_and_about_no_longer_one() {
     built || return 0
-    local base about
+    local base help
     for base in "$URL" "$PREFIXED"; do
-        about=$(page "$base" /about)
-        assert_equals 200 "$(tail -1 <<<"$about")"
-        assert_contains '<title>About | My grid' "$about"
+        help=$(page "$base" /help)
+        assert_equals 200 "$(tail -1 <<<"$help")"
+        assert_contains '<title>Help | My grid' "$help"
+        # What the grid is: the text of the home now
+        assert_equals 404 "$(tail -1 <<<"$(page "$base" /about)")"
     done
     # In the languages of the site
-    assert_contains '<title>À propos | My grid' "$(page "$URL" /fr/about)"
-    assert_contains '<title>Über uns | My grid' "$(page "$PREFIXED" /de/about)"
+    assert_contains '<title>Aide | My grid' "$(page "$URL" /fr/help)"
+    assert_contains '<title>Hilfe | My grid' "$(page "$PREFIXED" /de/help)"
 }
 
 test_password_is_the_page_of_a_lost_password_of_the_site() {

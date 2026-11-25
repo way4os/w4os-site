@@ -53,7 +53,7 @@ test_a_page_a_viewer_shows_has_none_but_the_splash_page() {
     built || return 0
     local base path page
     for base in "$URL" "$PREFIXED"; do
-        for path in / /about; do
+        for path in / /help; do
             page=$(curl -sL -A "$VIEWER" "$base$path")
             assert_contains '</html>' "$page"
             assert_not_contains 'w4os-backdrop' "$page"
