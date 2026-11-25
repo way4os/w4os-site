@@ -28,6 +28,12 @@ custom_logo:
     name: opensimulator-logo.png
     type: image/png
     path: user/themes/w4os/images/logo/opensimulator-logo.png
+# The same logo in the menu on a phone (Quark2's own setting)
+custom_logo_mobile:
+  user/themes/w4os/images/logo/opensimulator-logo.png:
+    name: opensimulator-logo.png
+    type: image/png
+    path: user/themes/w4os/images/logo/opensimulator-logo.png
 # The favicon of the site, Quark2's own setting (the settings page of the site changes it): the OpenSimulator logo on a square
 # until the site sets its own
 custom_favicon:
