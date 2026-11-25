@@ -163,11 +163,13 @@ test_the_logo_of_the_top_bar_keeps_its_ratio_and_gives_way_to_the_icon_of_the_si
     assert_contains 'width: clamp(0px, (20px * var(--w4os-logo-ratio) - 100%) * 999, 28px)' "$css"
 }
 
-test_from_861_to_1199_px_the_tools_of_the_top_bar_are_in_the_drawer_of_quark2() {
-    local css
+test_from_861_to_1199_px_the_menus_of_the_visitor_are_icons_and_the_day_and_night_switch_is_in_the_footer_only() {
+    local css partials
     css=$(cat "$ROOT/theme/w4os/css/custom.css")
+    partials="$ROOT/theme/w4os/templates/partials"
     assert_contains '@media (min-width: 861px) and (max-width: 1199.98px) {' "$css"
-    assert_contains '#header .navbar-section.actions { display: none; }' "$css"
-    assert_contains '.mobile-menu, .mobile-container { display: block; }' "$css"
-    assert_contains '.overlay .overlay-menu, .overlay .mobile-logo { display: none; }' "$css"
+    assert_contains '#header .navbar-section.actions .w4os-user-current { font-size: 0; gap: 0; padding: .4rem; }' "$css"
+    assert_not_contains 'data-theme-toggle' "$(cat "$partials/theme-toggle.html.twig")"
+    assert_contains 'data-theme-toggle' "$(cat "$partials/theme-switch.html.twig")"
+    assert_contains "{% include 'partials/theme-switch.html.twig' %}" "$(cat "$partials/footer.html.twig")"
 }

@@ -27,11 +27,11 @@ The widths of the window (CSS px) where the theme `w4os` changes, with Quark2 (`
 | 860 | | Quark2, w4os | Up to 860: the menu of a phone (Quark2's button and panel, everything in it); the menus of the visitor out of the top bar. From 861: the top bar in three columns (logo, main menu centered, tools) |
 | 960 | | Quark2 | Pages with a sidebar in two columns |
 | 1024 | lg | Pico, Quark2 | Font 118.75%; container 950 px; modular features in three columns |
-| 1199 / 1200 | | w4os, Quark2 | From 861 to 1199: the main menu alone in the top bar, the tools (search, admin, avatar, day and night, languages) in Quark2's panel, a drawer at the right. From 1200: the tools in the top bar; blog lists in three columns; the top bar and the footer of a full-width page (layout-fluid) at most 1200 px |
+| 1199 / 1200 | | w4os, Quark2 | From 861 to 1199: the menus of the visitor (admin, avatar) as their icons alone, the search icon and the languages beside them. From 1200: their names back; blog lists in three columns; the top bar and the footer of a full-width page (layout-fluid) at most 1200 px |
 | 1280 | xl | Pico | Font 125%; container 1200 px |
 | 1536 | xxl | Pico | Font 131.25%; container 1450 px |
 
-Whatever the width, the logo of the top bar keeps its ratio: its side of the bar gives room first, the logo scaled down whole to 20 px high, then the site's icon in its place (`css/custom.css`, `w4os-logo-fit`).
+Whatever the width, the day and night switch is in the footer only, never in the top bar. The logo of the top bar keeps its ratio: its side of the bar gives room first, the logo scaled down whole to 20 px high, then the site's icon in its place (`css/custom.css`, `w4os-logo-fit`).
 
 ## The zip and the package
 

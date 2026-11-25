@@ -61,13 +61,12 @@ body.w4os-logo-fit #header .navbar-brand::before { content: ""; flex: none; widt
     #header .navbar-section.desktop-menu { justify-content: center; }
     #header .navbar-section.actions { justify-self: end; margin-left: 0; }
 }
-/* From 861 to 1199 px, the main menu alone in the top bar: the tools of the visitor (search, admin, avatar, day and night, languages)
-   in Quark2's menu of a phone, its button and its panel (a drawer at the right, without the main menu and the logo) */
+/* From 861 to 1199 px, the menus of the visitor (admin, avatar) as their icons alone, their names still read out; the search and the
+   languages beside them as they are, all closer together */
 @media (min-width: 861px) and (max-width: 1199.98px) {
-    #header .navbar-section.actions { display: none; }
-    .mobile-menu, .mobile-container { display: block; }
-    .overlay { left: auto; width: min(22rem, 100%); box-shadow: var(--q2-shadow-card); }
-    .overlay .overlay-menu, .overlay .mobile-logo { display: none; }
+    #header .navbar .navbar-section.actions, #header .navbar .w4os-visitor-menus { gap: .5rem; }
+    #header .navbar-section.actions .w4os-user-current { font-size: 0; gap: 0; padding: .4rem; }
+    #header .navbar-section.actions .w4os-user-current i { font-size: 1rem; }
 }
 .login-status-wrapper { display: none; }
 .w4os-toggle-label { margin-left: .5rem; }

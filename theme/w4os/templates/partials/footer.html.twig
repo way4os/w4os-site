@@ -1,4 +1,5 @@
-{# The name of the grid, then w4os (its long logo, which says w4os) and OpenSimulator (its logo beside its name) #}
+{# The name of the grid, then w4os (its long logo, which says w4os) and OpenSimulator (its logo beside its name), then the day and
+   night switch #}
 {% set long_logo = w4os_logo('w4os-logo-v1-long-300x75.png') %}
 {% set opensim_logo = w4os_logo('opensimulator-logo.png') %}
 <footer id="footer" class="section section-tight">
@@ -9,6 +10,8 @@
             <a href="https://w4os.org">{% if long_logo %}<img class="w4os-credit-logo" src="{{ long_logo }}" alt="w4os">{% else %}w4os{% endif %}</a>
             <span aria-hidden="true">·</span>
             <a href="http://opensimulator.org">{% if opensim_logo %}<img class="w4os-credit-icon" src="{{ opensim_logo }}" alt=""> {% endif %}OpenSimulator</a>
+            <span aria-hidden="true">·</span>
+            {% include 'partials/theme-switch.html.twig' %}
         </p>
     </div>
 </footer>
