@@ -162,3 +162,12 @@ test_the_logo_of_the_top_bar_keeps_its_ratio_and_gives_way_to_the_icon_of_the_si
     assert_contains 'width: clamp(0px, (100% - 20px * var(--w4os-logo-ratio)) * 999, 100%); height: auto;' "$css"
     assert_contains 'width: clamp(0px, (20px * var(--w4os-logo-ratio) - 100%) * 999, 28px)' "$css"
 }
+
+test_from_861_to_1199_px_the_tools_of_the_top_bar_are_in_the_drawer_of_quark2() {
+    local css
+    css=$(cat "$ROOT/theme/w4os/css/custom.css")
+    assert_contains '@media (min-width: 861px) and (max-width: 1199.98px) {' "$css"
+    assert_contains '#header .navbar-section.actions { display: none; }' "$css"
+    assert_contains '.mobile-menu, .mobile-container { display: block; }' "$css"
+    assert_contains '.overlay .overlay-menu, .overlay .mobile-logo { display: none; }' "$css"
+}

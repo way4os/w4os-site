@@ -13,6 +13,26 @@ The site is Grav, its official plugins and the w4os plugin, assembled at fixed v
 - `web/apache.conf`: the Apache template of `w4os-site web apache`; Caddy and nginx come from Grav's own `webserver-configs`.
 - `packaging/`: the nfpm definition, `build` (assembles `build/w4os-site`), `build-zip` (the zip of that tree, `zip.sh`), the maintainer scripts.
 
+## Breakpoints of the theme
+
+The widths of the window (CSS px) where the theme `w4os` changes, with Quark2 (`css/theme.css`) and its Pico base (`css/blades.min.css`, Pico's names: sm, md, lg, xl, xxl) beneath it. The w4os.org theme adds its own (`themes/w4os-org/css/site.css`, in rem).
+
+| Width | Name | Where | What changes |
+| --- | --- | --- | --- |
+| 560 | | Quark2 | Blog lists in two columns |
+| 576 | sm | Pico | Font 106.25%; container 510 px |
+| 640 | | Quark2 | Modular features in two columns |
+| 720 | | Quark2 | Below it, masonry (bricklayer) in one column |
+| 768 | md | Pico | Font 112.5%; container 700 px; `.grid` in columns |
+| 860 | | Quark2, w4os | Up to 860: the menu of a phone (Quark2's button and panel, everything in it); the menus of the visitor out of the top bar. From 861: the top bar in three columns (logo, main menu centered, tools) |
+| 960 | | Quark2 | Pages with a sidebar in two columns |
+| 1024 | lg | Pico, Quark2 | Font 118.75%; container 950 px; modular features in three columns |
+| 1199 / 1200 | | w4os, Quark2 | From 861 to 1199: the main menu alone in the top bar, the tools (search, admin, avatar, day and night, languages) in Quark2's panel, a drawer at the right. From 1200: the tools in the top bar; blog lists in three columns; the top bar and the footer of a full-width page (layout-fluid) at most 1200 px |
+| 1280 | xl | Pico | Font 125%; container 1200 px |
+| 1536 | xxl | Pico | Font 131.25%; container 1450 px |
+
+Whatever the width, the logo of the top bar keeps its ratio: its side of the bar gives room first, the logo scaled down whole to 20 px high, then the site's icon in its place (`css/custom.css`, `w4os-logo-fit`).
+
 ## The zip and the package
 
 They are built as the opensim projects build theirs, by build-tools and its apt-package (`composer install` first, for `vendor/bin/build-tools`), from the last commit, into `dist/`: the zip `w4os-site-<version>.zip`, the general delivery, and the Debian package `w4os-site_<version>_all.deb`; the version is the one of `.version`, with the number of commits and the hash of HEAD until a tag. `build-tools release` attaches both to the GitHub release.
