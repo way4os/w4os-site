@@ -227,12 +227,15 @@ test_web_caddy_is_a_site_block_of_its_own_to_import_next_to_other_sites() {
         >"$SITE/webserver-configs/Caddyfile"
     printf "custom_base_url: 'https://site.example.org'\n" >>"$SITE/user/config/system.yaml"
     local output
+    # Grav's rules in the snippet the package ships (packaging/build), imported by one line
+    mkdir -p "$SITE/share/web"
+    awk -f "$ROOT/packaging/grav-caddy.awk" "$SITE/webserver-configs/Caddyfile" >"$SITE/share/web/grav.caddy"
+    export W4OS_SITE_SHARE="$SITE/share"
     output=$(W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy)
-    assert_contains $'site.example.org {\n\tencode gzip' "$output"
-    assert_contains "root * $SITE" "$output"
-    assert_contains 'php_fastcgi unix/' "$output"
-    assert_equals '}' "$(echo "$output" | tail -1)"
-    assert_not_contains 'localhost' "$output"
+    assert_equals $'# The w4os site (w4os-site web caddy)\nsite.example.org {\n\tencode gzip\n\timport '"$SITE/share/web/grav.caddy $SITE"$' unix//run/php/test.sock /index.php\n}' "$output"
+    assert_contains $'php_fastcgi {args[1]} {\n\t\tenv SCRIPT_NAME {args[2]}\n\t}' "$(cat "$SITE/share/web/grav.caddy")"
+    assert_contains 'root * {args[0]}' "$(cat "$SITE/share/web/grav.caddy")"
+    assert_not_contains 'localhost' "$(cat "$SITE/share/web/grav.caddy")"
     assert_contains $'\ngrid.example.org:8830 {' "$(W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --host grid.example.org --port 8830)"
     printf "custom_base_url: 'http://grid.example.org:8830'\n" >>"$SITE/user/config/system.yaml"
     sed -i.bak "/custom_base_url: 'https/d" "$SITE/user/config/system.yaml"
@@ -250,16 +253,21 @@ test_web_caddy_under_a_prefix_is_a_block_of_its_own_beside_the_host_never_its_li
         >"$SITE/webserver-configs/Caddyfile"
     printf "custom_base_url: 'https://kimbe.example'\n" >>"$SITE/user/config/system.yaml"
     local output
+    mkdir -p "$SITE/share/web"
+    awk -f "$ROOT/packaging/grav-caddy.awk" "$SITE/webserver-configs/Caddyfile" >"$SITE/share/web/grav.caddy"
+    export W4OS_SITE_SHARE="$SITE/share"
     output=$(W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim --host kimbe.example,www.kimbe.example)
-    # Its own addresses, with the path: Caddy prefers them to the block of the host, which keeps whatever runs at the root
-    assert_contains $'kimbe.example/opensim, www.kimbe.example/opensim {\n\tredir * /opensim/ 308\n}' "$output"
-    assert_contains $'kimbe.example/opensim/*, www.kimbe.example/opensim/* {\n\tencode gzip' "$output"
-    assert_contains $'\thandle_path /opensim/* {\n\t\troot * '"$SITE" "$output"
-    assert_contains $'php_fastcgi unix//run/php/test.sock {\n\t\t\t\tenv SCRIPT_NAME /opensim/index.php\n\t\t\t}' "$output"
-    assert_not_contains $'kimbe.example {' "$output"
-    assert_not_contains 'localhost' "$output"
-    # The helpers of the grid under the prefix, as opensim web gives them, before the site (no grid here: said, not invented)
-    assert_contains 'no helpers of a grid of this machine under /opensim' "$output"
+    # Its own addresses, with the path: Caddy prefers them to the block of the host, which keeps whatever runs at the root; no grid
+    # here, no helpers
+    assert_equals "# The w4os site under /opensim, beside the site of the host (w4os-site web caddy)
+kimbe.example/opensim, kimbe.example/opensim/*, www.kimbe.example/opensim, www.kimbe.example/opensim/* {
+	encode gzip
+	redir /opensim /opensim/ 308
+	# Website
+	handle_path /opensim/* {
+		import $SITE/share/web/grav.caddy $SITE unix//run/php/test.sock /opensim/index.php
+	}
+}" "$output"
     printf "grid: kimbe\n" >>"$SITE/user/config/plugins/w4os.yaml"
     cat >"$SITE/bin/opensim" <<'STUB'
 #!/usr/bin/env bash
@@ -272,19 +280,19 @@ esac
 STUB
     chmod +x "$SITE/bin/opensim"
     output=$(W4OS_SITE_OPENSIM="$SITE/bin/opensim" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim)
-    assert_contains $'kimbe.example/opensim/* {\n\tencode gzip\n\t@opensim_helpers path /opensim/economy /opensim/economy/*' "$output"
-    assert_contains $'\thandle @opensim_helpers {\n\t\troot * /usr/share/w4os-helpers/public\n\t}' "$output"
-    assert_not_contains '# Helpers of the grid' "$output"
+    assert_contains $'\tredir /opensim /opensim/ 308\n\t# Helpers of the grid kimbe\n\t@opensim_helpers path /opensim/economy /opensim/economy/*\n\thandle @opensim_helpers {\n\t\troot * /usr/share/w4os-helpers/public\n\t}\n\t# Website' "$output"
     # The addresses of its helpers outside the prefix, each exactly, in a block of their own with the helpers' handler
-    assert_contains $'kimbe.example/helper/query.php, kimbe.example/helper/query.php/*, kimbe.example/helpers/helper/offline.php, kimbe.example/helpers/helper/offline.php/* {\n\tencode gzip\n\troot * /usr/share/w4os-helpers/public\n\tphp_fastcgi unix//run/php/php-fpm.sock\n}' "$output"
+    assert_contains $'\n# Helpers of the grid kimbe outside /opensim, as its config names them\nkimbe.example/helper/query.php, kimbe.example/helper/query.php/*, kimbe.example/helpers/helper/offline.php, kimbe.example/helpers/helper/offline.php/* {\n\tencode gzip\n\troot * /usr/share/w4os-helpers/public\n\tphp_fastcgi unix//run/php/php-fpm.sock\n}' "$output"
+    local helpers_output=$output
     # A command line too old for --prefix gives the paths of the root (the whole prefix): said, never written
     printf '#!/usr/bin/env bash\nprintf "@opensim_helpers path /opensim* /health*\\n\\nhandle @opensim_helpers {\\n\\troot * /usr/share/w4os-helpers/public\\n}\\n"\n' >"$SITE/bin/opensim"
     output=$(W4OS_SITE_OPENSIM="$SITE/bin/opensim" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim)
     assert_not_contains '@opensim_helpers' "$output"
     assert_contains 'w4os-cli 3.0.0~beta.4+125 or later' "$output"
+    assert_not_contains '# Helpers' "$output"
     # Caddy takes it next to the block of the host, which it leaves as it is
     if command -v caddy >/dev/null; then
-        { echo "$output"; printf 'kimbe.example {\n\trespond "root" 418\n}\n'; } >"$SITE/Caddyfile.test"
+        { echo "$helpers_output"; printf 'kimbe.example {\n\trespond "root" 418\n}\n'; } >"$SITE/Caddyfile.test"
         assert_equals 0 "$(caddy adapt --config "$SITE/Caddyfile.test" --adapter caddyfile >/dev/null 2>&1; echo $?)"
     fi
 }

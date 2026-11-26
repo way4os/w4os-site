@@ -88,6 +88,10 @@ cp -R "$head/defaults" "$out/defaults"
 mkdir -p "$out/bin" "$out/web"
 cp "$head/bin/w4os-site" "$head/bin/w4os-site-tree" "$out/bin/"
 cp "$head"/web/* "$out/web/"
+# Grav's rules for Caddy, one snippet a version of Grav, which the file of a site imports (w4os-site web caddy)
+git show HEAD:packaging/grav-caddy.awk >"$sources/grav-caddy.awk"
+awk -f "$sources/grav-caddy.awk" "$grav/webserver-configs/Caddyfile" >"$out/web/grav.caddy"
+awk -f "$sources/grav-caddy.awk" "$out/grav17/webserver-configs/Caddyfile" >"$out/web/grav17.caddy"
 
 # The version of Grav, and what the version of the project (from apt-package) adds to tell the plugin it bundles
 {

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- change (web): the Caddy file of a site in a few lines, Grav's rules in a snippet the package ships (web/grav.caddy), imported
 - new (web): web caddy --prefix also routes the helpers' addresses outside the prefix, each exactly, in a block of their own
 - fix (web): --install follows the folder the Caddyfile imports (absolute too); a host given with its scheme makes no odd file name
 - fix (web): under a prefix, the helpers of a command line too old for it (the paths of the root) are left out, with what to upgrade

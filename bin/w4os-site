@@ -239,19 +239,27 @@ check_site() {
     return 1
 }
 
-# caddy_prefixed ADDRESSES PREFIX SOCKET: the site under PREFIX, in blocks of their own whose addresses have the path (Caddy prefers
-# them to the block of the host, whatever runs at its root, which they never change): the prefix alone sent to its folder, then
-# the helpers of the grid of this machine under it (opensim web GRID snippet caddy --prefix), then the site, the prefix stripped
+# grav_snippet: the file of Grav's rules for Caddy the package ships for the Grav of the site (Grav 1.7 where PHP is older than 8.3)
+grav_snippet() {
+    if grep -qs "define('GRAV_VERSION', '1\." "$ROOT/system/defines.php"; then
+        echo "$SHARE/web/grav17.caddy"
+    else
+        echo "$SHARE/web/grav.caddy"
+    fi
+}
+
+# caddy_prefixed ADDRESSES PREFIX SOCKET: the site under PREFIX, in a block of its own whose addresses have the path (Caddy prefers
+# it to the block of the host, whatever runs at its root, which it never changes): the helpers of the grid of this machine under
+# it (opensim web GRID snippet caddy --prefix), then the site, the prefix stripped; the helpers elsewhere on the host, each exactly
 caddy_prefixed() {
-    local addresses=$1 prefix=$2 socket=$3 tab=$'\t' list= under= subtree= address grid helpers= matcher old_cli=
+    local addresses=$1 prefix=$2 socket=$3 tab=$'\t' list= under= address grid helpers= matcher
     IFS=, read -ra list <<<"${addresses//, /,}"
     for address in "${list[@]}"; do
-        under+=${under:+, }$address$prefix
-        subtree+=${subtree:+, }$address$prefix/*
+        under+="${under:+, }$address$prefix, $address$prefix/*"
     done
     grid=$(yaml_get "$CONFIG/plugins/w4os.yaml" grid)
     if [ -n "$grid" ] && command -v "${W4OS_SITE_OPENSIM:-opensim}" >/dev/null 2>&1; then
-        helpers=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" snippet caddy --prefix "$prefix" 2>/dev/null | sed -e '/^[[:space:]]*#/d' | sed -e '/./,$!d' || true)
+        helpers=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" snippet caddy --prefix "$prefix" 2>/dev/null | sed -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' || true)
         # Paths under the prefix, or none: an empty matcher would take every path
         matcher=$(sed -n 's/^@opensim_helpers path[[:space:]]*//p' <<<"$helpers")
         [ -n "$matcher" ] || helpers=
@@ -260,47 +268,27 @@ caddy_prefixed() {
         for path in $matcher; do
             [[ $path == "$prefix"/* ]] && continue
             helpers=
-            old_cli=1
+            warning "the helpers of $grid are not in the file: w4os-cli 3.0.0~beta.4+125 or later gives their paths under $prefix"
+            break
         done
     fi
-    printf '# The w4os site under %s, made by w4os-site web caddy --prefix %s: blocks of their own beside the one of the host,\n' "$prefix" "$prefix"
-    printf '# which they never change; import this file in the Caddyfile of the machine\n'
-    printf '%s {\n%sredir * %s/ 308\n}\n' "$under" "$tab" "$prefix"
-    printf '%s {\n%sencode gzip\n' "$subtree" "$tab"
+    printf '# The w4os site under %s, beside the site of the host (w4os-site web caddy)\n' "$prefix"
+    printf '%s {\n%sencode gzip\n%sredir %s %s/ 308\n' "$under" "$tab" "$tab" "$prefix" "$prefix"
     if [ -n "$helpers" ]; then
+        printf '%s# Helpers of the grid %s\n' "$tab" "$grid"
         sed -e "s/^\(.\)/$tab\1/" <<<"$helpers"
-    elif [ -n "$old_cli" ]; then
-        printf '%s# The helpers of the grid: its command line gives the paths of the root, not the ones under %s:\n' "$tab" "$prefix"
-        printf '%s# w4os-cli 3.0.0~beta.4+125 or later is needed (apt install --only-upgrade w4os-cli), then this command again\n' "$tab"
-    else
-        printf '%s# The helpers of the grid: no helpers of a grid of this machine under %s (opensim web GRID snippet caddy --prefix %s\n' "$tab" "$prefix" "$prefix"
-        printf '%s# on the machine of the grid)\n' "$tab"
     fi
-    printf '\n%shandle_path %s/* {\n' "$tab" "$prefix"
-    # Grav's Caddyfile, made for a site alone: its rules, its folder, and the address it is under for its own links (SCRIPT_NAME)
-    awk -v root="$ROOT" -v socket="$socket" -v prefix="$prefix" -v tab="$tab" '
-        !started { started = ($0 == "localhost"); next }
-        $0 == "encode gzip" { next }
-        $0 == "root * ." { $0 = "root * " root }
-        /^[[:space:]]*php_fastcgi / {
-            indent = $0; sub(/php_fastcgi.*/, "", indent)
-            print tab tab indent "php_fastcgi unix/" socket " {"
-            print tab tab indent tab "env SCRIPT_NAME " prefix "/index.php"
-            print tab tab indent "}"
-            next
-        }
-        { print (length($0) ? tab tab $0 : "") }
-    ' "$ROOT/webserver-configs/Caddyfile"
-    printf '%s}\n}\n' "$tab"
+    printf '%s# Website\n%shandle_path %s/* {\n' "$tab" "$tab" "$prefix"
+    printf '%s%simport %s %s unix/%s %s/index.php\n%s}\n}\n' "$tab" "$tab" "$(grav_snippet)" "$ROOT" "$socket" "$prefix" "$tab"
     # The addresses of the helpers of the grid elsewhere on the host, each exactly, in a block of their own with their handler (the
     # one of opensim web GRID snippet caddy): the block of the host keeps the rest
-    local outside= body= path joined=
-    if [ -n "$grid" ] && command -v "${W4OS_SITE_OPENSIM:-opensim}" >/dev/null 2>&1; then
+    local outside= body= joined=
+    if [ -n "$helpers" ]; then
         outside=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" paths --outside "$prefix" 2>/dev/null || true)
         body=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" snippet caddy 2>/dev/null |
             awk '/^handle @opensim_helpers \{/ { inside = 1; next } inside && /^\}/ { inside = 0; next } inside { print }' || true)
     fi
-    if [ -n "$outside" ] && [ -n "$body" ] && [ -z "$old_cli" ]; then
+    if [ -n "$outside" ] && [ -n "$body" ]; then
         # Paths alone, one per line, as they are (never a glob of this folder)
         for address in "${list[@]}"; do
             while IFS= read -r path; do
@@ -309,7 +297,7 @@ caddy_prefixed() {
         done
     fi
     if [ -n "$joined" ]; then
-        printf '\n# The addresses of the helpers of the grid outside %s, as its config names them, each exactly\n' "$prefix"
+        printf '\n# Helpers of the grid %s outside %s, as its config names them\n' "$grid" "$prefix"
         printf '%s {\n%sencode gzip\n%s\n}\n' "$joined" "$tab" "$body"
     fi
 }
@@ -430,10 +418,8 @@ web() {
         if [ -z "$prefix" ]; then
             # A site block of its own (Grav's Caddyfile, made for a site alone, in braces), for the Caddyfile of the machine to
             # import next to its other sites
-            text=$(printf '# The w4os site, made by w4os-site web caddy: import this file in the Caddyfile of the machine\n%s {\n' "$addresses"
-                sed -e '1,/^localhost$/d' -e "s|^root \* \.|root * $ROOT|" -e "s|php_fastcgi .*|php_fastcgi unix/$socket|" -e "s/^\(.\)/$tab\1/" \
-                    "$ROOT/webserver-configs/Caddyfile"
-                echo '}')
+            text=$(printf '# The w4os site (w4os-site web caddy)\n%s {\n%sencode gzip\n%simport %s %s unix/%s /index.php\n}\n' \
+                "$addresses" "$tab" "$tab" "$(grav_snippet)" "$ROOT" "$socket")
         else
             text=$(caddy_prefixed "$addresses" "$prefix" "$socket")
         fi
