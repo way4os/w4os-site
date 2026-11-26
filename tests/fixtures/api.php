@@ -38,15 +38,41 @@ if ($path === '/api/info') {
         'addGrid' => ['hop' => 'hop:///app/gridmanager/addgrid/grid.example.org%3A8002', 'secondlife' => 'secondlife:///app/gridmanager/addgrid/grid.example.org%3A8002'],
         'elements' => ['gridname' => 'Demo Grid', 'gridnick' => 'demo']]]]);
 }
+// The passwords a registration, a change or a reset gave, by name, kept for this API (its port): a sign-in takes them, as typed
+$passwordsFile = sys_get_temp_dir().'/w4os-fake-passwords-'.(int) ($_SERVER['SERVER_PORT'] ?? 0).'.json';
+$passwords = is_file($passwordsFile) ? (array) json_decode((string) file_get_contents($passwordsFile), true) : [];
+$keep = function (string $name, string $password) use ($passwordsFile, &$passwords): void {
+    $passwords[$name] = $password;
+    file_put_contents($passwordsFile, json_encode($passwords));
+};
 if ($path === '/api/sign-ins' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $sent = (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []);
-    if (($sent['name'] ?? '') === 'Ada Love' && ($sent['password'] ?? '') === 'secret') {
+    $name = (string) ($sent['name'] ?? '');
+    $right = fn (string $default) => ($sent['password'] ?? null) === ($passwords[$name] ?? $default);
+    if ($name === 'Ada Love' && $right('secret')) {
         $answer(200, ['data' => $ada]);
     }
-    if (($sent['name'] ?? '') === 'God Test' && ($sent['password'] ?? '') === 'secret') {
+    if ($name === 'God Test' && $right('secret')) {
         $answer(200, ['data' => $god]);
     }
+    if (isset($passwords[$name]) && $right('')) {
+        $answer(200, ['data' => ['type' => 'avatars', 'id' => 'n1', 'attributes' => ['uuid' => 'n1', 'name' => $name, 'slug' => strtolower(str_replace(' ', '-', $name)), 'level' => 0, 'status' => 'active', 'shownRole' => 'resident']]]);
+    }
     $answer(401, ['title' => 'Refused', 'status' => 401, 'detail' => 'Wrong name or password', 'code' => 'sign-in-refused']);
+}
+// Ada's new password (her account), or the one a reset gives (the token of the tests)
+if ($path === '/api/avatars/a1' && $_SERVER['REQUEST_METHOD'] === 'PATCH') {
+    $sent = (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []);
+    isset($sent['password']) && $keep('Ada Love', (string) $sent['password']);
+    $answer(200, ['data' => $ada]);
+}
+if ($path === '/api/password-resets/complete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $sent = (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []);
+    if (($sent['token'] ?? '') !== 'reset-ada') {
+        $answer(400, ['title' => 'Refused', 'status' => 400, 'detail' => 'This link is no longer valid', 'code' => 'token-refused']);
+    }
+    $keep('Ada Love', (string) ($sent['password'] ?? ''));
+    $answer(200, ['data' => $ada]);
 }
 // An avatar by its UUID or its name, as the engine finds it
 if (in_array(rawurldecode($path), ['/api/avatars/a1', '/api/avatars/Ada Love'], true)) {
@@ -141,6 +167,7 @@ if ($path === '/api/avatars' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // A new avatar: what was sent kept for the test, the avatar made
     $sent = (array) (json_decode((string) file_get_contents('php://input'), true)['data']['attributes'] ?? []);
     file_put_contents(sys_get_temp_dir().'/w4os-fake-new-avatar-'.(int) ($_SERVER['SERVER_PORT'] ?? 0).'.json', json_encode($sent));
+    isset($sent['password']) && $keep(trim(($sent['firstName'] ?? '').' '.($sent['lastName'] ?? '')), (string) $sent['password']);
     $answer(201, ['data' => ['type' => 'avatars', 'id' => 'n1', 'attributes' => [
         'uuid' => 'n1', 'name' => trim(($sent['firstName'] ?? '').' '.($sent['lastName'] ?? '')), 'level' => 0, 'status' => 'active',
     ]]]);
