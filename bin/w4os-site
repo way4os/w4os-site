@@ -231,6 +231,31 @@ php_socket() {
     return 0
 }
 
+# apache_socket SOCKET: the socket of PHP-FPM when the account Apache runs as can reach it (the owner or the group its pool gives
+# it, of its envvars); else nothing when Apache has its own PHP (mod_php serves the site then), else the socket as it is
+apache_socket() {
+    local socket=$1 etc=${W4OS_SITE_APACHE_ETC:-/etc/apache2} conf user group owner listen_group members
+    [ -n "$socket" ] || return 0
+    user=$(sed -nE 's/^[[:space:]]*export[[:space:]]+APACHE_RUN_USER=["\x27]?([^"\x27[:space:]]+).*/\1/p' "$etc/envvars" 2>/dev/null | tail -1)
+    group=$(sed -nE 's/^[[:space:]]*export[[:space:]]+APACHE_RUN_GROUP=["\x27]?([^"\x27[:space:]]+).*/\1/p' "$etc/envvars" 2>/dev/null | tail -1)
+    conf=$(grep -lE "^[[:space:]]*listen[[:space:]]*=[[:space:]]*$socket([[:space:];]|$)" "${W4OS_SITE_PHP_ETC:-/etc/php}"/*/fpm/pool.d/*.conf 2>/dev/null | head -1)
+    if [ -z "$user" ] || [ -z "$conf" ]; then
+        echo "$socket"
+        return 0
+    fi
+    # The owner and group of its socket: listen.owner and listen.group, else the user and group of the pool
+    owner=$(sed -nE 's/^[[:space:]]*listen\.owner[[:space:]]*=[[:space:]]*([^[:space:];]+).*/\1/p' "$conf" | head -1)
+    [ -n "$owner" ] || owner=$(sed -nE 's/^[[:space:]]*user[[:space:]]*=[[:space:]]*([^[:space:];]+).*/\1/p' "$conf" | head -1)
+    listen_group=$(sed -nE 's/^[[:space:]]*listen\.group[[:space:]]*=[[:space:]]*([^[:space:];]+).*/\1/p' "$conf" | head -1)
+    [ -n "$listen_group" ] || listen_group=$(sed -nE 's/^[[:space:]]*group[[:space:]]*=[[:space:]]*([^[:space:];]+).*/\1/p' "$conf" | head -1)
+    members=" $(id -nG "$user" 2>/dev/null) $group "
+    if [ "$owner" = "$user" ] || [[ $members == *" $listen_group "* ]]; then
+        echo "$socket"
+    elif ! { apache2ctl -M 2>/dev/null || true; } | grep -q 'php[0-9._]*_module'; then
+        echo "$socket"
+    fi
+}
+
 # check_site BASE PORT HOST SOCKET: whether the site answers through PHP on this machine (its page with its title, never PHP's
 # source), said either way: what is missing when it does not, with a non-zero status
 check_site() {
@@ -527,6 +552,7 @@ web() {
     socket=${W4OS_SITE_PHP_SOCKET:-$(php_socket)}
     case $server in
     apache)
+        [ -n "${W4OS_SITE_PHP_SOCKET:-}" ] || socket=$(apache_socket "$socket")
         if [ -n "$prefix" ]; then
             local mode=print
             [ -z "$install" ] || mode=$install

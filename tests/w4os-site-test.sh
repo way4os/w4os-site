@@ -539,3 +539,20 @@ STUB
     # A file of the helpers without it (an engine of before): the site's PHP for both
     assert_equals 2 "$(grep -c 'proxy:unix:/run/php/test.sock' <<<"$other")"
 }
+
+test_web_apache_gives_the_site_a_pool_apache_reaches_else_leaves_it_to_mod_php() {
+    local etc apache stubs version reached left
+    etc=$(mktemp -d) apache=$(mktemp -d) stubs=$(mktemp -d)
+    version=$(php -r 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;')
+    mkdir -p "$etc/$version/fpm/pool.d"
+    printf '%s\n' '[www]' 'user = www-data' 'group = www-data' "listen = /run/php/php$version-fpm.sock" 'listen.owner = www-data' 'listen.group = www-data' >"$etc/$version/fpm/pool.d/www.conf"
+    printf '#!/usr/bin/env bash\n[ "$1" != -M ] || echo " php_module (shared)"\n' >"$stubs/apache2ctl"
+    chmod +x "$stubs/apache2ctl"
+    printf 'export APACHE_RUN_USER=www-data\nexport APACHE_RUN_GROUP=www-data\n' >"$apache/envvars"
+    reached=$(PATH="$stubs:$PATH" W4OS_SITE_APACHE_ETC=$apache W4OS_SITE_OWNER=www-data W4OS_SITE_PHP_ETC=$etc site web apache --host kimbe.example --prefix /opensim)
+    printf 'export APACHE_RUN_USER=magic\nexport APACHE_RUN_GROUP=magic\n' >"$apache/envvars"
+    left=$(PATH="$stubs:$PATH" W4OS_SITE_APACHE_ETC=$apache W4OS_SITE_OWNER=www-data W4OS_SITE_PHP_ETC=$etc site web apache --host kimbe.example --prefix /opensim)
+    rm -rf "$etc" "$apache" "$stubs"
+    assert_contains "proxy:unix:/run/php/php$version-fpm.sock" "$reached"
+    assert_not_contains "SetHandler" "$left"
+}
