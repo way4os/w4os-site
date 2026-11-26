@@ -170,3 +170,49 @@ test_the_language_chosen_reaches_every_page_of_the_grid_the_site_declares() {
             --header 'Accept-Language: fr' --follow 2>/dev/null | tr '\n' ' ' | sed 's/<html[[:space:]]*/<html /')"
     done
 }
+
+# in_english JAR [NAME]: whether every page of the grid the site declares answers in English to a French browser, the cookie NAME
+# (the session) dropped before each
+in_english() {
+    local url page
+    for url in $(declared_pages); do
+        [ -z "${2:-}" ] || php "$ROOT/tests/fixtures/browser.php" "$1" drop "$2"
+        page=$(php "$ROOT/tests/fixtures/browser.php" "$1" get "$url" --resolve "$HOST:$((PORT + 1)):127.0.0.1" --header 'Accept-Language: fr' --follow 2>/dev/null)
+        assert_contains '<html lang="en"' "$(tr '\n' ' ' <<<"$page" | sed 's/<html[[:space:]]*/<html /')"
+    done
+}
+
+test_the_language_chosen_is_kept_without_the_session_in_the_cookie_of_the_suite() {
+    built || return 0
+    local name jar=$TMP/c
+    name=$(session_name)
+    landing "$jar" /en >/dev/null
+    # The cookie of the suite, for the whole host
+    assert_contains '"name":"w4os_lang","value":"en"' "$(cat "$jar")"
+    assert_equals / "$(php "$ROOT/tests/fixtures/browser.php" "$jar" paths w4os_lang)"
+    in_english "$jar" "$name"
+}
+
+test_the_language_chosen_is_kept_with_an_older_cookie_of_the_session_of_a_longer_path() {
+    built || return 0
+    local name jar=$TMP/ce
+    name=$(session_name)
+    php "$ROOT/tests/fixtures/browser.php" "$jar" seed "$BASE/" "$name" "$STALE" '' /opensim/fr/
+    landing "$jar" /en >/dev/null
+    in_english "$jar"
+    assert_equals "$BASE/" "$(landing "$jar" /)"
+}
+
+test_a_lang_cookie_of_another_application_is_read_when_the_site_has_none_never_written() {
+    built || return 0
+    local name jar=$TMP/o
+    name=$(session_name)
+    php "$ROOT/tests/fixtures/browser.php" "$jar" seed "$BASE/" lang de '' /
+    assert_equals "$BASE/de" "$(landing "$jar" /)"
+    assert_contains '"name":"w4os_lang","value":"de"' "$(cat "$jar")"
+    # One of no language of the site: the browser's; the lang cookie never written
+    php "$ROOT/tests/fixtures/browser.php" "$TMP/x" seed "$BASE/" lang xx '' /
+    assert_equals "$BASE/fr" "$(landing "$TMP/x" /)"
+    assert_contains '"name":"lang","value":"xx"' "$(cat "$TMP/x")"
+    assert_equals 1 "$(grep -o '"name":"lang"' "$TMP/x" | wc -l | tr -d ' ')"
+}
