@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix (setup): a kept key the engine refuses is replaced by a new one; setup --help, web --help give their own usage
 - fix (web): one PHP socket for the site and the helpers; the helpers outside the prefix, one block a folder of the root
 - change (web): the Caddy file of a site in a few lines, Grav's rules in a snippet the package ships (web/grav.caddy), imported
 - new (web): web caddy --prefix also routes the helpers' addresses outside the prefix, each exactly, in a block of their own

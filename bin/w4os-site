@@ -17,6 +17,16 @@
 
 PGM=w4os-site
 COMMANDOPTS=setup,status,web
+# The help, before bash-helpers, which knows only its own options: the usage of a command, or all of it
+if [[ " $* " == *" --help "* || " $* " == *" -h "* ]]; then
+    usage=$(sed -n '3,/^$/p' "$0" | sed -n 's/^# \{0,1\}//p')
+    if [[ "${1:-}" =~ ^(setup|status|web)$ ]]; then
+        awk -v command="w4os-site $1" 'index($0, command) == 3 { on = 1; print; next } /^  w4os-site / { on = 0 } on' <<<"$usage"
+    else
+        printf '%s\n' "$usage"
+    fi
+    exit 0
+fi
 # Sourced before the options of the shell: bash-tools 1.0.9 stops under set -e when gnu-getopt is not where Homebrew puts it
 source "$(command -v bash-helpers)"
 set -eo pipefail
@@ -139,10 +149,17 @@ setup() {
     url=${url:-$(ask 'Address of the helpers of the grid (https://grid.example.org/helpers)' "$(yaml_get "$CONFIG/plugins/w4os.yaml" url)")}
     [ -n "$url" ] || die "the address of the helpers is needed"
     url=${url%/}
-    key=${key:-$(api_key)}
+    # The key the site kept, while the engine takes it: refused (an engine installed again), a new one is made
+    if [ -z "$key" ]; then
+        key=$(api_key)
+        if [ -n "$key" ] && ! api_get "$api" "$key" /info >/dev/null 2>&1; then
+            warning "the engine API refuses the key the site kept: a new one is made"
+            key=
+        fi
+    fi
     # A grid on this machine makes the key itself
-    if [ -z "$key" ] && command -v opensim >/dev/null; then
-        key=$(opensim api-key create "w4os-site $(hostname)" 2>/dev/null | grep -o 'osk_[A-Za-z0-9_-]*' | head -1 || true)
+    if [ -z "$key" ] && command -v "${W4OS_SITE_OPENSIM:-opensim}" >/dev/null; then
+        key=$("${W4OS_SITE_OPENSIM:-opensim}" api-key create "w4os-site $(hostname)" 2>/dev/null | grep -o 'osk_[A-Za-z0-9_-]*' | head -1 || true)
         [ -z "$key" ] || log "made the API key 'w4os-site $(hostname)' of this machine"
     fi
     [ -n "$key" ] || key=$(ask 'API key of the site (opensim api-key create <label>, on the machine of the grid)')

@@ -94,6 +94,27 @@ test_setup_refuses_a_key_the_api_refuses() {
     assert_file_contains "$SITE/user/config/plugins/w4os.yaml" "api_url: ''"
 }
 
+test_setup_makes_a_new_key_when_the_engine_refuses_the_one_the_site_kept() {
+    mkdir -p "$SITE/user/data/w4os" "$SITE/bin"
+    printf '{"api_key":"osk_old"}\n' >"$SITE/user/data/w4os/api.json"
+    printf '#!/usr/bin/env bash\n[ "$1 $2" = "api-key create" ] && echo "Key osk_test made"\n' >"$SITE/bin/opensim"
+    chmod +x "$SITE/bin/opensim"
+    local output
+    output=$(W4OS_SITE_OPENSIM="$SITE/bin/opensim" site setup --api "http://127.0.0.1:$PORT/api" --url "http://127.0.0.1:$PORT/helpers" --title Test)
+    assert_contains "refuses the key the site kept" "$output"
+    assert_contains "connected" "$output"
+    assert_file_contains "$SITE/user/data/w4os/api.json" "osk_test"
+}
+
+test_help_of_a_command_is_its_usage() {
+    local output
+    output=$(site setup --help)
+    assert_contains "w4os-site setup [--api <engine API>]" "$output"
+    assert_contains "connect the site to the engine API" "$output"
+    assert_not_contains "w4os-site web" "$output"
+    assert_contains "w4os-site web apache|caddy|nginx" "$(site --help)"
+}
+
 test_setup_keeps_the_title_the_site_has_over_the_ascii_name_of_its_grid() {
     printf "title: 'Kimb\xc3\xa9 R\xc3\xa8d'\n" >"$SITE/user/config/site.yaml"
     site setup --api "http://127.0.0.1:$PORT/api" --url "http://127.0.0.1:$PORT/helpers" --key osk_test >/dev/null
