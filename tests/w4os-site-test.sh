@@ -413,6 +413,11 @@ test_web_runs_the_site_in_the_pool_of_the_web_user_never_in_the_one_of_the_engin
     printf '%s\n' '[www]' "user = $(id -un)" "listen = /run/php/php$version-fpm.sock" >"$etc/$version/fpm/pool.d/www.conf"
     assert_contains "proxy:unix:/run/php/php$version-fpm.sock" "$(W4OS_SITE_PHP_ETC=$etc site web apache)"
     assert_not_contains 'w4os-api.sock' "$(W4OS_SITE_PHP_ETC=$etc site web apache)"
+    # The pool of the helpers runs as the web user too: never the site's either
+    printf '%s\n' '[w4os-helpers]' "user = $(id -un)" 'listen = /run/php/w4os-helpers.sock' >"$etc/$version/fpm/pool.d/w4os-helpers.conf"
+    assert_contains "proxy:unix:/run/php/php$version-fpm.sock" "$(W4OS_SITE_PHP_ETC=$etc site web apache)"
+    assert_not_contains 'w4os-helpers.sock' "$(W4OS_SITE_PHP_ETC=$etc site web apache)"
+    rm "$etc/$version/fpm/pool.d/w4os-helpers.conf"
     # The engine's alone: never the site's
     rm "$etc/$version/fpm/pool.d/www.conf"
     assert_not_contains 'w4os-api.sock' "$(W4OS_SITE_PHP_ETC=$etc site web apache)"
@@ -512,4 +517,25 @@ test_the_cards_of_a_page_stand_on_the_solid_surface_of_the_theme() {
     # The install cards in a tint of the accent, solid too
     assert_contains '.install-cards li { border-top: 3px solid var(--q2-accent); background-color: color-mix(in srgb, var(--q2-accent) 10%, var(--q2-bg-elev)); }' "$css"
     assert_not_contains 'linear-gradient(color-mix' "$css"
+}
+
+test_web_apache_keeps_the_pool_of_the_helpers_when_their_file_names_it_else_gives_them_the_one_of_the_site() {
+    printf "grid: kimbe\n" >>"$SITE/user/config/plugins/w4os.yaml"
+    mkdir -p "$SITE/bin"
+    cat >"$SITE/bin/opensim" <<'STUB'
+#!/usr/bin/env bash
+[[ "$*" == "web kimbe snippet apache" ]] || exit 2
+printf 'AliasMatch "^/(?:helpers)(?:/.*)?$" "/usr/share/w4os-helpers/public/index.php"\n<Directory /usr/share/w4os-helpers/public>\n\tRequire all granted\n'
+[ -z "${OWN_POOL:-}" ] || printf '\t<FilesMatch "\\.php$">\n\t\tSetHandler "proxy:unix:/run/php/w4os-helpers.sock|fcgi://w4os-helpers"\n\t</FilesMatch>\n'
+printf '</Directory>\n'
+STUB
+    chmod +x "$SITE/bin/opensim"
+    local own other
+    own=$(OWN_POOL=1 W4OS_SITE_OPENSIM="$SITE/bin/opensim" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web apache --host kimbe.example --prefix /opensim)
+    other=$(W4OS_SITE_OPENSIM="$SITE/bin/opensim" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web apache --host kimbe.example --prefix /opensim)
+    # Their own pool, and the site's PHP for the site alone
+    assert_contains 'proxy:unix:/run/php/w4os-helpers.sock' "$own"
+    assert_equals 1 "$(grep -c 'proxy:unix:/run/php/test.sock' <<<"$own")"
+    # A file of the helpers without it (an engine of before): the site's PHP for both
+    assert_equals 2 "$(grep -c 'proxy:unix:/run/php/test.sock' <<<"$other")"
 }
