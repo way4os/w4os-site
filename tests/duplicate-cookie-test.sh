@@ -216,3 +216,23 @@ test_a_lang_cookie_of_another_application_is_read_when_the_site_has_none_never_w
     assert_contains '"name":"lang","value":"xx"' "$(cat "$TMP/x")"
     assert_equals 1 "$(grep -o '"name":"lang"' "$TMP/x" | wc -l | tr -d ' ')"
 }
+
+test_an_older_cookie_of_a_language_path_never_keeps_the_sign_in_from_answering() {
+    built || return 0
+    local name jar password page out
+    name=$(session_name)
+    for password in wrong-on-purpose secret; do
+        jar=$TMP/f-$password
+        php "$ROOT/tests/fixtures/browser.php" "$jar" seed "$BASE/" "$name" "$STALE" '' /opensim/fr/
+        # The form reached as a French browser reaches it: the sign-in, sent to its language
+        page=$(php "$ROOT/tests/fixtures/browser.php" "$jar" get "$BASE/login" --resolve "$HOST:$((PORT + 1)):127.0.0.1" --header 'Accept-Language: fr' --follow 2>/dev/null)
+        out=$(php "$ROOT/tests/fixtures/browser.php" "$jar" post "$BASE/fr/login" --resolve "$HOST:$((PORT + 1)):127.0.0.1" --header 'Accept-Language: fr' --follow \
+            "username=Ada Love" "password=$password" "task=login.login" \
+            "login-form-nonce=$(sed -n 's/.*name="login-form-nonce" value="\([^"]*\)".*/\1/p' <<<"$page" | head -1)" 2>/dev/null)
+        if [ "$password" = secret ]; then
+            assert_contains "task:login.logout" "$out"
+        else
+            assert_contains 'Échec de la connexion' "$out"
+        fi
+    done
+}
