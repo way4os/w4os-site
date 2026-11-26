@@ -374,7 +374,9 @@ test_web_apache_under_a_prefix_is_included_by_the_sites_of_its_host_alone_and_ta
     for f in kimbe.example kimbe.example-le-ssl other.example; do ln -s "../sites-available/$f.conf" "$etc/sites-enabled/$f.conf"; done
     printf '#!/usr/bin/env bash\necho "$*" >>"%s/apache-calls"\n' "$SITE" >"$SITE/stubs/apache2ctl"
     cp "$SITE/stubs/apache2ctl" "$SITE/stubs/a2enmod"
-    chmod +x "$SITE/stubs/apache2ctl" "$SITE/stubs/a2enmod"
+    # A host with systemd reloads through it (ursull), a container through apache2ctl: both stubbed, either said
+    cp "$SITE/stubs/apache2ctl" "$SITE/stubs/systemctl"
+    chmod +x "$SITE/stubs/apache2ctl" "$SITE/stubs/a2enmod" "$SITE/stubs/systemctl"
     local before_ssl before_other
     before_ssl=$(cat "$etc/sites-available/kimbe.example-le-ssl.conf")
     before_other=$(cat "$etc/sites-available/other.example.conf")
@@ -391,7 +393,7 @@ test_web_apache_under_a_prefix_is_included_by_the_sites_of_its_host_alone_and_ta
     # Once only, however often it is run
     PATH="$SITE/stubs:$PATH" site web apache --host https://kimbe.example --prefix /opensim --install >/dev/null
     assert_equals 1 "$(grep -c IncludeOptional "$etc/sites-available/kimbe.example-le-ssl.conf")"
-    assert_contains "graceful" "$(cat "$SITE/apache-calls")"
+    assert_matches "(graceful|reload apache2)" "$(cat "$SITE/apache-calls")"
     # Taken out: the files as they were, the file of the site gone
     PATH="$SITE/stubs:$PATH" site web apache --host https://kimbe.example --prefix /opensim --remove >/dev/null
     assert_equals "$before_ssl" "$(cat "$etc/sites-available/kimbe.example-le-ssl.conf")"
