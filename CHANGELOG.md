@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix (web): the helpers keep the pool of their own the engine gives them; the site never takes it, nor the API's
 - change (web): web apache --prefix on its host alone: one IncludeOptional line in each site serving it, a copy before; --vhosts, --remove
 - new (web): web apache --prefix: the site under a path for the sites of this Apache, in conf-available/w4os-site.conf
 - fix (web): the snippet of Grav read by Caddy 2.6 (Debian 13, {args.N}); helpers all outside the prefix served; reload without systemd
