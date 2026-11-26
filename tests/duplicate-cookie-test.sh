@@ -22,6 +22,12 @@ browse() {
     php "$ROOT/tests/fixtures/browser.php" "$jar" "$method" "$BASE$path" --resolve "$HOST:$((PORT + 1)):127.0.0.1" "$@" 2>/dev/null
 }
 
+# landing JAR PATH: where a French browser lands from that page of the site (its redirections followed)
+landing() {
+    php "$ROOT/tests/fixtures/browser.php" "$1" get "$BASE$2" --resolve "$HOST:$((PORT + 1)):127.0.0.1" --header 'Accept-Language: fr' --follow \
+        2>&1 >/dev/null | tail -1
+}
+
 # session_name: the name of the cookie of the session of the site
 session_name() {
     local jar=$TMP/name
@@ -70,4 +76,18 @@ test_an_older_cookie_of_a_longer_path_never_keeps_the_browser_from_signing_in_no
     sign_in "$jar"
     assert_contains "task:login.logout" "$(browse "$jar" get /fr/login)"
     assert_equals 1 "$(php "$ROOT/tests/fixtures/browser.php" "$jar" sent "$BASE/fr/login" "$name")"
+}
+
+test_the_language_chosen_stays_chosen_with_an_older_cookie_of_the_session() {
+    built || return 0
+    local name jar=$TMP/l
+    session_domain "$HOST"
+    name=$(session_name)
+    php "$ROOT/tests/fixtures/browser.php" "$jar" seed "$BASE/" "$name" "$STALE" '' /opensim/
+    # A French browser lands in French, chooses English, and stays in English on the home
+    assert_equals "$BASE/fr" "$(landing "$jar" /)"
+    landing "$jar" /en >/dev/null
+    assert_equals "$BASE/" "$(landing "$jar" /)"
+    assert_equals 1 "$(php "$ROOT/tests/fixtures/browser.php" "$jar" sent "$BASE/" "$name")"
+    session_domain ''
 }
