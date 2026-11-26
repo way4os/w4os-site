@@ -418,6 +418,10 @@ test_web_runs_the_site_in_the_pool_of_the_web_user_never_in_the_one_of_the_engin
     assert_contains "proxy:unix:/run/php/php$version-fpm.sock" "$(W4OS_SITE_PHP_ETC=$etc site web apache)"
     assert_not_contains 'w4os-helpers.sock' "$(W4OS_SITE_PHP_ETC=$etc site web apache)"
     rm "$etc/$version/fpm/pool.d/w4os-helpers.conf"
+    # The site's own pool of the suite: taken before the host's
+    printf '%s\n' '[w4os-site]' "user = $(id -un)" 'listen = /run/php/w4os-site.sock' >"$etc/$version/fpm/pool.d/w4os-site.conf"
+    assert_contains 'proxy:unix:/run/php/w4os-site.sock' "$(W4OS_SITE_PHP_ETC=$etc site web apache)"
+    rm "$etc/$version/fpm/pool.d/w4os-site.conf"
     # The engine's alone: never the site's
     rm "$etc/$version/fpm/pool.d/www.conf"
     assert_not_contains 'w4os-api.sock' "$(W4OS_SITE_PHP_ETC=$etc site web apache)"

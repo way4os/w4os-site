@@ -212,6 +212,12 @@ php_socket() {
     local etc=${W4OS_SITE_PHP_ETC:-/etc/php} version conf listen user socket pass
     version=$(php -r 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;' 2>/dev/null || true)
     owner
+    # The site's own pool of the suite first (w4os-site, as the web user), whatever the web server runs as
+    for conf in ${version:+"$etc/$version"/fpm/pool.d/w4os-site.conf} $(ls -r "$etc"/*/fpm/pool.d/w4os-site.conf 2>/dev/null); do
+        [ -f "$conf" ] || continue
+        listen=$(sed -n 's/^[[:space:]]*listen[[:space:]]*=[[:space:]]*\(\/[^[:space:];]*\).*/\1/p' "$conf" | head -1)
+        [ -z "$listen" ] || { echo "$listen" && return; }
+    done
     # The pool of the web user first, else another one, never the suite's: the engine API runs as the user of the grid, with its
     # rights, and the helpers have theirs
     for pass in web other; do
@@ -219,7 +225,7 @@ php_socket() {
         for conf in ${version:+"$etc/$version"/fpm/pool.d/*.conf} $(ls -r "$etc"/*/fpm/pool.d/*.conf 2>/dev/null); do
             [ -f "$conf" ] || continue
             listen=$(sed -n 's/^[[:space:]]*listen[[:space:]]*=[[:space:]]*\(\/[^[:space:];]*\).*/\1/p' "$conf" | head -1)
-            [ -n "$listen" ] && [[ $listen != */w4os-api.sock && $listen != */w4os-helpers.sock ]] || continue
+            [ -n "$listen" ] && [[ $listen != */w4os-api.sock && $listen != */w4os-helpers.sock && $listen != */w4os-site.sock ]] || continue
             user=$(sed -n 's/^[[:space:]]*user[[:space:]]*=[[:space:]]*\([^[:space:];]*\).*/\1/p' "$conf" | head -1)
             [ "$pass" = other ] || [ "$user" = "$OWNER" ] || continue
             echo "$listen" && return

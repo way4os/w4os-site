@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix (web): the site served by its own pool of the suite (w4os-site, as the web user) once it is installed
 - fix (web): beside Apache, the site takes a PHP-FPM socket only when Apache's account reaches it, else mod_php serves it
 - fix (web): the helpers keep the pool of their own the engine gives them; the site never takes it, nor the API's
 - change (web): web apache --prefix on its host alone: one IncludeOptional line in each site serving it, a copy before; --vhosts, --remove
