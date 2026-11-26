@@ -9,9 +9,10 @@
 #       what the site is connected to, and whether the API answers
 #   w4os-site web apache|caddy|nginx [--host <name>[,<name>...]] [--port <port>] [--prefix /<path>] [--install]
 #       the configuration of a web server for the site (printed; installed and enabled with --install, Apache and Caddy), at the
-#       host and the port of the address of the site when not given (localhost on a new site); with --prefix (Caddy), the site
+#       host and the port of the address of the site when not given (localhost on a new site); with --prefix, the site
 #       under that path, in a block of its own beside the one of the host, which it never changes (sites/<host>.w4os.caddyfile),
-#       with the helpers of the grid of this machine under it
+#       with the helpers of the grid of this machine under it; for Apache, in a conf of its own for its sites
+#       (conf-available/w4os-site.conf): an Apache site cannot be given a path from outside its file
 #   w4os-site --version
 #       the version of the site
 
@@ -359,6 +360,54 @@ caddy_install() {
     success "the site is in $file, Caddy reloaded"
 }
 
+# apache_prefixed HOST PREFIX SOCKET INSTALL SCHEME: the site under PREFIX for the sites of this Apache, in a conf of its own
+# (conf-available/w4os-site.conf), which never changes a site of the host: an Apache site cannot be given a path from outside it;
+# the helpers of the grid of this machine before it (opensim web GRID snippet apache), Grav's .htaccess told the prefix
+apache_prefixed() {
+    local host=$1 prefix=/${2#/} socket=$3 install=$4 scheme=$5 grid helpers= handler= text file=/etc/apache2/conf-available/w4os-site.conf said
+    prefix=${prefix%/}
+    [[ $host != *://* ]] || { scheme=${host%%://*}; host=${host#*://}; }
+    [ -z "$socket" ] || handler=$(printf '\t<FilesMatch "\\.php$">\n\t\tSetHandler "proxy:unix:%s|fcgi://localhost"\n\t</FilesMatch>' "$socket")
+    grid=$(yaml_get "$CONFIG/plugins/w4os.yaml" grid)
+    if [ -n "$grid" ] && command -v "${W4OS_SITE_OPENSIM:-opensim}" >/dev/null 2>&1; then
+        helpers=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" snippet apache 2>/dev/null | sed -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' || true)
+        grep -q '^AliasMatch ' <<<"$helpers" || helpers=
+        [ -z "$helpers" ] || helpers=$(printf '# Helpers of the grid %s\n%s\n' "$grid" "$(awk -v h="$handler" '/^<\/Directory>/ && h != "" { print h } { print }' <<<"$helpers")")
+    fi
+    text=$(
+        printf '# The w4os site under %s, for the sites of this Apache (w4os-site web apache --prefix %s)\n' "$prefix" "$prefix"
+        [ -z "$helpers" ] || printf '%s\n' "$helpers"
+        printf '# Website\nRedirectMatch 308 ^%s$ %s/\nAlias %s %s\n<Directory %s>\n\tRequire all granted\n\tAllowOverride All\n\tOptions -Indexes +FollowSymLinks -MultiViews\n' "$prefix" "$prefix" "$prefix" "$ROOT" "$ROOT"
+        [ -z "$handler" ] || printf '%s\n' "$handler"
+        printf '</Directory>\n'
+    )
+    if [ -z "$install" ]; then
+        printf '%s\n' "$text"
+        return
+    fi
+    require a2enconf apache2ctl
+    [ -n "$socket" ] || apache2ctl -M 2>/dev/null | grep -q php ||
+        die "no PHP for Apache: no pool of PHP-FPM (/etc/php/<version>/fpm/pool.d) and no PHP module of Apache: apt install php-fpm, then this command again"
+    printf '%s\n' "$text" >"$file"
+    # Grav's rules under an alias: their base is the prefix
+    [ ! -f "$ROOT/.htaccess" ] || sed -i -E "s|^#? ?RewriteBase .*|RewriteBase $prefix|" "$ROOT/.htaccess"
+    said=$(a2enmod -q rewrite proxy_fcgi alias 2>&1 && a2enconf -q w4os-site 2>&1) || die "Apache's modules or the site could not be enabled: $said"
+    said=$(apache2ctl configtest 2>&1) || {
+        a2disconf -q w4os-site >/dev/null 2>&1 || true
+        die "Apache refuses the configuration, the site is not enabled ($file): $said"
+    }
+    yaml_set "$CONFIG/system.yaml" custom_base_url "$scheme://$host$prefix"
+    owner
+    chown "$OWNER:$GROUP" "$CONFIG/system.yaml" "$ROOT/.htaccess" 2>/dev/null || true
+    rm -rf "${W4OS_SITE_CACHE:-$ROOT/cache}"/* 2>/dev/null || true
+    if [ -d /run/systemd/system ] || [ -n "${W4OS_SITE_SYSTEMD:-}" ]; then
+        said=$(systemctl reload apache2 2>&1) || die "the site is in $file, but Apache did not reload ($said)"
+    else
+        said=$(apache2ctl graceful 2>&1) || die "the site is in $file, but Apache did not reload ($said)"
+    fi
+    success "the site is in $file, Apache reloaded"
+}
+
 web() {
     local server=${1:-} host= port= install= prefix=
     shift || true
@@ -388,6 +437,10 @@ web() {
     socket=${W4OS_SITE_PHP_SOCKET:-$(php_socket)}
     case $server in
     apache)
+        if [ -n "$prefix" ]; then
+            apache_prefixed "$host" "$prefix" "$socket" "$install" "${scheme:-https}"
+            return
+        fi
         port=${port:-80}
         local listen= php= conf
         [ "$port" = 80 ] || [ "$port" = 443 ] || listen="Listen $port"
