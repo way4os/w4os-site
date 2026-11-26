@@ -237,3 +237,12 @@ test_an_older_cookie_of_a_language_path_never_keeps_the_sign_in_from_answering()
         fi
     done
 }
+
+test_the_profile_of_an_avatar_shows_the_menu_of_the_avatar_signed_in() {
+    built || return 0
+    local jar=$TMP/pm
+    sign_in "$jar"
+    # Its name in the path (a dot): the same session as every page
+    assert_contains "task:login.logout" "$(browse "$jar" get /fr/profile/Ada.Love)"
+    assert_contains "task:login.logout" "$(browse "$jar" get /profile/Ada.Love)"
+}

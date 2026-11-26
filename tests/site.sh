@@ -17,8 +17,17 @@ site_set_up() {
     TMP=$(mktemp -d)
     # shellcheck source=../packaging/zip.sh
     source "$ROOT/packaging/zip.sh"
+    # The site in the folder its prefixed address serves (serve_prefixed), SITE a link to it: every request, whichever way the server
+    # routes it, has the same root, so the same name of session
+    mkdir -p "$TMP/www"
+    site_tree "$GRAV_TREE" "$ROOT/defaults" "$TMP/www/opensim"
     SITE="$TMP/w4os-site"
-    site_tree "$GRAV_TREE" "$ROOT/defaults" "$SITE"
+    ln -s "$TMP/www/opensim" "$SITE"
+    # Its sessions at their whole path: PHP's built-in server runs some requests from the folder it serves, which a relative path
+    # would be read from (a web server runs them from the site's)
+    sed -i.bak -e "s#^    save_path: user/data/sessions\$#    save_path: $TMP/www/opensim/user/data/sessions#" "$SITE/user/config/system.yaml"
+    rm -f "$SITE/user/config/system.yaml.bak"
+    grep -q "save_path: $TMP/www/opensim/user/data/sessions" "$SITE/user/config/system.yaml" || echo "site.sh: the sessions path not set" >&2
     API_PORT=$((20000 + RANDOM % 20000))
     PORT=$((API_PORT + 1))
     # The contract of the engine the site ships, for the fake API to serve
@@ -45,8 +54,6 @@ tear_down_after_script() {
 # serve_prefixed: the same site under /opensim, as Grav's own router serves a site in a folder (GRAV_BASEDIR), at PREFIXED
 serve_prefixed() {
     [ -n "${SITE:-}" ] || return 0
-    mkdir -p "$TMP/www"
-    ln -s "$SITE" "$TMP/www/opensim"
     local port=$((PORT + 1))
     (cd "$TMP/www" && GRAV_BASEDIR=/opensim PHP_CLI_SERVER_WORKERS=2 exec php -S "127.0.0.1:$port" opensim/system/router.php \
         >/dev/null 2>&1) &
