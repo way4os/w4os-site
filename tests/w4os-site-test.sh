@@ -279,9 +279,9 @@ kimbe.example/opensim, kimbe.example/opensim/*, www.kimbe.example/opensim, www.k
     cat >"$SITE/bin/opensim" <<'STUB'
 #!/usr/bin/env bash
 case "$*" in
-"web kimbe snippet caddy --prefix /opensim") printf '# Helpers of the grid kimbe.\n@opensim_helpers path /opensim/economy /opensim/economy/*\n\nhandle @opensim_helpers {\n\troot * /usr/share/w4os-helpers/public\n}\n' ;;
-"web kimbe snippet caddy") printf '# Helpers of the grid kimbe.\n@opensim_helpers path /opensim/economy /opensim/economy/* /helper/query.php /helper/query.php/*\n\nhandle @opensim_helpers {\n\troot * /usr/share/w4os-helpers/public\n\tphp_fastcgi unix//run/php/php-fpm.sock\n}\n' ;;
-"web kimbe paths --outside /opensim") printf '/helper/query.php\n/helper/query.php/*\n/helpers/helper/offline.php\n/helpers/helper/offline.php/*\n' ;;
+"web kimbe snippet caddy --prefix /opensim --socket /run/php/test.sock") printf '# Helpers of the grid kimbe.\n@opensim_helpers path /opensim/economy /opensim/economy/*\n\nhandle @opensim_helpers {\n\troot * /usr/share/w4os-helpers/public\n}\n' ;;
+"web kimbe snippet caddy --socket /run/php/test.sock") printf '# Helpers of the grid kimbe.\n@opensim_helpers path /opensim/economy /opensim/economy/* /helper/query.php /helper/query.php/*\n\nhandle @opensim_helpers {\n\troot * /usr/share/w4os-helpers/public\n\tphp_fastcgi unix//run/php/test.sock\n}\n' ;;
+"web kimbe paths --outside /opensim") printf '/helper/query.php\n/helper/query.php/*\n/helpers/helper/offline.php\n/helpers/helper/offline.php/*\n/landtool.php\n' ;;
 *) exit 2 ;;
 esac
 STUB
@@ -289,7 +289,9 @@ STUB
     output=$(W4OS_SITE_OPENSIM="$SITE/bin/opensim" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim)
     assert_contains $'\tredir /opensim /opensim/ 308\n\t# Helpers of the grid kimbe\n\t@opensim_helpers path /opensim/economy /opensim/economy/*\n\thandle @opensim_helpers {\n\t\troot * /usr/share/w4os-helpers/public\n\t}\n\t# Website' "$output"
     # The addresses of its helpers outside the prefix, each exactly, in a block of their own with the helpers' handler
-    assert_contains $'\n# Helpers of the grid kimbe outside /opensim, as its config names them\nkimbe.example/helper/query.php, kimbe.example/helper/query.php/*, kimbe.example/helpers/helper/offline.php, kimbe.example/helpers/helper/offline.php/* {\n\tencode gzip\n\troot * /usr/share/w4os-helpers/public\n\tphp_fastcgi unix//run/php/php-fpm.sock\n}' "$output"
+    assert_contains $'\n# Helpers of the grid kimbe at /helper\nkimbe.example/helper, kimbe.example/helper/* {\n\tencode gzip\n\troot * /usr/share/w4os-helpers/public\n\tphp_fastcgi unix//run/php/test.sock\n}' "$output"
+    assert_contains $'\n# Helpers of the grid kimbe at /helpers\nkimbe.example/helpers, kimbe.example/helpers/* {' "$output"
+    assert_contains $'\n# Helpers of the grid kimbe at /landtool.php\nkimbe.example/landtool.php {' "$output"
     local helpers_output=$output
     # A command line too old for --prefix gives the paths of the root (the whole prefix): said, never written
     printf '#!/usr/bin/env bash\nprintf "@opensim_helpers path /opensim* /health*\\n\\nhandle @opensim_helpers {\\n\\troot * /usr/share/w4os-helpers/public\\n}\\n"\n' >"$SITE/bin/opensim"

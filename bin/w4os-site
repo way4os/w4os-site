@@ -259,7 +259,7 @@ caddy_prefixed() {
     done
     grid=$(yaml_get "$CONFIG/plugins/w4os.yaml" grid)
     if [ -n "$grid" ] && command -v "${W4OS_SITE_OPENSIM:-opensim}" >/dev/null 2>&1; then
-        helpers=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" snippet caddy --prefix "$prefix" 2>/dev/null | sed -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' || true)
+        helpers=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" snippet caddy --prefix "$prefix" ${socket:+--socket "$socket"} 2>/dev/null | sed -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' || true)
         # Paths under the prefix, or none: an empty matcher would take every path
         matcher=$(sed -n 's/^@opensim_helpers path[[:space:]]*//p' <<<"$helpers")
         [ -n "$matcher" ] || helpers=
@@ -280,26 +280,34 @@ caddy_prefixed() {
     fi
     printf '%s# Website\n%shandle_path %s/* {\n' "$tab" "$tab" "$prefix"
     printf '%s%simport %s %s unix/%s %s/index.php\n%s}\n}\n' "$tab" "$tab" "$(grav_snippet)" "$ROOT" "$socket" "$prefix" "$tab"
-    # The addresses of the helpers of the grid elsewhere on the host, each exactly, in a block of their own with their handler (the
-    # one of opensim web GRID snippet caddy): the block of the host keeps the rest
-    local outside= body= joined=
+    # The helpers of the grid elsewhere on the host: a block of their own for each folder of the root they are in (a file at the
+    # root alone), with their handler (the one of opensim web GRID snippet caddy); the block of the host keeps the rest
+    local outside= body= places= place addresses
     if [ -n "$helpers" ]; then
         outside=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" paths --outside "$prefix" 2>/dev/null || true)
-        body=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" snippet caddy 2>/dev/null |
+        body=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" snippet caddy ${socket:+--socket "$socket"} 2>/dev/null |
             awk '/^handle @opensim_helpers \{/ { inside = 1; next } inside && /^\}/ { inside = 0; next } inside { print }' || true)
     fi
-    if [ -n "$outside" ] && [ -n "$body" ]; then
-        # Paths alone, one per line, as they are (never a glob of this folder)
+    [ -n "$body" ] || outside=
+    while IFS= read -r path; do
+        [[ $path == /* && $path != *[[:space:]]* ]] || continue
+        path=${path%/\*}
+        place=/$(cut -d/ -f2 <<<"$path")
+        [[ $path == "$place" ]] || place+=/
+        [[ " $places " == *" $place "* ]] || places+=" $place"
+    done <<<"$outside"
+    for place in $places; do
+        addresses=
         for address in "${list[@]}"; do
-            while IFS= read -r path; do
-                [[ $path == /* && $path != *[[:space:]]* ]] && joined+=${joined:+, }$address$path
-            done <<<"$outside"
+            if [[ $place == */ ]]; then
+                addresses+="${addresses:+, }$address${place%/}, $address$place*"
+            else
+                addresses+="${addresses:+, }$address$place"
+            fi
         done
-    fi
-    if [ -n "$joined" ]; then
-        printf '\n# Helpers of the grid %s outside %s, as its config names them\n' "$grid" "$prefix"
-        printf '%s {\n%sencode gzip\n%s\n}\n' "$joined" "$tab" "$body"
-    fi
+        printf '\n# Helpers of the grid %s at %s\n' "$grid" "${place%/}"
+        printf '%s {\n%sencode gzip\n%s\n}\n' "$addresses" "$tab" "$body"
+    done
 }
 
 # caddy_install HOST TEXT: the file of the site in the sites of Caddy (sites/<host>.w4os.caddyfile), checked with the rest, then
