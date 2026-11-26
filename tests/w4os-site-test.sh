@@ -121,9 +121,16 @@ test_the_language_switcher_keeps_the_choice_of_the_menu() {
 }
 
 test_the_default_pages_link_to_registration_only_while_it_is_open() {
-    # Every line of a default page that links to the registration page is inside [w4os-register]...[/w4os-register]
+    # Every link of a default page to the registration page is inside [w4os-register]...[/w4os-register], on its line or around
+    # its lines
     local unguarded
-    unguarded=$(grep -h '(/register)' "$ROOT"/defaults/pages/*/*.md | grep -v '\[w4os-register\].*(/register).*\[/w4os-register\]' || true)
+    unguarded=$(awk '
+        FNR == 1 { open = 0 }
+        { line = $0; gsub(/\[w4os-register\].*\[\/w4os-register\]/, "", line) }
+        line ~ /\(\/register\)/ && ! open { print FILENAME ":" FNR ": " $0 }
+        line ~ /\[w4os-register\]/ { open = 1 }
+        line ~ /\[\/w4os-register\]/ { open = 0 }
+    ' "$ROOT"/defaults/pages/*/*.md)
     assert_empty "$unguarded"
 }
 
