@@ -364,6 +364,43 @@ test_web_caddy_install_writes_the_file_of_the_site_in_its_sites_never_the_file_o
     assert_file_not_exists "$SITE/caddy/sites/kimbe.example.w4os.caddyfile"
 }
 
+test_web_apache_under_a_prefix_is_included_by_the_sites_of_its_host_alone_and_taken_out_again() {
+    local etc=$SITE/apache output
+    mkdir -p "$etc/sites-available" "$etc/sites-enabled" "$SITE/stubs"
+    # kimbe.example: an http block that only redirects, its https block in certbot's file; other.example has its own /opensim
+    printf '<VirtualHost *:80>\n    ServerName kimbe.example\n    DocumentRoot /var/www/kimbe\n    RewriteEngine on\n    RewriteRule ^ https://%%{SERVER_NAME}%%{REQUEST_URI} [END,NE,R=permanent]\n</VirtualHost>\n' >"$etc/sites-available/kimbe.example.conf"
+    printf '<IfModule mod_ssl.c>\n<VirtualHost *:443>\n    ServerName www.kimbe.example\n    ServerAlias kimbe.example\n    DocumentRoot /var/www/kimbe\n    SSLEngine on\n</VirtualHost>\n</IfModule>\n' >"$etc/sites-available/kimbe.example-le-ssl.conf"
+    printf '<VirtualHost *:80>\n    ServerName other.example\n    Alias /opensim /var/www/other-opensim\n</VirtualHost>\n' >"$etc/sites-available/other.example.conf"
+    for f in kimbe.example kimbe.example-le-ssl other.example; do ln -s "../sites-available/$f.conf" "$etc/sites-enabled/$f.conf"; done
+    printf '#!/usr/bin/env bash\necho "$*" >>"%s/apache-calls"\n' "$SITE" >"$SITE/stubs/apache2ctl"
+    cp "$SITE/stubs/apache2ctl" "$SITE/stubs/a2enmod"
+    chmod +x "$SITE/stubs/apache2ctl" "$SITE/stubs/a2enmod"
+    local before_ssl before_other
+    before_ssl=$(cat "$etc/sites-available/kimbe.example-le-ssl.conf")
+    before_other=$(cat "$etc/sites-available/other.example.conf")
+    export W4OS_SITE_APACHE_ETC="$etc" W4OS_SITE_PHP_SOCKET=/run/php/test.sock
+
+    # The files the question names: the one of the https block alone (the http one only redirects)
+    assert_equals "$(readlink -f "$etc/sites-available/kimbe.example-le-ssl.conf")" "$(PATH="$SITE/stubs:$PATH" site web apache --host https://kimbe.example --prefix /opensim --vhosts)"
+    output=$(PATH="$SITE/stubs:$PATH" site web apache --host https://kimbe.example --prefix /opensim --install)
+    assert_contains "IncludeOptional $etc/w4os/kimbe.example.conf" "$(cat "$etc/sites-available/kimbe.example-le-ssl.conf")"
+    assert_not_contains "IncludeOptional" "$(cat "$etc/sites-available/kimbe.example.conf")"
+    assert_equals "$before_other" "$(cat "$etc/sites-available/other.example.conf")"
+    assert_equals "$before_ssl" "$(cat "$etc/sites-available/kimbe.example-le-ssl.conf.before-w4os")"
+    assert_contains "Alias /opensim $SITE" "$(cat "$etc/w4os/kimbe.example.conf")"
+    # Once only, however often it is run
+    PATH="$SITE/stubs:$PATH" site web apache --host https://kimbe.example --prefix /opensim --install >/dev/null
+    assert_equals 1 "$(grep -c IncludeOptional "$etc/sites-available/kimbe.example-le-ssl.conf")"
+    assert_contains "graceful" "$(cat "$SITE/apache-calls")"
+    # Taken out: the files as they were, the file of the site gone
+    PATH="$SITE/stubs:$PATH" site web apache --host https://kimbe.example --prefix /opensim --remove >/dev/null
+    assert_equals "$before_ssl" "$(cat "$etc/sites-available/kimbe.example-le-ssl.conf")"
+    assert_file_not_exists "$etc/w4os/kimbe.example.conf"
+    # No site of Apache for a host: said, nothing written
+    assert_contains "no site of Apache serves nowhere.example" "$(PATH="$SITE/stubs:$PATH" site web apache --host https://nowhere.example --prefix /opensim --install)"
+    assert_file_not_exists "$etc/w4os/nowhere.example.conf"
+}
+
 test_web_runs_the_site_in_the_pool_of_the_web_user_never_in_the_one_of_the_engine_api() {
     local etc version
     etc=$(mktemp -d)

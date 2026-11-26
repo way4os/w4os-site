@@ -7,12 +7,12 @@
 #       nothing, the confirmation links are shown on the page
 #   w4os-site status
 #       what the site is connected to, and whether the API answers
-#   w4os-site web apache|caddy|nginx [--host <name>[,<name>...]] [--port <port>] [--prefix /<path>] [--install]
+#   w4os-site web apache|caddy|nginx [--host <name>[,<name>...]] [--port <port>] [--prefix /<path>] [--install | --vhosts | --remove]
 #       the configuration of a web server for the site (printed; installed and enabled with --install, Apache and Caddy), at the
 #       host and the port of the address of the site when not given (localhost on a new site); with --prefix, the site
 #       under that path, in a block of its own beside the one of the host, which it never changes (sites/<host>.w4os.caddyfile),
-#       with the helpers of the grid of this machine under it; for Apache, in a conf of its own for its sites
-#       (conf-available/w4os-site.conf): an Apache site cannot be given a path from outside its file
+#       with the helpers of the grid of this machine under it; for Apache, in a file of its own (/etc/apache2/w4os/<host>.conf)
+#       that one line includes in each site of Apache serving the host (--vhosts: their files, --remove: the lines taken out)
 #   w4os-site --version
 #       the version of the site
 
@@ -360,52 +360,139 @@ caddy_install() {
     success "the site is in $file, Caddy reloaded"
 }
 
-# apache_prefixed HOST PREFIX SOCKET INSTALL SCHEME: the site under PREFIX for the sites of this Apache, in a conf of its own
-# (conf-available/w4os-site.conf), which never changes a site of the host: an Apache site cannot be given a path from outside it;
-# the helpers of the grid of this machine before it (opensim web GRID snippet apache), Grav's .htaccess told the prefix
+# apache_blocks HOST SCHEME: the blocks of the sites of Apache that serve HOST (its ServerName or a ServerAlias), one a line,
+# "file<TAB>first line<TAB>last line": the ones of SCHEME (https: its port 443 or SSLEngine on), and the http ones that do more than
+# redirect to https, as their file has them (the real file of a link of sites-enabled)
+apache_blocks() {
+    local host=$1 scheme=$2 etc=${W4OS_SITE_APACHE_ETC:-/etc/apache2} link file
+    for link in "$etc"/sites-enabled/*.conf; do
+        [ -e "$link" ] || continue
+        file=$(readlink -f -- "$link")
+        awk -v host="$(tr '[:upper:]' '[:lower:]' <<<"$host")" -v scheme="$scheme" -v file="$file" '
+            function done_block() {
+                if (!named) return
+                tls = (port == "443" || ssl)
+                if (scheme == "https" && (tls || !redirects)) print file "\t" first "\t" NR
+                else if (scheme == "http" && !tls) print file "\t" first "\t" NR
+            }
+            /^[[:space:]]*<VirtualHost[[:space:]>]/ { inside = 1; first = NR; named = 0; ssl = 0; redirects = 0; port = ""
+                if (match($0, /:[0-9]+/)) port = substr($0, RSTART + 1, RLENGTH - 1); next }
+            inside && /^[[:space:]]*<\/VirtualHost>/ { done_block(); inside = 0; next }
+            inside && tolower($1) ~ /^(servername|serveralias)$/ { for (i = 2; i <= NF; i++) if (tolower($i) == host) named = 1 }
+            inside && tolower($1) == "sslengine" && tolower($2) == "on" { ssl = 1 }
+            inside && tolower($1) ~ /^redirect(match|permanent)?$/ && $0 ~ /https:/ { redirects = 1 }
+            inside && tolower($1) == "rewriterule" && $3 ~ /^https:/ && $0 ~ /R=|R,|\[R\]/ { redirects = 1 }
+        ' "$file"
+    done | sort -u
+}
+
+# The two lines a block of a site of the host is given, and the marker that finds them again
+APACHE_MARK='# w4os-site: the site under its path (w4os-site web apache --remove takes it out)'
+
+# apache_prefixed HOST PREFIX SOCKET MODE SCHEME: the site under PREFIX on HOST alone, never on another site of Apache: a file of
+# its own (/etc/apache2/w4os/HOST.conf: the helpers of the grid of this machine, the site, its PHP), included by one line in each
+# block that serves HOST (an Apache site cannot be given a path from outside its own file), IncludeOptional so that Apache starts
+# without the file; a copy of each file before it is changed. MODE: print, vhosts (the files that would be changed), install, remove
 apache_prefixed() {
-    local host=$1 prefix=/${2#/} socket=$3 install=$4 scheme=$5 grid helpers= handler= text file=/etc/apache2/conf-available/w4os-site.conf said
+    local host=$1 prefix=/${2#/} socket=$3 mode=$4 scheme=$5 etc=${W4OS_SITE_APACHE_ETC:-/etc/apache2} grid helpers= handler= text said
     prefix=${prefix%/}
     [[ $host != *://* ]] || { scheme=${host%%://*}; host=${host#*://}; }
+    local own="$etc/w4os/$host.conf" blocks files file ends
+    blocks=$(apache_blocks "$host" "$scheme")
+    files=$(cut -f1 <<<"$blocks" | sed '/^$/d' | sort -u)
+    case $mode in
+    vhosts)
+        printf '%s\n' "$files" | sed '/^$/d'
+        return
+        ;;
+    remove)
+        require apache2ctl
+        for file in $(grep -l -F -- "$APACHE_MARK" "$etc"/sites-available/*.conf 2>/dev/null); do
+            apache_unmark "$file"
+        done
+        rm -f "$own"
+        said=$(apache2ctl configtest 2>&1) || die "Apache refuses its configuration once the site is taken out: $said"
+        apache_reload
+        success "the site is out of Apache ($host)"
+        return
+        ;;
+    esac
     [ -z "$socket" ] || handler=$(printf '\t<FilesMatch "\\.php$">\n\t\tSetHandler "proxy:unix:%s|fcgi://localhost"\n\t</FilesMatch>' "$socket")
     grid=$(yaml_get "$CONFIG/plugins/w4os.yaml" grid)
     if [ -n "$grid" ] && command -v "${W4OS_SITE_OPENSIM:-opensim}" >/dev/null 2>&1; then
         helpers=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" snippet apache 2>/dev/null | sed -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' || true)
         grep -q '^AliasMatch ' <<<"$helpers" || helpers=
-        [ -z "$helpers" ] || helpers=$(printf '# Helpers of the grid %s\n%s\n' "$grid" "$(awk -v h="$handler" '/^<\/Directory>/ && h != "" { print h } { print }' <<<"$helpers")")
+        # The handler as it is: awk -v would read its backslashes as escapes
+        [ -z "$helpers" ] || helpers=$(printf '# Helpers of the grid %s\n%s\n' "$grid" "$(W4OS_HANDLER=$handler awk '/^<\/Directory>/ && ENVIRON["W4OS_HANDLER"] != "" { print ENVIRON["W4OS_HANDLER"] } { print }' <<<"$helpers")")
     fi
     text=$(
-        printf '# The w4os site under %s, for the sites of this Apache (w4os-site web apache --prefix %s)\n' "$prefix" "$prefix"
+        printf '# The w4os site under %s on %s alone, included by its sites (w4os-site web apache --prefix %s)\n' "$prefix" "$host" "$prefix"
         [ -z "$helpers" ] || printf '%s\n' "$helpers"
         printf '# Website\nRedirectMatch 308 ^%s$ %s/\nAlias %s %s\n<Directory %s>\n\tRequire all granted\n\tAllowOverride All\n\tOptions -Indexes +FollowSymLinks -MultiViews\n' "$prefix" "$prefix" "$prefix" "$ROOT" "$ROOT"
         [ -z "$handler" ] || printf '%s\n' "$handler"
         printf '</Directory>\n'
     )
-    if [ -z "$install" ]; then
+    if [ "$mode" != install ]; then
         printf '%s\n' "$text"
         return
     fi
-    require a2enconf apache2ctl
+    require apache2ctl
+    [ -n "$files" ] || die "no site of Apache serves $host: the website is put in one of its sites"
     [ -n "$socket" ] || apache2ctl -M 2>/dev/null | grep -q php ||
         die "no PHP for Apache: no pool of PHP-FPM (/etc/php/<version>/fpm/pool.d) and no PHP module of Apache: apt install php-fpm, then this command again"
-    printf '%s\n' "$text" >"$file"
+    mkdir -p "$etc/w4os" && printf '%s\n' "$text" >"$own" || die "cannot write $own"
+    # The global conf of before, for every site of Apache: never again
+    [ ! -e "$etc/conf-available/w4os-site.conf" ] || { a2disconf -q w4os-site >/dev/null 2>&1 || true; rm -f "$etc/conf-available/w4os-site.conf"; }
+    # The line before the end of each block, the last ones first (the numbers of the others stay right); a copy of each file once
+    for file in $files; do
+        [ -e "$file.before-w4os" ] || cp -p -- "$file" "$file.before-w4os" || die "cannot keep a copy of $file"
+        # Each block that has not the line yet gets it before its end
+        ends=$(awk -F'\t' -v f="$file" '$1 == f { print $2 ":" $3 }' <<<"$blocks" | tr '\n' ' ')
+        text=$(awk -v ends="$ends" -v m="$APACHE_MARK" -v inc="IncludeOptional $own" '
+            BEGIN { n = split(ends, list, " "); for (i = 1; i <= n; i++) { split(list[i], b, ":"); last[b[2]] = b[1] } }
+            index($0, m) { marked[NR] = 1 }
+            { lines[NR] = $0 }
+            END {
+                for (i = 1; i <= NR; i++) {
+                    if (i in last) {
+                        has = 0
+                        for (j = last[i]; j < i; j++) if (j in marked) has = 1
+                        if (!has) { print "    " m; print "    " inc }
+                    }
+                    print lines[i]
+                }
+            }' "$file") && printf '%s\n' "$text" >"$file" || die "cannot write $file"
+    done
+    said=$(a2enmod -q rewrite proxy_fcgi alias 2>&1) || die "Apache's modules could not be enabled: $said"
+    said=$(apache2ctl configtest 2>&1) || {
+        for file in $files; do apache_unmark "$file"; done
+        rm -f "$own"
+        die "Apache refuses the configuration, nothing is changed: $said"
+    }
     # Grav's rules under an alias: their base is the prefix
     [ ! -f "$ROOT/.htaccess" ] || sed -i -E "s|^#? ?RewriteBase .*|RewriteBase $prefix|" "$ROOT/.htaccess"
-    said=$(a2enmod -q rewrite proxy_fcgi alias 2>&1 && a2enconf -q w4os-site 2>&1) || die "Apache's modules or the site could not be enabled: $said"
-    said=$(apache2ctl configtest 2>&1) || {
-        a2disconf -q w4os-site >/dev/null 2>&1 || true
-        die "Apache refuses the configuration, the site is not enabled ($file): $said"
-    }
     yaml_set "$CONFIG/system.yaml" custom_base_url "$scheme://$host$prefix"
     owner
     chown "$OWNER:$GROUP" "$CONFIG/system.yaml" "$ROOT/.htaccess" 2>/dev/null || true
     rm -rf "${W4OS_SITE_CACHE:-$ROOT/cache}"/* 2>/dev/null || true
+    apache_reload
+    success "the site is in $own, included by $(tr '\n' ' ' <<<"$files" | sed 's/ $//; s/ /, /g'), Apache reloaded"
+}
+
+# apache_unmark FILE: the two lines of the site taken out of a file of a site of Apache (the marker and the line after it)
+apache_unmark() {
+    local text
+    text=$(awk -v m="$APACHE_MARK" 'skip { skip = 0; next } index($0, m) { skip = 1; next } { print }' "$1") && printf '%s\n' "$text" >"$1"
+}
+
+# Apache told to read its configuration again: by systemd, else the Apache that runs (a container)
+apache_reload() {
+    local said
     if [ -d /run/systemd/system ] || [ -n "${W4OS_SITE_SYSTEMD:-}" ]; then
-        said=$(systemctl reload apache2 2>&1) || die "the site is in $file, but Apache did not reload ($said)"
+        said=$(systemctl reload apache2 2>&1) || die "Apache did not reload ($said)"
     else
-        said=$(apache2ctl graceful 2>&1) || die "the site is in $file, but Apache did not reload ($said)"
+        said=$(apache2ctl graceful 2>&1) || die "Apache did not reload ($said)"
     fi
-    success "the site is in $file, Apache reloaded"
 }
 
 web() {
@@ -417,6 +504,8 @@ web() {
         --port) port=$2; shift 2 ;;
         --prefix) prefix=$2; shift 2 ;;
         --install) install=1; shift ;;
+        --vhosts) install=vhosts; shift ;;
+        --remove) install=remove; shift ;;
         *) die "unknown option $1" ;;
         esac
     done
@@ -438,7 +527,10 @@ web() {
     case $server in
     apache)
         if [ -n "$prefix" ]; then
-            apache_prefixed "$host" "$prefix" "$socket" "$install" "${scheme:-https}"
+            local mode=print
+            [ -z "$install" ] || mode=$install
+            [ "$mode" != 1 ] || mode=install
+            apache_prefixed "$host" "$prefix" "$socket" "$mode" "${scheme:-https}"
             return
         fi
         port=${port:-80}
