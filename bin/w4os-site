@@ -269,7 +269,7 @@ grav_snippet() {
 # it to the block of the host, whatever runs at its root, which it never changes): the helpers of the grid of this machine under
 # it (opensim web GRID snippet caddy --prefix), then the site, the prefix stripped; the helpers elsewhere on the host, each exactly
 caddy_prefixed() {
-    local addresses=$1 prefix=$2 socket=$3 tab=$'\t' list= under= address grid helpers= matcher
+    local addresses=$1 prefix=$2 socket=$3 tab=$'\t' list= under= address grid helpers= matcher outdated=
     IFS=, read -ra list <<<"${addresses//, /,}"
     for address in "${list[@]}"; do
         under+="${under:+, }$address$prefix, $address$prefix/*"
@@ -285,6 +285,7 @@ caddy_prefixed() {
         for path in $matcher; do
             [[ $path == "$prefix"/* ]] && continue
             helpers=
+            outdated=yes
             warning "the helpers of $grid are not in the file: w4os-cli 3.0.0~beta.4+125 or later gives their paths under $prefix"
             break
         done
@@ -300,7 +301,8 @@ caddy_prefixed() {
     # The helpers of the grid elsewhere on the host: a block of their own for each folder of the root they are in (a file at the
     # root alone), with their handler (the one of opensim web GRID snippet caddy); the block of the host keeps the rest
     local outside= body= places= place addresses
-    if [ -n "$helpers" ]; then
+    # Whether or not some are under the prefix (helpers at /helpers, the site under /opensim)
+    if [ -n "$grid" ] && [ -z "$outdated" ] && command -v "${W4OS_SITE_OPENSIM:-opensim}" >/dev/null 2>&1; then
         outside=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" paths --outside "$prefix" 2>/dev/null || true)
         body=$("${W4OS_SITE_OPENSIM:-opensim}" web "$grid" snippet caddy ${socket:+--socket "$socket"} 2>/dev/null |
             awk '/^handle @opensim_helpers \{/ { inside = 1; next } inside && /^\}/ { inside = 0; next } inside { print }' || true)
@@ -308,10 +310,11 @@ caddy_prefixed() {
     [ -n "$body" ] || outside=
     while IFS= read -r path; do
         [[ $path == /* && $path != *[[:space:]]* ]] || continue
-        path=${path%/\*}
         place=/$(cut -d/ -f2 <<<"$path")
+        # A folder when something is under it (its glob too), else a file at the root
         [[ $path == "$place" ]] || place+=/
-        [[ " $places " == *" $place "* ]] || places+=" $place"
+        [[ " $places " != *" ${place%/} "* ]] || places=${places/ ${place%/}/}
+        [[ " $places " == *" $place "* || " $places " == *" $place/ "* ]] || places+=" $place"
     done <<<"$outside"
     for place in $places; do
         addresses=
@@ -347,7 +350,12 @@ caddy_install() {
         rm -f "$file"
         die "Caddy refuses the configuration, the site is not installed: $said"
     }
-    said=$(systemctl reload caddy 2>&1) || die "the site is in $file, but Caddy did not reload ($said): reload it, then this command again"
+    if [ -d /run/systemd/system ] || [ -n "${W4OS_SITE_SYSTEMD:-}" ]; then
+        said=$(systemctl reload caddy 2>&1) || die "the site is in $file, but Caddy did not reload ($said)"
+    else
+        # Without systemd (a container): the Caddy that runs told to read its config again
+        said=$(caddy reload --config "$etc/Caddyfile" --adapter caddyfile 2>&1) || die "the site is in $file, but Caddy did not reload ($said)"
+    fi
     success "the site is in $file, Caddy reloaded"
 }
 

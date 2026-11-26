@@ -261,8 +261,8 @@ test_web_caddy_is_a_site_block_of_its_own_to_import_next_to_other_sites() {
     export W4OS_SITE_SHARE="$SITE/share"
     output=$(W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy)
     assert_equals $'# The w4os site (w4os-site web caddy)\nsite.example.org {\n\tencode gzip\n\timport '"$SITE/share/web/grav.caddy $SITE"$' unix//run/php/test.sock /index.php\n}' "$output"
-    assert_contains $'php_fastcgi {args[1]} {\n\t\tenv SCRIPT_NAME {args[2]}\n\t}' "$(cat "$SITE/share/web/grav.caddy")"
-    assert_contains 'root * {args[0]}' "$(cat "$SITE/share/web/grav.caddy")"
+    assert_contains $'php_fastcgi {args.1} {\n\t\tenv SCRIPT_NAME {args.2}\n\t}' "$(cat "$SITE/share/web/grav.caddy")"
+    assert_contains 'root * {args.0}' "$(cat "$SITE/share/web/grav.caddy")"
     assert_not_contains 'localhost' "$(cat "$SITE/share/web/grav.caddy")"
     assert_contains $'\ngrid.example.org:8830 {' "$(W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --host grid.example.org --port 8830)"
     printf "custom_base_url: 'http://grid.example.org:8830'\n" >>"$SITE/user/config/system.yaml"
@@ -314,6 +314,11 @@ STUB
     assert_contains $'\n# Helpers of the grid kimbe at /helpers\nkimbe.example/helpers, kimbe.example/helpers/* {' "$output"
     assert_contains $'\n# Helpers of the grid kimbe at /landtool.php\nkimbe.example/landtool.php {' "$output"
     local helpers_output=$output
+    # Helpers all outside the prefix (at /helpers, the site under /opensim): their blocks all the same
+    sed -i.bak 's|^"web kimbe snippet caddy --prefix /opensim --socket /run/php/test.sock").*|"web kimbe snippet caddy --prefix /opensim --socket /run/php/test.sock") printf "@opensim_helpers path \\n" ;;|' "$SITE/bin/opensim"
+    output=$(W4OS_SITE_OPENSIM="$SITE/bin/opensim" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim)
+    assert_not_contains '@opensim_helpers' "$output"
+    assert_contains $'\n# Helpers of the grid kimbe at /helpers\nkimbe.example/helpers, kimbe.example/helpers/* {' "$output"
     # A command line too old for --prefix gives the paths of the root (the whole prefix): said, never written
     printf '#!/usr/bin/env bash\nprintf "@opensim_helpers path /opensim* /health*\\n\\nhandle @opensim_helpers {\\n\\troot * /usr/share/w4os-helpers/public\\n}\\n"\n' >"$SITE/bin/opensim"
     output=$(W4OS_SITE_OPENSIM="$SITE/bin/opensim" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim)
@@ -332,7 +337,7 @@ test_web_caddy_install_writes_the_file_of_the_site_in_its_sites_never_the_file_o
     printf 'localhost\nencode gzip\nroot * .\nroute {\n\tphp_fastcgi 127.0.0.1:9000\n}\n' >"$SITE/webserver-configs/Caddyfile"
     printf "custom_base_url: 'https://kimbe.example'\n" >>"$SITE/user/config/system.yaml"
     printf 'kimbe.example {\n\troot * /var/www/html\n}\n' >"$SITE/caddy/sites/kimbe.example.caddyfile"
-    printf '#!/usr/bin/env bash\n[ "${CADDY_REFUSES:-}" = "" ] || { echo refused; exit 1; }\n' >"$SITE/stubs/caddy"
+    printf '#!/usr/bin/env bash\n[ "${CADDY_REFUSES:-}" = "" ] || { echo refused; exit 1; }\n[ "$1" != reload ] || echo "caddy reload" >>"%s/reloads"\n' "$SITE" >"$SITE/stubs/caddy"
     printf '#!/usr/bin/env bash\necho "$*" >>"%s/reloads"\n' "$SITE" >"$SITE/stubs/systemctl"
     chmod +x "$SITE/stubs/caddy" "$SITE/stubs/systemctl"
     local host_file
@@ -345,7 +350,8 @@ test_web_caddy_install_writes_the_file_of_the_site_in_its_sites_never_the_file_o
     PATH="$SITE/stubs:$PATH" W4OS_SITE_CADDY_ETC="$SITE/caddy" W4OS_SITE_PHP_SOCKET=/run/php/test.sock site web caddy --prefix /opensim --install >/dev/null
     assert_contains 'kimbe.example/opensim/* {' "$(cat "$SITE/caddy/sites/kimbe.example.w4os.caddyfile")"
     assert_equals "$host_file" "$(cat "$SITE/caddy/sites/kimbe.example.caddyfile")"
-    assert_equals 'reload caddy' "$(cat "$SITE/reloads")"
+    # By systemd, else the Caddy that runs (a container)
+    assert_matches '^(reload caddy|caddy reload)$' "$(cat "$SITE/reloads")"
     # An absolute import of the Caddyfile: the file goes where it imports
     mkdir -p "$SITE/caddy/sites-enabled"
     printf 'import %s/caddy/sites-enabled/*.caddyfile\n' "$SITE" >"$SITE/caddy/Caddyfile"
