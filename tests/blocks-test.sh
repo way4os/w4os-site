@@ -20,13 +20,14 @@ set_up() {
     echo "url: 'http://127.0.0.1:$((API_PORT + 2))/helpers'" >>"$SITE/user/config/plugins/w4os.yaml"
 }
 
-test_a_manager_is_told_why_the_profile_is_empty_with_a_link_to_health() {
+test_a_manager_is_told_why_the_profile_is_empty_its_status_and_a_link_to_the_diagnostics() {
     built || return 0
     [ -s "$TMP/god" ] || sign_in_as "$TMP/god" "God Test"
     local page
     page=$(curl -s -b "$TMP/god" "$URL/profile")
-    assert_contains 'The helpers of the grid did not give profile: ' "$page"
-    assert_contains '>Health</a>' "$page"
+    # What a failure says: the reason of the transport (nothing answers there), then what was asked
+    assert_contains 'Connection refused · helpers: profile <a' "$page"
+    assert_contains '>Diagnostics page</a>' "$page"
     assert_contains 'w4os/health' "$page"
     assert_contains 'the block profile of the helpers cannot be read' "$(cat "$SITE"/logs/*.log)"
 }
@@ -37,7 +38,7 @@ test_a_visitor_is_told_the_page_is_unavailable_for_now_without_the_reason() {
     local page
     page=$(curl -s -b "$TMP/ada" "$URL/profile")
     assert_contains 'The grid cannot be reached right now. Please try again later.' "$page"
-    assert_not_contains 'The helpers of the grid did not give' "$page"
+    assert_not_contains 'helpers: profile' "$page"
 }
 
 test_a_manager_is_told_once_for_the_blocks_of_the_home_page_a_visitor_sees_the_page_without_them() {
@@ -45,7 +46,7 @@ test_a_manager_is_told_once_for_the_blocks_of_the_home_page_a_visitor_sees_the_p
     [ -s "$TMP/god" ] || sign_in_as "$TMP/god" "God Test"
     local page
     page=$(curl -s -L -b "$TMP/god" "$URL/")
-    assert_equals 1 "$(echo "$page" | grep -o 'The helpers of the grid did not give' | wc -l | tr -d ' ')"
-    assert_not_contains 'The helpers of the grid did not give' "$(curl -s -L "$URL/")"
+    assert_equals 1 "$(echo "$page" | grep -o 'Connection refused · helpers: ' | wc -l | tr -d ' ')"
+    assert_not_contains 'Connection refused' "$(curl -s -L "$URL/")"
     assert_not_contains 'The grid cannot be reached right now' "$(curl -s -L "$URL/")"
 }
