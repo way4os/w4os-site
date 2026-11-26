@@ -15,11 +15,11 @@ if (($_SERVER['HTTP_AUTHORIZATION'] ?? '') !== 'Bearer osk_test') {
 }
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $ada = ['type' => 'avatars', 'id' => 'a1', 'attributes' => [
-    'uuid' => 'a1', 'name' => 'Ada Love', 'slug' => 'ada-love', 'email' => 'ada@example.org', 'level' => 0, 'status' => 'active', 'shownRole' => 'resident',
+    'uuid' => 'a1', 'name' => 'Ada Love', 'slug' => 'ada-love', 'email' => 'ada@example.org', 'profileImage' => '11111111-2222-3333-4444-555555555555', 'level' => 0, 'status' => 'active', 'shownRole' => 'resident',
     'estates' => 0, 'regions' => 0, 'parcels' => 1,
 ]];
 $god = ['type' => 'avatars', 'id' => 'g1', 'attributes' => [
-    'uuid' => 'g1', 'name' => 'God Test', 'slug' => 'god-test', 'email' => 'god@example.org', 'level' => 200, 'status' => 'active', 'shownRole' => 'god',
+    'uuid' => 'g1', 'name' => 'God Test', 'slug' => 'god-test', 'email' => 'god@example.org', 'lastSeen' => 1795000000, 'level' => 200, 'status' => 'active', 'shownRole' => 'god',
     'estates' => 1, 'regions' => 3, 'parcels' => 5,
 ]];
 $answer = function (int $status, array $document) {
