@@ -13,6 +13,29 @@ set_up_before_script() {
     site_set_up
     serve_prefixed
     BASE="http://$HOST:$((PORT + 1))/opensim"
+    serve_other
+}
+
+tear_down_after_script() {
+    pkill -P "${OTHER_PID:-0}" 2>/dev/null || true
+    kill "${OTHER_PID:-}" 2>/dev/null || true
+    site_tear_down
+}
+
+# serve_other: another site of its own root, the same engine, under /other on another port of the same host (a cookie knows no
+# port), at OTHER
+serve_other() {
+    [ -n "${SITE:-}" ] || return 0
+    local port=$((PORT + 2)) tries=100
+    site_tree "$GRAV_TREE" "$ROOT/defaults" "$TMP/site2"
+    cp "$SITE/user/config/plugins/w4os.yaml" "$TMP/site2/user/config/plugins/w4os.yaml"
+    mkdir -p "$TMP/www2"
+    ln -s "$TMP/site2" "$TMP/www2/other"
+    (cd "$TMP/www2" && GRAV_BASEDIR=/other PHP_CLI_SERVER_WORKERS=2 exec php -S "127.0.0.1:$port" other/system/router.php \
+        >/dev/null 2>&1) &
+    OTHER_PID=$!
+    OTHER="http://$HOST:$port/other"
+    until curl -s -o /dev/null "http://127.0.0.1:$port/other/" || [ $((tries -= 1)) -eq 0 ]; do sleep 0.2; done
 }
 
 # browse JAR get|post PATH [field=value...]: the page of the site under its prefix, as the browser JAR sees it
@@ -42,12 +65,18 @@ sign_in() {
     browse "$jar" post /fr/login "username=Ada Love" "password=secret" "task=login.login" "login-form-nonce=$nonce" >/dev/null
 }
 
-# session_domain DOMAIN: the domain of the cookie of the session (Grav's setting; empty: Grav's own, the host only)
-session_domain() {
+# session_setting KEY VALUE: a setting of the cookie of the session in the site's system.yaml (empty: none, Grav's or w4os's own)
+session_setting() {
     local config=$SITE/user/config/system.yaml
-    awk -v domain="$1" '/^  domain: / { next } { print } /^session:$/ && domain != "" { print "  domain: " domain }' "$config" >"$config.new"
+    awk -v key="$1" -v value="$2" '$0 ~ "^  " key ": " { next } { print } /^session:$/ && value != "" { print "  " key ": " value }' \
+        "$config" >"$config.new"
     mv "$config.new" "$config"
     rm -rf "$SITE/cache/compiled"
+}
+
+# session_domain DOMAIN: the domain of the cookie of the session (empty: Grav's own, the host only)
+session_domain() {
+    session_setting domain "$1"
 }
 
 test_an_older_cookie_without_the_domain_of_now_never_keeps_the_browser_from_signing_in() {
@@ -90,4 +119,54 @@ test_the_language_chosen_stays_chosen_with_an_older_cookie_of_the_session() {
     assert_equals "$BASE/" "$(landing "$jar" /)"
     assert_equals 1 "$(php "$ROOT/tests/fixtures/browser.php" "$jar" sent "$BASE/" "$name")"
     session_domain ''
+}
+
+test_a_browser_signed_in_with_the_cookie_at_the_base_of_before_stays_signed_in_with_one_cookie_at_the_root() {
+    built || return 0
+    local name jar=$TMP/m
+    name=$(session_name)
+    # Before: the cookie of the session at the base of the site (Grav's own)
+    session_setting path /opensim/
+    sign_in "$jar"
+    assert_equals /opensim/ "$(php "$ROOT/tests/fixtures/browser.php" "$jar" paths "$name")"
+    # Now: at the root of the host (w4os's), the visitor still signed in, one cookie left
+    session_setting path ''
+    assert_contains "task:login.logout" "$(browse "$jar" get /fr/login)"
+    assert_contains "task:login.logout" "$(browse "$jar" get /fr/login)"
+    assert_equals / "$(php "$ROOT/tests/fixtures/browser.php" "$jar" paths "$name")"
+}
+
+test_two_sites_of_one_host_under_two_prefixes_never_share_a_session() {
+    built || return 0
+    local jar=$TMP/t
+    sign_in "$jar"
+    assert_contains "task:login.logout" "$(browse "$jar" get /fr/login)"
+    assert_not_contains "task:login.logout" \
+        "$(php "$ROOT/tests/fixtures/browser.php" "$jar" get "$OTHER/fr/login" --resolve "$HOST:$((PORT + 2)):127.0.0.1" 2>/dev/null)"
+    # Each its own cookie, the first site still signed in
+    assert_equals 2 "$(grep -oE '"name":"grav-site-[0-9a-f]{7}"' "$jar" | sort -u | wc -l | tr -d ' ')"
+    assert_contains "task:login.logout" "$(browse "$jar" get /fr/login)"
+}
+
+# declared_pages: the address of each page of the grid the site declares (Site::servedPages(), from the routes of its settings)
+declared_pages() {
+    php -r '
+        require $argv[1]."/vendor/autoload.php";
+        require $argv[1]."/user/plugins/w4os/vendor/autoload.php";
+        $read = fn (string $file) => is_file($file) ? (array) Symfony\Component\Yaml\Yaml::parseFile($file) : [];
+        $routes = array_replace((array) ($read($argv[1]."/user/plugins/w4os/w4os.yaml")["routes"] ?? []), (array) ($read($argv[1]."/user/config/plugins/w4os.yaml")["routes"] ?? []));
+        echo implode("\n", W4OS\Grav\Site::servedPages(array_map(fn ($r) => "/".trim((string) $r, "/"), array_filter($routes)), $argv[2]));
+    ' "$SITE" "$BASE"
+}
+
+test_the_language_chosen_reaches_every_page_of_the_grid_the_site_declares() {
+    built || return 0
+    local jar=$TMP/p url pages
+    pages=$(declared_pages)
+    assert_not_empty "$pages"
+    landing "$jar" /en >/dev/null
+    for url in $pages; do
+        assert_contains '<html lang="en"' "$(php "$ROOT/tests/fixtures/browser.php" "$jar" get "$url" --resolve "$HOST:$((PORT + 1)):127.0.0.1" \
+            --header 'Accept-Language: fr' --follow 2>/dev/null | tr '\n' ' ' | sed 's/<html[[:space:]]*/<html /')"
+    done
 }

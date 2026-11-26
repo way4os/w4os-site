@@ -7,6 +7,7 @@
 //   php browser.php JAR seed URL NAME VALUE DOMAIN PATH   a cookie kept before (DOMAIN '' for the host only), older than the others
 //   php browser.php JAR count NAME                        how many cookies of that name it keeps
 //   php browser.php JAR sent URL NAME                     how many of them it sends to that address
+//   php browser.php JAR paths NAME                        the paths of the cookies of that name it keeps
 [, $file, $command] = $argv + [null, null, null];
 $jar = is_file($file) ? (array) json_decode((string) file_get_contents($file), true) : [];
 $save = function () use (&$jar, $file): void {
@@ -66,6 +67,9 @@ switch ($command) {
         break;
     case 'count':
         echo count(array_filter($jar, fn ($c) => $c['name'] === $argv[3]))."\n";
+        break;
+    case 'paths':
+        echo implode(' ', array_column(array_filter($jar, fn ($c) => $c['name'] === $argv[3]), 'path'))."\n";
         break;
     case 'sent':
         echo count(array_filter($sent($argv[3]), fn ($c) => $c['name'] === $argv[4]))."\n";
