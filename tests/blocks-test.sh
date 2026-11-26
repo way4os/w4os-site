@@ -32,13 +32,14 @@ test_a_manager_is_told_why_the_profile_is_empty_its_status_and_a_link_to_the_dia
     assert_contains 'the block profile of the helpers cannot be read' "$(cat "$SITE"/logs/*.log)"
 }
 
-test_a_visitor_is_told_the_page_is_unavailable_for_now_without_the_reason() {
+test_a_visitor_is_told_the_page_is_unavailable_as_a_failure_is_without_the_diagnostics() {
     built || return 0
     [ -s "$TMP/ada" ] || sign_in_as "$TMP/ada" "Ada Love"
     local page
     page=$(curl -s -b "$TMP/ada" "$URL/profile")
-    assert_contains 'The grid cannot be reached right now. Please try again later.' "$page"
-    assert_not_contains 'helpers: profile' "$page"
+    # As a failure is said, without the link to the diagnostics
+    assert_contains 'Connection refused · helpers: profile' "$page"
+    assert_not_contains 'Diagnostics page' "$page"
 }
 
 test_a_manager_is_told_once_for_the_blocks_of_the_home_page_a_visitor_sees_the_page_without_them() {
@@ -48,5 +49,5 @@ test_a_manager_is_told_once_for_the_blocks_of_the_home_page_a_visitor_sees_the_p
     page=$(curl -s -L -b "$TMP/god" "$URL/")
     assert_equals 1 "$(echo "$page" | grep -o 'Connection refused · helpers: ' | wc -l | tr -d ' ')"
     assert_not_contains 'Connection refused' "$(curl -s -L "$URL/")"
-    assert_not_contains 'The grid cannot be reached right now' "$(curl -s -L "$URL/")"
+    assert_not_contains ' · helpers: ' "$(curl -s -L "$URL/")"
 }

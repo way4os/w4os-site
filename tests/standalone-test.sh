@@ -61,7 +61,7 @@ test_a_profile_is_shown_with_its_picture() {
     page=$(curl -s "$URL/profile/Bart.Simpson")
     assert_contains 'profile-banner' "$page"
     assert_contains 'Bart Simpson' "$page"
-    assert_not_contains 'The grid cannot be reached right now' "$page"
+    assert_not_contains ' · helpers: ' "$page"
     picture=$(echo "$page" | grep -o '<img[^>]*src="[^"]*"' | grep -o 'src="[^"]*"' | sed 's/^src="//; s/"$//; s/&amp;/\&/g' | grep -v '^data:' | head -1)
     assert_not_empty "$picture"
     assert_equals 200 "$(curl -s -o /dev/null -w '%{http_code}' "$(case $picture in http*) echo "$picture" ;; *) echo "$URL$picture" ;; esac)")"
@@ -71,9 +71,9 @@ test_the_guide_and_the_search_are_shown() {
     standalone || return 0
     local guide search
     guide=$(curl -s "$URL/guide")
-    assert_not_contains 'The grid cannot be reached right now' "$guide"
+    assert_not_contains ' · helpers: ' "$guide"
     assert_contains 'destination' "$guide"
     search=$(curl -s "$URL/search?q=Bart")
-    assert_not_contains 'The grid cannot be reached right now' "$search"
+    assert_not_contains ' · helpers: ' "$search"
     assert_contains 'Bart Simpson' "$search"
 }
