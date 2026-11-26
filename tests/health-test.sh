@@ -6,6 +6,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/site.sh"
 
 # A recent time as the page tells it: relative where the host lets Carbon run (Grav 2), else the short date with its time (Grav 1.7)
 SHORT_DATE='[0-9]{1,2}/[0-9]{1,2}/[0-9]{2}, [0-9]{1,2}:[0-9]{2}[^0-9<]{1,4}[AP]M'
+# A time as the plugin writes it, in its tag (Site::timeTag), the browser telling it again in its own zone
+TIME='<time [^>]*>'
 
 # sign_in_as JAR NAME: NAME signs in in the browser JAR
 sign_in_as() {
@@ -20,16 +22,16 @@ test_the_health_says_when_it_was_checked_and_a_new_time_once_checked_again() {
     sign_in_as "$TMP/god" "God Test"
     local before after
     before=$(curl -s -b "$TMP/god" "$URL/w4os/health")
-    assert_matches "checked (1 hour ago|$SHORT_DATE)" "$before"
+    assert_matches "checked $TIME(1 hour ago|$SHORT_DATE)" "$before"
     assert_contains 'href="/w4os/health?refresh=1"' "$before"
     # The addresses of the grid by their use, then file and section, each its key
     assert_contains '<code>AssetServerURI</code>' "$before"
     assert_contains '<code>Robust.HG.ini</code> <span class="text-secondary">[LoginService]</span>' "$before"
     after=$(curl -s -b "$TMP/god" "$URL/w4os/health?refresh=1")
     assert_not_contains 'checked 1 hour ago' "$after"
-    assert_matches "checked ([0-9]+ seconds? ago|$SHORT_DATE)" "$after"
-    assert_not_equals "$(grep -oE "checked (1 hour ago|$SHORT_DATE)" <<<"$before" | head -1)" \
-        "$(grep -oE "checked ([0-9]+ seconds? ago|$SHORT_DATE)" <<<"$after" | head -1)"
+    assert_matches "checked $TIME([0-9]+ seconds? ago|$SHORT_DATE)" "$after"
+    assert_not_equals "$(grep -oE "checked $TIME(1 hour ago|$SHORT_DATE)" <<<"$before" | head -1)" \
+        "$(grep -oE "checked $TIME([0-9]+ seconds? ago|$SHORT_DATE)" <<<"$after" | head -1)"
 }
 
 test_a_line_of_the_health_is_checked_again_alone_as_the_page_draws_it() {

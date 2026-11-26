@@ -38,8 +38,8 @@ test_help_is_a_page_of_the_site_and_about_no_longer_one() {
         help=$(page "$base" /help)
         assert_equals 200 "$(tail -1 <<<"$help")"
         assert_contains '<title>Help | My grid' "$help"
-        # What the grid is: the text of the home now
-        assert_equals 404 "$(tail -1 <<<"$(page "$base" /about)")"
+        # What the grid is: the text of the home now, where the about page the grid announces leads (Site::ABOUT_ROUTE)
+        assert_equals "301 $base/" "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$base/about")"
     done
     # In the languages of the site
     assert_contains '<title>Aide | My grid' "$(page "$URL" /fr/help)"
