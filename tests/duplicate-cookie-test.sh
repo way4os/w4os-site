@@ -230,7 +230,8 @@ test_an_older_cookie_of_a_language_path_never_keeps_the_sign_in_from_answering()
             "username=Ada Love" "password=$password" "task=login.login" \
             "login-form-nonce=$(sed -n 's/.*name="login-form-nonce" value="\([^"]*\)".*/\1/p' <<<"$page" | head -1)" 2>/dev/null)
         if [ "$password" = secret ]; then
-            assert_contains "task:login.logout" "$out"
+            # Signed in: the sign-in page then offers to sign out
+            assert_contains "task:login.logout" "$(browse "$jar" get /fr/login)"
         else
             assert_contains 'Échec de la connexion' "$out"
         fi
