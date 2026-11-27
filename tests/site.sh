@@ -98,8 +98,29 @@ serve_fastcgi() {
     until [ "$(curl -s -o /dev/null -w '%{http_code}' "$FASTCGI/")" = 200 ] || [ $((tries -= 1)) -eq 0 ]; do sleep 0.2; done
 }
 
+# serve_apache: the same site served by Apache with mod_php, in a container of Grav's own image (W4OS_APACHE_IMAGE) on the
+# network of the machine, at APACHE; nothing without podman or the image (it is not pulled)
+serve_apache() {
+    [ -n "${SITE:-}" ] || return 0
+    local image=${W4OS_APACHE_IMAGE:-docker.io/getgrav/grav:php8.4} port=$((API_PORT + 5)) root=$TMP/www/opensim
+    command -v podman >/dev/null && podman image exists "$image" 2>/dev/null || return 0
+    printf 'Listen %s\n<VirtualHost *:%s>\n\tDocumentRoot %s\n\t<Directory %s>\n\t\tAllowOverride All\n\t\tRequire all granted\n\t</Directory>\n</VirtualHost>\n' \
+        "$port" "$port" "$root" "$root" >"$TMP/apache.conf"
+    : >"$TMP/ports.conf"
+    # Apache started as root in the container, its pages run as the user of the tests (the files of the site are theirs)
+    APACHE_CONTAINER=w4os-site-test-apache-$port
+    podman run -d --rm --name "$APACHE_CONTAINER" --network host --userns=keep-id --user 0 \
+        -e APACHE_RUN_USER="#$(id -u)" -e APACHE_RUN_GROUP="#$(id -g)" -v "$root:$root" \
+        -v "$TMP/apache.conf:/etc/apache2/sites-enabled/000-default.conf:ro" -v "$TMP/ports.conf:/etc/apache2/ports.conf:ro" \
+        --entrypoint apache2-foreground "$image" >/dev/null || return 0
+    APACHE="http://127.0.0.1:$port"
+    local tries=100
+    until [ "$(curl -s -o /dev/null -w '%{http_code}' "$APACHE/")" = 200 ] || [ $((tries -= 1)) -eq 0 ]; do sleep 0.2; done
+}
+
 # site_tear_down: the servers stopped, the site removed (tear_down_after_script)
 site_tear_down() {
+    [ -z "${APACHE_CONTAINER:-}" ] || podman rm -f "$APACHE_CONTAINER" >/dev/null 2>&1 || true
     kill "${CADDY_PID:-}" "${FPM_PID:-}" 2>/dev/null || true
     kill "${HELPERS_PID:-}" 2>/dev/null || true
     pkill -P "${PREFIX_PID:-0}" 2>/dev/null || true

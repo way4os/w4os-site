@@ -12,6 +12,7 @@ set_up_before_script() {
     site_set_up
     serve_helpers
     serve_fastcgi
+    serve_apache
 }
 
 # cold DELAY: no block kept by the site in English (Grav's own cache made again by the French pages), the helpers answering each
@@ -70,25 +71,39 @@ test_a_copy_past_its_time_is_shown_at_once_without_a_server_that_closes_the_conn
     assert_empty "$(cat "$HELPERS/log")"
 }
 
-test_a_copy_past_its_time_is_shown_at_once_and_read_again_after_the_page_is_sent_once_for_two_pages_with_a_web_server() {
+# past_its_time SERVER: a copy past its time shown at once by SERVER, two pages at once, then read again after the page is sent,
+# each block by one page alone
+past_its_time() {
+    cold 0
+    curl -s -o /dev/null -L "$1/"
+    echo 1500 >"$HELPERS/delay"
+    : >"$HELPERS/log"
+    sleep 2
+    local time
+    time=$(timed "$1/")
+    curl -s -o /dev/null -L "$1/" &
+    assert_successful_code "$(under 1 "$time")"
+    assert_contains 'fake-block fake-motd' "$(cat "$TMP/page")"
+    sleep 3
+    assert_equals 'destination_guide grid-info grid-status motd popular_places' "$(cut -d' ' -f1 "$HELPERS/log" | sort | tr '\n' ' ' | sed 's/ $//')"
+}
+
+test_a_copy_past_its_time_is_shown_at_once_and_read_again_after_the_page_is_sent_once_for_two_pages_with_php_fpm() {
     built || return 0
     if [ -z "${FASTCGI:-}" ]; then
         bashunit::skip "no php-fpm or caddy"
         return
     fi
-    cold 0
-    curl -s -o /dev/null -L "$FASTCGI/"
-    echo 1500 >"$HELPERS/delay"
-    : >"$HELPERS/log"
-    sleep 2
-    local time
-    time=$(timed "$FASTCGI/")
-    curl -s -o /dev/null -L "$FASTCGI/" &
-    assert_successful_code "$(under 1 "$time")"
-    assert_contains 'fake-block fake-motd' "$(cat "$TMP/page")"
-    # Read again once the page is sent, each block by one page alone
-    sleep 3
-    assert_equals 'destination_guide grid-info grid-status motd popular_places' "$(cut -d' ' -f1 "$HELPERS/log" | sort | tr '\n' ' ' | sed 's/ $//')"
+    past_its_time "$FASTCGI"
+}
+
+test_a_copy_past_its_time_is_shown_at_once_and_read_again_after_the_page_is_sent_once_for_two_pages_with_apache_and_mod_php() {
+    built || return 0
+    if [ -z "${APACHE:-}" ]; then
+        bashunit::skip "no podman or no image of Grav (docker.io/getgrav/grav:php8.4)"
+        return
+    fi
+    past_its_time "$APACHE"
 }
 
 test_helpers_that_do_not_answer_are_waited_for_once_a_short_while_then_said_at_once() {
