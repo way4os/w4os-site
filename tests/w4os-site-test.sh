@@ -373,7 +373,13 @@ test_web_apache_under_a_prefix_is_included_by_the_sites_of_its_host_alone_and_ta
     printf '<VirtualHost *:80>\n    ServerName other.example\n    Alias /opensim /var/www/other-opensim\n</VirtualHost>\n' >"$etc/sites-available/other.example.conf"
     for f in kimbe.example kimbe.example-le-ssl other.example; do ln -s "../sites-available/$f.conf" "$etc/sites-enabled/$f.conf"; done
     printf '#!/usr/bin/env bash\necho "$*" >>"%s/apache-calls"\n' "$SITE" >"$SITE/stubs/apache2ctl"
-    cp "$SITE/stubs/apache2ctl" "$SITE/stubs/a2enmod"
+    # Its modules as Debian keeps them (mods-enabled): rewrite and alias enabled already, proxy and proxy_fcgi not
+    mkdir -p "$etc/mods-enabled"
+    : >"$etc/mods-enabled/rewrite.load"
+    : >"$etc/mods-enabled/alias.load"
+    printf '#!/usr/bin/env bash\nfor m in "$@"; do [[ $m == -* ]] || : >"%s/mods-enabled/$m.load"; done\n' "$etc" >"$SITE/stubs/a2enmod"
+    printf '#!/usr/bin/env bash\nfor m in "$@"; do [[ $m == -* ]] || rm -f "%s/mods-enabled/$m.load"; done\n' "$etc" >"$SITE/stubs/a2dismod"
+    chmod +x "$SITE/stubs/a2dismod"
     # A host with systemd reloads through it (ursull), a container through apache2ctl: both stubbed, either said
     cp "$SITE/stubs/apache2ctl" "$SITE/stubs/systemctl"
     chmod +x "$SITE/stubs/apache2ctl" "$SITE/stubs/a2enmod" "$SITE/stubs/systemctl"
@@ -384,7 +390,10 @@ test_web_apache_under_a_prefix_is_included_by_the_sites_of_its_host_alone_and_ta
 
     # The files the question names: the one of the https block alone (the http one only redirects)
     assert_equals "$(readlink -f "$etc/sites-available/kimbe.example-le-ssl.conf")" "$(PATH="$SITE/stubs:$PATH" site web apache --host https://kimbe.example --prefix /opensim --vhosts)"
+    # The modules it would enable, said before (the question names them)
+    assert_equals "$(printf 'proxy\nproxy_fcgi')" "$(PATH="$SITE/stubs:$PATH" site web apache --host https://kimbe.example --prefix /opensim --modules)"
     output=$(PATH="$SITE/stubs:$PATH" site web apache --host https://kimbe.example --prefix /opensim --install)
+    assert_file_exists "$etc/mods-enabled/proxy_fcgi.load"
     assert_contains "IncludeOptional $etc/w4os/kimbe.example.conf" "$(cat "$etc/sites-available/kimbe.example-le-ssl.conf")"
     assert_not_contains "IncludeOptional" "$(cat "$etc/sites-available/kimbe.example.conf")"
     assert_equals "$before_other" "$(cat "$etc/sites-available/other.example.conf")"
@@ -398,6 +407,11 @@ test_web_apache_under_a_prefix_is_included_by_the_sites_of_its_host_alone_and_ta
     PATH="$SITE/stubs:$PATH" site web apache --host https://kimbe.example --prefix /opensim --remove >/dev/null
     assert_equals "$before_ssl" "$(cat "$etc/sites-available/kimbe.example-le-ssl.conf")"
     assert_file_not_exists "$etc/w4os/kimbe.example.conf"
+    # The modules it enabled disabled again, the ones Apache had kept
+    assert_file_not_exists "$etc/mods-enabled/proxy_fcgi.load"
+    assert_file_not_exists "$etc/mods-enabled/proxy.load"
+    assert_file_exists "$etc/mods-enabled/rewrite.load"
+    assert_file_exists "$etc/mods-enabled/alias.load"
     # No site of Apache for a host: said, nothing written
     assert_contains "no site of Apache serves nowhere.example" "$(PATH="$SITE/stubs:$PATH" site web apache --host https://nowhere.example --prefix /opensim --install)"
     assert_file_not_exists "$etc/w4os/nowhere.example.conf"

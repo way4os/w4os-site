@@ -7,12 +7,13 @@
 #       nothing, the confirmation links are shown on the page
 #   w4os-site status
 #       what the site is connected to, and whether the API answers
-#   w4os-site web apache|caddy|nginx [--host <name>[,<name>...]] [--port <port>] [--prefix /<path>] [--install | --vhosts | --remove]
+#   w4os-site web apache|caddy|nginx [--host <name>[,<name>...]] [--port <port>] [--prefix /<path>] [--install | --vhosts | --modules | --remove]
 #       the configuration of a web server for the site (printed; installed and enabled with --install, Apache and Caddy), at the
 #       host and the port of the address of the site when not given (localhost on a new site); with --prefix, the site
 #       under that path, in a block of its own beside the one of the host, which it never changes (sites/<host>.w4os.caddyfile),
 #       with the helpers of the grid of this machine under it; for Apache, in a file of its own (/etc/apache2/w4os/<host>.conf)
-#       that one line includes in each site of Apache serving the host (--vhosts: their files, --remove: the lines taken out)
+#       that one line includes in each site of Apache serving the host (--vhosts: their files, --modules: the modules of Apache
+#       it enables, --remove: the lines taken out, the modules it enabled disabled again)
 #   w4os-site --version
 #       the version of the site
 
@@ -421,6 +422,17 @@ apache_blocks() {
 # The two lines a block of a site of the host is given, and the marker that finds them again
 APACHE_MARK='# w4os-site: the site under its path (w4os-site web apache --remove takes it out)'
 
+# The modules of Apache the site needs (PHP-FPM through proxy_fcgi, which needs proxy)
+APACHE_MODULES='rewrite proxy proxy_fcgi alias'
+
+# apache_off_modules ETC: the modules the site needs that Apache has not enabled, one a line
+apache_off_modules() {
+    local module
+    for module in $APACHE_MODULES; do
+        [ -e "$1/mods-enabled/$module.load" ] || printf '%s\n' "$module"
+    done
+}
+
 # apache_prefixed HOST PREFIX SOCKET MODE SCHEME: the site under PREFIX on HOST alone, never on another site of Apache: a file of
 # its own (/etc/apache2/w4os/HOST.conf: the helpers of the grid of this machine, the site, its PHP), included by one line in each
 # block that serves HOST (an Apache site cannot be given a path from outside its own file), IncludeOptional so that Apache starts
@@ -437,12 +449,21 @@ apache_prefixed() {
         printf '%s\n' "$files" | sed '/^$/d'
         return
         ;;
+    modules)
+        apache_off_modules "$etc"
+        return
+        ;;
     remove)
         require apache2ctl
         for file in $(grep -l -F -- "$APACHE_MARK" "$etc"/sites-available/*.conf 2>/dev/null); do
             apache_unmark "$file"
         done
         rm -f "$own"
+        # The modules it enabled itself disabled again, the last ones first (proxy_fcgi before proxy); the others as they were
+        if [ -f "$own.modules" ]; then
+            said=$(a2dismod -q $(tac "$own.modules") 2>&1) || die "Apache's modules could not be disabled again: $said"
+            rm -f "$own.modules"
+        fi
         said=$(apache2ctl configtest 2>&1) || die "Apache refuses its configuration once the site is taken out: $said"
         apache_reload
         success "the site is out of Apache ($host)"
@@ -495,12 +516,17 @@ apache_prefixed() {
                 }
             }' "$file") && printf '%s\n' "$text" >"$file" || die "cannot write $file"
     done
-    said=$(a2enmod -q rewrite proxy_fcgi alias 2>&1) || die "Apache's modules could not be enabled: $said"
+    # The modules it enables itself kept, to be disabled again by --remove (never the ones Apache had)
+    local off
+    off=$(apache_off_modules "$etc")
+    said=$(a2enmod -q $APACHE_MODULES 2>&1) || die "Apache's modules could not be enabled: $said"
     said=$(apache2ctl configtest 2>&1) || {
         for file in $files; do apache_unmark "$file"; done
         rm -f "$own"
+        [ -z "$off" ] || a2dismod -q $(tac <<<"$off") >/dev/null 2>&1 || true
         die "Apache refuses the configuration, nothing is changed: $said"
     }
+    [ -z "$off" ] || printf '%s\n' "$off" >>"$own.modules"
     # Grav's rules under an alias: their base is the prefix
     [ ! -f "$ROOT/.htaccess" ] || sed -i -E "s|^#? ?RewriteBase .*|RewriteBase $prefix|" "$ROOT/.htaccess"
     yaml_set "$CONFIG/system.yaml" custom_base_url "$scheme://$host$prefix"
@@ -537,6 +563,7 @@ web() {
         --prefix) prefix=$2; shift 2 ;;
         --install) install=1; shift ;;
         --vhosts) install=vhosts; shift ;;
+        --modules) install=modules; shift ;;
         --remove) install=remove; shift ;;
         *) die "unknown option $1" ;;
         esac
