@@ -63,8 +63,45 @@ serve_prefixed() {
     until curl -s -o /dev/null "$PREFIXED/" || [ $((tries -= 1)) -eq 0 ]; do sleep 0.2; done
 }
 
+# serve_helpers: fake helpers of the grid for the site (tests/fixtures/helpers.php), their folder HELPERS (its files delay and log),
+# the blocks kept a second
+serve_helpers() {
+    [ -n "${SITE:-}" ] || return 0
+    HELPERS=$TMP/helpers
+    mkdir -p "$HELPERS"
+    local port=$((API_PORT + 3))
+    W4OS_HELPERS=$HELPERS php "$ROOT/tests/fixtures/helpers.php" "$port" >/dev/null 2>&1 &
+    HELPERS_PID=$!
+    sed -i.bak -e "/^url:/d" -e "/^cache:/d" "$SITE/user/config/plugins/w4os.yaml" && rm -f "$SITE/user/config/plugins/w4os.yaml.bak"
+    printf "url: 'http://127.0.0.1:%s/helpers'\ncache: 1\n" "$port" >>"$SITE/user/config/plugins/w4os.yaml"
+    local tries=100
+    until curl -s -o /dev/null "http://127.0.0.1:$port/" || [ $((tries -= 1)) -eq 0 ]; do sleep 0.2; done
+}
+
+# serve_fastcgi: the same site served by Caddy and PHP-FPM, as a web server serves it (the page sent before the end of the
+# request), at FASTCGI; nothing without them
+serve_fastcgi() {
+    [ -n "${SITE:-}" ] || return 0
+    local fpm port=$((API_PORT + 4))
+    fpm=$(command -v php-fpm || find /usr/local/sbin /usr/sbin -name 'php-fpm*' 2>/dev/null | sort | tail -1)
+    [ -n "$fpm" ] && command -v caddy >/dev/null || return 0
+    printf '[global]\nerror_log = %s\ndaemonize = no\n[site]\nlisten = %s\npm = static\npm.max_children = 4\n' \
+        "$TMP/fpm.log" "$TMP/fpm.sock" >"$TMP/fpm.conf"
+    "$fpm" -y "$TMP/fpm.conf" >/dev/null 2>&1 &
+    FPM_PID=$!
+    printf '{\n\tadmin off\n\tauto_https off\n}\nhttp://127.0.0.1:%s {\n\troot * %s\n\tphp_fastcgi unix/%s\n\tfile_server\n}\n' \
+        "$port" "$TMP/www/opensim" "$TMP/fpm.sock" >"$TMP/Caddyfile"
+    XDG_DATA_HOME=$TMP/caddy XDG_CONFIG_HOME=$TMP/caddy caddy run --config "$TMP/Caddyfile" --adapter caddyfile >"$TMP/caddy.log" 2>&1 &
+    CADDY_PID=$!
+    FASTCGI="http://127.0.0.1:$port"
+    local tries=100
+    until [ "$(curl -s -o /dev/null -w '%{http_code}' "$FASTCGI/")" = 200 ] || [ $((tries -= 1)) -eq 0 ]; do sleep 0.2; done
+}
+
 # site_tear_down: the servers stopped, the site removed (tear_down_after_script)
 site_tear_down() {
+    kill "${CADDY_PID:-}" "${FPM_PID:-}" 2>/dev/null || true
+    kill "${HELPERS_PID:-}" 2>/dev/null || true
     pkill -P "${PREFIX_PID:-0}" 2>/dev/null || true
     kill "${PREFIX_PID:-}" 2>/dev/null || true
     # The server's workers are its children
