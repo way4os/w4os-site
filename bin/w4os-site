@@ -549,7 +549,8 @@ apache_reload() {
     if [ -d /run/systemd/system ] || [ -n "${W4OS_SITE_SYSTEMD:-}" ]; then
         said=$(systemctl reload apache2 2>&1) || die "Apache did not reload ($said)"
     else
-        said=$(apache2ctl graceful 2>&1) || die "Apache did not reload ($said)"
+        # An Apache it starts is never on the terminal (it would keep it open after the run)
+        said=$(apache2ctl graceful 2>&1 </dev/null) || die "Apache did not reload ($said)"
     fi
 }
 

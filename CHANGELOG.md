@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix (web): an Apache started by its reload never keeps the terminal
 - new (web): --modules names the modules of Apache the site enables; --remove disables the ones it enabled itself
 - fix (web): the site served by its own pool of the suite (w4os-site, as the web user) once it is installed
 - fix (web): beside Apache, the site takes a PHP-FPM socket only when Apache's account reaches it, else mod_php serves it
