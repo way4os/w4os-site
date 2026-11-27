@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.0.0-beta.15
 
 - fix (web): an Apache started by its reload never keeps the terminal
 - new (web): --modules names the modules of Apache the site enables; --remove disables the ones it enabled itself
